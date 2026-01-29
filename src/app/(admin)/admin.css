@@ -1,0 +1,11 @@
+@reference "../globals.css";
+
+@layer base {
+  body {
+    @apply font-sans font-light antialiased bg-body-bg text-primary-text text-xs leading-normal tracking-wide transition-colors duration-300;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-medium text-primary-text;
+  }
+}

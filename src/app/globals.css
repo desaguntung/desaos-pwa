@@ -1,26 +1,218 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Light Mode (Default) */
+    --body-bg: #FAFAFA; /* Zinc-50 */
+    --sidebar-bg: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --primary-text: #18181B; /* Zinc-900 */
+    --secondary-text: #71717A; /* Zinc-500 */
+    --border-color: #E4E4E7; /* Zinc-200 */
+    --accent: #3B82F6; /* Blue-500 */
+    --ds-gray-200-value: 240, 5.9%, 90%;
+    
+    /* Chart Colors */
+    --chart-1: #3b82f6;
+    --chart-2: #ec4899;
+    --chart-3: #10b981;
+    --chart-4: #f59e0b;
+    --chart-5: #8b5cf6;
+    --chart-6: #6366f1;
+    --chart-7: #06b6d4;
+    --chart-8: #f43f5e;
+  }
+
+  .dark {
+    /* Dark Mode - Professional SaaS Palette */
+    /* Using Zinc palette but slightly tuned for contrast and comfort */
+    --body-bg: #09090b; /* Zinc-950 */
+    --sidebar-bg: #18181b; /* Zinc-900 */
+    --card-bg: #18181b; /* Zinc-900 */
+    --primary-text: #fafafa; /* Zinc-50 */
+    --secondary-text: #a1a1aa; /* Zinc-400 */
+    --border-color: #27272a; /* Zinc-800 */
+    --accent: #60a5fa; /* Blue-400 */
+    --ds-gray-200-value: 240, 3.7%, 15.9%; /* Zinc-800 */
+
+    /* Chart Colors (Slightly adjusted for dark mode if needed, but keeping same for consistency for now) */
+    --chart-1: #3b82f6;
+    --chart-2: #ec4899;
+    --chart-3: #10b981;
+    --chart-4: #f59e0b;
+    --chart-5: #8b5cf6;
+    --chart-6: #6366f1;
+    --chart-7: #06b6d4;
+    --chart-8: #f43f5e;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  /* Semantic Colors */
+  --color-body-bg: var(--body-bg);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-card-bg: var(--card-bg);
+  --color-primary-text: var(--primary-text);
+  --color-secondary-text: var(--secondary-text);
+  --color-border-color: var(--border-color);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --animate-slide-down-fade: slide-down-fade 0.5s ease-out both;
+  @keyframes slide-down-fade {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+}
+
+@keyframes officials-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@layer base {
+  /* Global "Clean" Reset */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #D4D4D8 transparent; /* Zinc-300 */
+  }
+
+  .dark * {
+    scrollbar-color: #3f3f46 transparent; /* Zinc-700 */
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #D4D4D8; /* Zinc-300 */
+    border-radius: 9999px;
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    background-color: #3f3f46; /* Zinc-700 */
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-text text-body-bg px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-card-bg text-primary-text border border-border-color px-3 py-1.5 rounded-md text-xs font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5;
+  }
+
+  .input-field {
+    @apply w-full bg-card-bg border border-border-color rounded-md px-3 py-1.5 text-sm text-primary-text focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+
+  .card {
+    @apply bg-card-bg border border-border-color rounded-lg p-5;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.tailwind {
+  --ds-background-200-value: 210, 20%, 97%;
+  --p-inputSpacingY: 10px;
+  --p-inputSpacingX: 12px;
+  --p-colorBackgroundDeemphasize10: #e5e7eb;
+  --c-inputColorScheme: light;
+}
+
+.tailwind .bg-background-200 {
+  --tw-bg-opacity: 1;
+  background-color: hsla(var(--ds-background-200-value), var(--tw-bg-opacity, 1));
+}
+
+.tailwind .border {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+.tailwind .rounded-sm {
+  border-radius: 4px;
+}
+
+.tailwind .gap-5 {
+  gap: 1.25rem;
+}
+
+.Label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  color: hsla(0, 0%, 40%, 1);
+  text-transform: capitalize;
+}
+
+.tailwind .Input,
+.tailwind .p-FauxInput {
+  padding: var(--p-inputSpacingY) var(--p-inputSpacingX);
+  background-color: hsla(0, 0%, 100%, 1);
+  border-radius: 6px;
+  transition: box-shadow 150ms;
+  border: 1px solid var(--p-colorBackgroundDeemphasize10);
+  box-shadow: 0 0 0 1px #00000014;
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 14px;
+  color: hsla(0, 0%, 9%, 1);
+  border-width: 0;
+  outline: none;
+}
+
+.tailwind .Input:focus,
+.tailwind .Input:focus-visible,
+.tailwind .p-FauxInput:focus,
+.tailwind .p-FauxInput:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px #d4d4d8;
+  border-color: #d4d4d8;
+}
+
+.tailwind .p-Input-input {
+  -webkit-animation: native-autofill-out 1ms;
+  animation: native-autofill-out 1ms;
+  color-scheme: var(--c-inputColorScheme);
+  display: block;
+  width: 100%;
 }
