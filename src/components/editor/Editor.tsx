@@ -2,32 +2,34 @@
 
 import { useEditor, Element, Frame, Editor as CraftEditor } from "@craftjs/core";
 import { useEffect, useState } from "react";
-import { Container } from "./nodes/Container";
-import { Text } from "./nodes/Text";
-import { Variable } from "./nodes/Variable";
-import { Input } from "./nodes/Input";
-import { Row } from "./nodes/Row";
-import { Page } from "./nodes/Page";
-import { KopSurat } from "./nodes/KopSurat";
-import { Signature } from "./nodes/Signature";
-import { DataRow } from "./nodes/DataRow";
-import { Table } from "./nodes/Table";
-import { LandSketch } from "./nodes/LandSketch";
-import { LandBoundaries } from "./nodes/LandBoundaries";
+import { Container } from "@/components/editor/nodes/Container";
+import { Text } from "@/components/editor/nodes/Text";
+import { Variable } from "@/components/editor/nodes/Variable";
+import { Input } from "@/components/editor/nodes/Input";
+import { Row } from "@/components/editor/nodes/Row";
+import { Page } from "@/components/editor/nodes/Page";
+import { KopSurat } from "@/components/editor/nodes/KopSurat";
+import { Signature } from "@/components/editor/nodes/Signature";
+import { DataRow } from "@/components/editor/nodes/DataRow";
+import { Table } from "@/components/editor/nodes/Table";
+import { LandSketch } from "@/components/editor/nodes/LandSketch";
+import { LandBoundaries } from "@/components/editor/nodes/LandBoundaries";
+import { FooterBSrE } from "@/components/editor/nodes/FooterBSrE";
+import { FooterArea } from "@/components/editor/nodes/FooterArea";
 
 import { SuratContext } from "@/lib/contexts/SuratContext";
 
-import { OpeningText, ClosingText, CommonPendudukData } from "./LegacyComponents";
-import { loadTemplatePart2 } from "./part2";
-import { loadTemplatePart3 } from "./part3";
-import { loadTemplatePart4 } from "./part4";
-import { loadTemplatePart5 } from "./part5";
-import { loadTemplatePart6 } from "./part6";
-import { loadTemplatePart7 } from "./part7";
+import { OpeningText, ClosingText, CommonPendudukData } from "@/components/editor/LegacyComponents";
+import { loadTemplatePart2 } from "@/components/editor/part2";
+import { loadTemplatePart3 } from "@/components/editor/part3";
+import { loadTemplatePart4 } from "@/components/editor/part4";
+import { loadTemplatePart5 } from "@/components/editor/part5";
+import { loadTemplatePart6 } from "@/components/editor/part6";
+import { loadTemplatePart7 } from "@/components/editor/part7";
 
-import { Header } from "./Header";
-import { Toolbox } from "./Toolbox";
-import { SettingsPanel } from "./SettingsPanel";
+import { Header } from "@/components/editor/Header";
+import { Toolbox } from "@/components/editor/Toolbox";
+import { SettingsPanel } from "@/components/editor/SettingsPanel";
 
 type EditorProps = {
   initialJson?: string;
@@ -224,47 +226,86 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
        const templateKey = getTemplateKeyFromType(letterType);
        if (templateKey && templateKey !== "blank") {
           loadTemplate(templateKey);
+       } else {
+          // Default/Blank template
+          const defaultContent = (
+            <Element
+              is={Container}
+              canvas
+              width="100%"
+              height="auto"
+              background="transparent"
+              padding="0"
+              flexDirection="column"
+              alignItems="center"
+            >
+              <Element is={Page} canvas>
+                 <KopSurat />
+                 <div className="h-20"></div>
+                 <Text text="Klik tombol 'Edit' untuk mulai membuat surat." fontSize="14" textAlign="center" />
+              </Element>
+            </Element>
+          );
+          
+          try {
+             // @ts-ignore - React 19 compatibility
+             const tree = query.parseReactElement(defaultContent).toNodeTree();
+             actions.deserialize(tree.nodes as any);
+          } catch (e) {
+             console.error("Error loading default content:", e);
+          }
        }
+    } else {
+        // Fallback if no letterType (e.g. direct create)
+        const defaultContent = (
+            <Element
+              is={Container}
+              canvas
+              width="100%"
+              height="auto"
+              background="transparent"
+              padding="0"
+              flexDirection="column"
+              alignItems="center"
+            >
+              <Element is={Page} canvas>
+                 <KopSurat />
+                 <div className="h-20"></div>
+                 <Text text="Klik tombol 'Edit' untuk mulai membuat surat." fontSize="14" textAlign="center" />
+              </Element>
+            </Element>
+          );
+          
+          try {
+             // @ts-ignore - React 19 compatibility
+             const tree = query.parseReactElement(defaultContent).toNodeTree();
+             actions.deserialize(tree.nodes as any);
+          } catch (e) {
+             console.error("Error loading default content:", e);
+          }
     }
   }, [initialJson, letterType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <SuratContext.Provider value={contextValue}>
-      <div className="h-full flex flex-col bg-zinc-50 overflow-hidden">
-        {!readOnly && <Header onSave={onSave} zoom={zoom} setZoom={setZoom} readOnly={readOnly} hideNavigation={hideHeaderNavigation} />}
+      <div className={`h-full flex flex-col overflow-hidden ${readOnly ? 'bg-transparent' : 'bg-zinc-50'}`}>
+        <Header onSave={onSave} zoom={zoom} setZoom={setZoom} readOnly={readOnly} hideNavigation={hideHeaderNavigation} />
         
         <div className="flex-1 flex overflow-hidden">
           {/* Left: Toolbox */}
           {enabled && <Toolbox />}
 
           {/* Center: Canvas */}
-          <div className="flex-1 flex flex-col relative transition-all bg-zinc-100/50">
-            <div className="flex-1 overflow-auto p-8 flex justify-center custom-scrollbar">
+          <div className={`flex-1 flex flex-col relative transition-all ${readOnly ? 'bg-transparent' : 'bg-zinc-100/50'}`}>
+            <div className={`flex-1 overflow-auto flex justify-center custom-scrollbar ${readOnly ? 'py-10' : 'p-8'}`}>
                <div 
-                 className="transition-transform duration-200 ease-out origin-top pb-20 flex flex-col items-center"
+                 className={`transition-transform duration-200 ease-out origin-top flex flex-col items-center ${readOnly ? 'pb-10' : 'pb-20'}`}
                  style={{ 
                    transform: `scale(${zoom / 100})`,
                    marginBottom: `${(zoom > 100 ? (zoom - 100) * 4 : 0)}mm` // Add extra space at bottom when zoomed in
                  }}
                >
-                 <Frame>
-                    <Element 
-                      is={Container} 
-                      canvas 
-                      width="100%"
-                      height="auto"
-                      background="transparent"
-                      padding="0"
-                      flexDirection="column"
-                      alignItems="center"
-                    >
-                      <Element is={Page} canvas>
-                         <KopSurat />
-                         <div className="h-20"></div>
-                         <Text text="Klik tombol 'Edit' untuk mulai membuat surat." fontSize="14" textAlign="center" />
-                      </Element>
-                    </Element>
-                 </Frame>
+                 <Frame />
                </div>
             </div>
           </div>
@@ -294,6 +335,8 @@ export const Editor = (props: EditorProps) => {
         Table,
         LandSketch,
         LandBoundaries,
+        FooterBSrE,
+        FooterArea,
         OpeningText,
         ClosingText,
         CommonPendudukData,

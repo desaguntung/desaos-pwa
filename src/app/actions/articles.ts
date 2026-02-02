@@ -2,42 +2,55 @@
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 
+const PAGE_SIZE = 9;
+
+export async function getArticles(page: number, search: string = "", category: string = "Semua") {
+  const supabase = createSupabaseServerClient();
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("articles")
+    .select("id, title, slug, excerpt, cover_image, category, published_at, views_count", { count: "exact" })
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .range(from, to);
+
+  if (search) {
+    query = query.ilike("title", `%${search}%`);
+  }
+
+  if (category && category !== "Semua") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error("Error fetching articles:", error);
+    return { data: [], count: 0, error: error.message };
+  }
+
+  return { data, count, error: null };
+}
+
 export async function incrementArticleView(slug: string) {
   const supabase = createSupabaseServerClient();
-
-  // Call the RPC function if it exists, or update directly
-  // Using direct update for now as it's safer if RPC isn't set up, 
-  // though slightly race-condition prone without atomic increment.
-  // Ideally: await supabase.rpc('increment_article_views', { article_slug: slug });
   
-  // Since we want to be safe and I don't know if RPC exists, I'll try to use a direct update 
-  // but really we should use an RPC for atomicity. 
-  // Let's assume the user has a `views` column.
+  // We can't easily do atomic increment with simple update unless we use rpc or fetch-then-update.
+  // Ideally, use an RPC function: create function increment_views(row_id uuid) ...
+  // But for now, let's try to do it without RPC if possible to avoid migration complexity, 
+  // OR just create the RPC if we are comfortable with SQL.
   
-  // Option 1: Fetch current, then update (simple, but race conditions)
-  // Option 2: RPC (best)
+  // Actually, the best way for atomic update without RPC in Supabase/Postgres is unclear via JS client 
+  // without a stored procedure.
+  // However, for view counts, a little race condition is usually acceptable.
   
-  // Let's try RPC first, if it fails, fallback? No, can't easily fallback in server action without error logs.
-  // Given the user asked for SQL previously, maybe I should assume they ran it.
+  // Let's try to fetch current views first.
+  const { data } = await supabase.from('articles').select('id, views_count').eq('slug', slug).single();
   
-  // Let's try to update using a simple increment approach if possible or just fetch-update.
-  // For this "DesaOS" project level, fetch-update is probably acceptable for now.
-  
-  try {
-    const { data: article } = await supabase
-      .from("articles")
-      .select("id, views")
-      .eq("slug", slug)
-      .single();
-
-    if (article) {
-      const currentViews = article.views || 0;
-      await supabase
-        .from("articles")
-        .update({ views: currentViews + 1 })
-        .eq("id", article.id);
-    }
-  } catch (error) {
-    console.error("Failed to increment view:", error);
+  if (data) {
+    const newCount = (data.views_count || 0) + 1;
+    await supabase.from('articles').update({ views_count: newCount }).eq('id', data.id);
   }
 }

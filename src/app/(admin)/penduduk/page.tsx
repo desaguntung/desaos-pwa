@@ -423,25 +423,29 @@ export default function PendudukPage() {
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case "Meninggal": return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800";
-      case "Pindah": return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800";
-      default: return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"; // Aktif
+      case "Meninggal": return "bg-red-50 text-red-700 border border-red-100/50 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20";
+      case "Pindah": return "bg-blue-50 text-blue-700 border border-blue-100/50 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20";
+      default: return "bg-emerald-50 text-emerald-700 border border-emerald-100/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"; // Aktif
     }
   };
 
   return (
     <>
-    <div className="flex h-full flex-col bg-body-bg">
+    <div className="flex h-full flex-col bg-gray-50/50">
       <PageHeader 
         title="Penduduk" 
         subtitle="Kelola data kependudukan desa"
+        className="mb-6"
       />
 
        {/* 2. Area Konten (Canvas) */}
-       <div className="flex-1 overflow-hidden p-4 md:p-6 space-y-4 flex flex-col">
+       <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
+          
+          {/* Main Card */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
           
           {/* 3. Toolbar & Filter (SaaS Style - Vercel Inspired) */}
-          <div className="flex flex-row items-center justify-between gap-3">
+          <div className="flex flex-row items-center justify-between gap-3 p-5 border-b border-gray-100">
               {/* Search Bar (Left) */}
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
@@ -449,7 +453,7 @@ export default function PendudukPage() {
                 </div>
                 <input 
                   type="text" 
-                  className="block w-full pl-9 pr-3 h-9 text-sm border border-gray-200 rounded-md bg-white placeholder:text-slate-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gray-900/5 focus:border-gray-300 transition-all hover:border-gray-300 font-sans dark:bg-zinc-900 dark:border-zinc-700 dark:text-white dark:placeholder:text-zinc-500"
+                  className="block w-full pl-9 pr-3 h-9 text-sm border-transparent rounded-md bg-gray-50 placeholder:text-slate-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white transition-all hover:bg-gray-100 font-sans dark:bg-zinc-900 dark:border-zinc-700 dark:text-white dark:placeholder:text-zinc-500"
                   placeholder="Cari penduduk..."
                   value={searchTerm}
                   onChange={(e) => {
@@ -529,30 +533,30 @@ export default function PendudukPage() {
             </div>
 
           {/* 4. Tabel Presisi (Pixel Perfect) - Unified Scrollable Table */}
-          <div className="flex-1 overflow-hidden">
-            <div className="border border-border-color rounded-lg overflow-hidden h-full flex flex-col bg-card-bg shadow-sm">
-              <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="overflow-hidden h-full flex flex-col bg-white">
+              <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
                 {/* Mobile Table View (Visible only on mobile) */}
-                <table className="w-full text-left text-sm table-fixed md:hidden">
-                    <thead className="bg-zinc-50 dark:bg-zinc-900 sticky top-0 z-20 border-b border-border-color">
+                <table className="w-full text-left text-sm table-fixed md:hidden font-sans antialiased tracking-tight">
+                    <thead className="bg-gray-50/50 dark:bg-zinc-900 sticky top-0 z-20 border-b border-gray-100 backdrop-blur-sm">
                     <tr>
-                        <th className="h-10 px-3 text-[10px] font-medium text-secondary-text uppercase tracking-wider w-[12%] text-center border-b border-border-color">No</th>
-                        <th className="h-10 px-3 text-[10px] font-medium text-secondary-text uppercase tracking-wider w-[38%] border-b border-border-color">Nama Lengkap</th>
-                        <th className="h-10 px-3 text-[10px] font-medium text-secondary-text uppercase tracking-wider w-[25%] border-b border-border-color">TTL</th>
-                        <th className="h-10 px-3 text-[10px] font-medium text-secondary-text uppercase tracking-wider w-[10%] text-center border-b border-border-color">L/P</th>
-                        <th className="h-10 px-3 text-[10px] font-medium text-secondary-text uppercase tracking-wider w-[15%] text-center border-b border-border-color">Aksi</th>
+                        <th className="h-10 px-3 text-[10px] font-medium text-gray-500 normal-case tracking-wider w-[12%] text-center border-b border-gray-100">No</th>
+                        <th className="h-10 px-3 text-[10px] font-medium text-gray-500 normal-case tracking-wider w-[38%] border-b border-gray-100">Nama Lengkap</th>
+                        <th className="h-10 px-3 text-[10px] font-medium text-gray-500 normal-case tracking-wider w-[25%] border-b border-gray-100">TTL</th>
+                        <th className="h-10 px-3 text-[10px] font-medium text-gray-500 normal-case tracking-wider w-[10%] text-center border-b border-gray-100">L/P</th>
+                        <th className="h-10 px-3 text-[10px] font-medium text-gray-500 normal-case tracking-wider w-[15%] text-center border-b border-gray-100">Aksi</th>
                     </tr>
                     </thead>
-                    <tbody className="bg-card-bg divide-y divide-border-color">
+                    <tbody className="bg-white divide-y divide-gray-100">
                     {loading ? (
                         <tr>
-                        <td colSpan={5} className="h-32 text-center text-secondary-text text-xs">
+                        <td colSpan={5} className="h-32 text-center text-gray-500 text-sm">
                             Memuat data...
                         </td>
                         </tr>
                     ) : currentData.length === 0 ? (
                         <tr>
-                        <td colSpan={5} className="h-32 text-center text-secondary-text text-xs">
+                        <td colSpan={5} className="h-32 text-center text-gray-500 text-sm">
                             Tidak ada data penduduk ditemukan
                         </td>
                         </tr>
@@ -560,42 +564,42 @@ export default function PendudukPage() {
                         currentData.map((penduduk, index) => (
                         <tr 
                             key={penduduk.id} 
-                            className="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors group cursor-pointer border-b border-border-color last:border-0"
+                            className="hover:bg-gray-50 transition-colors duration-200 group cursor-pointer"
                             onClick={() => handleDetail(penduduk.nik)}
                         >
-                            <td className="py-3 px-3 align-top text-[10px] text-secondary-text text-center">
+                            <td className="py-4 px-3 align-top text-[10px] text-gray-500 text-center">
                                 {startIndex + index + 1}
                             </td>
 
-                            <td className="py-3 px-3 align-top w-[38%]">
+                            <td className="py-4 px-3 align-top w-[38%]">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[12px] text-primary-text capitalize leading-tight font-medium">
+                                <span className="text-sm text-gray-900 capitalize leading-tight font-medium">
                                     {(penduduk.nama || "").toLowerCase()}
                                 </span>
-                                <span className="text-[10px] text-secondary-text font-mono">
+                                <span className="text-xs text-gray-400 font-mono tracking-wide">
                                     {penduduk.nik}
                                 </span>
-                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium border w-fit mt-1 ${getStatusColor(penduduk.status_penduduk)}`}>
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${getStatusColor(penduduk.status_penduduk)}`}>
                                     {penduduk.status_penduduk || "Aktif"}
                                 </span>
                               </div>
                             </td>
 
-                            <td className="py-3 px-3 align-top text-[11px] text-secondary-text w-[25%]">
+                            <td className="py-4 px-3 align-top text-xs text-gray-600 w-[25%]">
                                 <div className="flex flex-col">
-                                    <span className="capitalize text-primary-text leading-tight">
+                                    <span className="capitalize text-gray-900 leading-tight">
                                         {(penduduk.tempat_lahir || "-").toLowerCase()}
                                     </span>
-                                    <span className="text-secondary-text text-[10px]">
+                                    <span className="text-gray-500 text-[10px]">
                                         {formatDate(penduduk.tanggal_lahir)}
                                     </span>
-                                    <span className="text-secondary-text/70 text-[10px] mt-0.5">
+                                    <span className="text-gray-400 text-[10px] mt-0.5">
                                         {penduduk.dusun || "-"}
                                     </span>
                                 </div>
                             </td>
 
-                            <td className="py-3 px-3 align-top text-[11px] text-secondary-text w-[10%] text-center">
+                            <td className="py-4 px-3 align-top text-[11px] text-gray-500 w-[10%] text-center">
                                 <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium ${
                                     (penduduk.jenis_kelamin || "").toUpperCase().startsWith("L") 
                                     ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100" 
@@ -605,28 +609,24 @@ export default function PendudukPage() {
                                 </span>
                             </td>
 
-                            <td className="py-3 px-3 align-top text-center w-[15%]">
+                            <td className="py-4 px-3 align-top text-center w-[15%]">
                                 <div onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-6 w-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md p-0"
-                                            >
-                                                <MoreVertical className="w-3.5 h-3.5" />
-                                            </Button>
+                                            <div className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 cursor-pointer transition-colors">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </div>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-[160px]">
                                             <DropdownMenuItem onClick={() => handleDetail(penduduk.nik)}>
-                                                <Eye className="w-3.5 h-3.5 mr-2 text-slate-500" />
+                                                <Eye className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                                 Lihat Detail
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => {
                                                 setEditNik(penduduk.nik);
                                                 setIsEditOpen(true);
                                             }}>
-                                                <Pencil className="w-3.5 h-3.5 mr-2 text-slate-500" />
+                                                <Pencil className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                                 Edit Data
                                             </DropdownMenuItem>
                                             <DropdownMenuItem 
@@ -647,41 +647,41 @@ export default function PendudukPage() {
                 </table>
 
                 {/* Desktop Table View (Visible only on desktop) */}
-                <table className="hidden md:table w-full text-left text-sm table-fixed">
-                    <thead className="bg-zinc-50 dark:bg-zinc-900 sticky top-0 z-20 border-b border-border-color">
+                <table className="hidden md:table w-full text-left text-sm table-fixed font-sans antialiased tracking-tight">
+                    <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200 backdrop-blur-sm">
                     <tr>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[4%] text-center border-b border-border-color">No</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[14%] border-b border-border-color">Nama Lengkap</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[11%] border-b border-border-color">NIK</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[11%] border-b border-border-color">No. KK</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[8%] border-b border-border-color">L/P</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[10%] border-b border-border-color">Tempat Lahir</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[9%] border-b border-border-color">Tgl Lahir</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[5%] border-b border-border-color">Umur</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider w-[10%] border-b border-border-color">Dusun</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider text-right w-[10%] border-b border-border-color">Status</th>
-                        <th className="h-10 px-4 text-xs font-medium text-secondary-text uppercase tracking-wider text-center w-[8%] border-b border-border-color">
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-12 text-center border-b border-gray-200">No</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[14%] border-b border-gray-200">Nama Lengkap</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[11%] border-b border-gray-200">NIK</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[11%] border-b border-gray-200">No. KK</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[8%] border-b border-gray-200">L/P</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[10%] border-b border-gray-200">Tempat Lahir</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[9%] border-b border-gray-200">Tgl Lahir</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[5%] border-b border-gray-200">Umur</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider w-[10%] border-b border-gray-200">Dusun</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider text-right w-[10%] border-b border-gray-200">Status</th>
+                        <th className="h-10 px-4 text-xs font-medium text-gray-500 normal-case tracking-wider text-center w-[8%] border-b border-gray-200">
                             Aksi
                         </th>
                     </tr>
                     </thead>
-                    <tbody className="bg-card-bg divide-y divide-border-color">
+                    <tbody className="bg-white divide-y divide-gray-100">
                     {loading ? (
                         <tr>
-                        <td colSpan={11} className="h-32 text-center text-secondary-text text-xs">
+                        <td colSpan={11} className="h-32 text-center text-gray-500 text-sm">
                             <div className="flex flex-col items-center justify-center gap-2">
-                                <div className="h-5 w-5 border-2 border-border-color border-t-secondary-text rounded-full animate-spin" />
+                                <div className="h-5 w-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
                                 <span>Memuat data...</span>
                             </div>
                         </td>
                         </tr>
                     ) : currentData.length === 0 ? (
                         <tr>
-                        <td colSpan={11} className="h-48 text-center text-secondary-text text-xs">
+                        <td colSpan={11} className="h-48 text-center text-gray-500 text-sm">
                             <div className="flex flex-col items-center justify-center gap-2">
-                                <Search className="w-8 h-8 text-secondary-text/50" />
-                                <p className="text-primary-text font-medium">Tidak ada data ditemukan</p>
-                                <p className="text-secondary-text">Coba ubah filter atau kata kunci pencarian</p>
+                                <Search className="w-8 h-8 text-gray-300" />
+                                <p className="text-gray-900 font-medium">Tidak ada data ditemukan</p>
+                                <p className="text-gray-500">Coba ubah filter atau kata kunci pencarian</p>
                             </div>
                         </td>
                         </tr>
@@ -689,84 +689,80 @@ export default function PendudukPage() {
                         currentData.map((penduduk, index) => (
                         <tr 
                             key={penduduk.id} 
-                            className="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors group cursor-pointer border-b border-border-color last:border-0"
+                            className="hover:bg-gray-50 transition-colors duration-200 group cursor-pointer"
                             onClick={() => handleDetail(penduduk.nik)}
                         >
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text text-center">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 text-center">
                                 {startIndex + index + 1}
                             </td>
-                            <td className="py-3 px-4 align-middle w-[14%]">
-                            <span className="text-xs font-medium text-primary-text truncate block uppercase">
-                                {penduduk.nama}
+                            <td className="py-4 px-4 align-middle w-[14%]">
+                            <span className="text-sm font-medium text-gray-900 truncate block capitalize">
+                                {(penduduk.nama || "").toLowerCase()}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle w-[11%]">
-                            <span className="text-xs text-secondary-text font-mono">
+                            <td className="py-4 px-4 align-middle w-[11%]">
+                            <span className="text-xs text-gray-400 font-mono tracking-wide">
                                 {penduduk.nik}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle w-[11%]">
-                            <span className="text-xs text-secondary-text font-mono">
+                            <td className="py-4 px-4 align-middle w-[11%]">
+                            <span className="text-xs text-gray-400 font-mono tracking-wide">
                                 {penduduk.no_kk}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text w-[10%]">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[8%]">
                             <span className="truncate block">
                                 {penduduk.jenis_kelamin === "LAKI-LAKI" ? "L" : penduduk.jenis_kelamin === "PEREMPUAN" ? "P" : penduduk.jenis_kelamin}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text w-[9%]">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[10%]">
                             <span className="truncate block capitalize">
                                 {(penduduk.tempat_lahir || "").toLowerCase()}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text w-[9%]">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[9%]">
                             {formatDate(penduduk.tanggal_lahir)}
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text w-[5%]">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[5%]">
                             {calculateAge(penduduk.tanggal_lahir)}
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-xs text-secondary-text w-[10%]">
+                            <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[10%]">
                             <span className="truncate block capitalize">
                                 {penduduk.dusun || "-"}
                             </span>
                             </td>
 
-                            <td className="py-3 px-4 align-middle text-right w-[9%]">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${getStatusColor(penduduk.status_penduduk)} shadow-sm`}>
+                            <td className="py-4 px-4 align-middle text-right w-[10%]">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(penduduk.status_penduduk)}`}>
                                 {penduduk.status_penduduk || "Aktif"}
                             </span>
                             </td>
 
-                            <td className="py-2.5 px-4 align-middle text-center w-[8%]">
+                            <td className="py-4 px-4 align-middle text-center w-[8%]">
                                 <div onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-8 w-8 text-secondary-text hover:text-primary-text hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md"
-                                            >
+                                            <div className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer">
                                                 <MoreHorizontal className="w-4 h-4" />
-                                            </Button>
+                                            </div>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-[160px]">
                                             <DropdownMenuItem onClick={() => handleDetail(penduduk.nik)}>
-                                                <Eye className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                                                <Eye className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                                 Lihat Detail
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => {
                                                 setEditNik(penduduk.nik);
                                                 setIsEditOpen(true);
                                             }}>
-                                                <Pencil className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                                                <Pencil className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                                 Edit Data
                                             </DropdownMenuItem>
                                             <DropdownMenuItem 
@@ -788,9 +784,9 @@ export default function PendudukPage() {
               </div>
             
               {/* Simple Pagination */}
-              <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-t border-border-color bg-card-bg">
+              <div className="flex-shrink-0 flex items-center justify-between px-4 pt-4 pb-4 border-t border-gray-100 bg-white">
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-secondary-text">
+                    <span className="text-sm text-gray-500">
                         Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredResidents.length)} dari {filteredResidents.length} data
                     </span>
                     <div className="hidden md:flex items-center gap-2">
@@ -811,20 +807,23 @@ export default function PendudukPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 border border-border-color bg-card-bg hover:bg-zinc-50 dark:hover:bg-zinc-800 h-8 px-3 text-secondary-text shadow-sm"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-9 px-3"
                   >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
                     Previous
                   </button>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 border border-border-color bg-card-bg hover:bg-zinc-50 dark:hover:bg-zinc-800 h-8 px-3 text-secondary-text shadow-sm"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-9 px-3"
                   >
                     Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </button>
                 </div>
               </div>
             </div>
+          </div>
           </div>
        </div>
     </div>

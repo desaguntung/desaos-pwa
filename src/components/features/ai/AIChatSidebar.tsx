@@ -144,19 +144,39 @@ export default function AIChatSidebar({ isOpen, onClose, onApplyDraft, onInsertI
   };
 
   const parseDraft = (jsonString: string): DraftData | null => {
-    try {
-      const draft = JSON.parse(jsonString);
-      if (draft.type === "draft") return draft;
-    } catch (e) {
-      // Retry with sanitized string
+    const attemptParse = (str: string) => {
       try {
-        const sanitized = jsonString.replace(/[\u0000-\u001F]+/g, " ");
-        const draft = JSON.parse(sanitized);
-        if (draft.type === "draft") return draft;
-      } catch (e2) {
-        console.error("Failed to parse draft JSON", e2);
+        const draft = JSON.parse(str);
+        return draft.type === "draft" ? draft : null;
+      } catch {
+        return null;
       }
-    }
+    };
+
+    // 1. Try raw
+    let result = attemptParse(jsonString);
+    if (result) return result;
+
+    // 2. Try removing control characters (common issue)
+    const sanitized = jsonString.replace(/[\u0000-\u001F]+/g, " ");
+    result = attemptParse(sanitized);
+    if (result) return result;
+
+    // 3. Try fixing missing commas (common LLM error: "val" "key")
+    // We do this on the original string to preserve newlines for the regex detection
+    let repaired = jsonString
+      // Fix missing commas between double-quoted strings (values and keys) across newlines
+      .replace(/\"\s*[\r\n]+\s*\"/g, '", "')
+      // Remove trailing commas
+      .replace(/,(\s*[}\]])/g, '$1');
+    
+    // Sanitize the repaired string
+    repaired = repaired.replace(/[\u0000-\u001F]+/g, " ");
+    
+    result = attemptParse(repaired);
+    if (result) return result;
+
+    console.error("Failed to parse draft JSON. Raw:", jsonString);
     return null;
   };
 

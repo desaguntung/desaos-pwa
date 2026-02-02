@@ -1,0 +1,425 @@
+table_name,column_name,data_type,is_nullable
+article_comments,id,uuid,NO
+article_comments,article_id,uuid,YES
+article_comments,user_id,uuid,YES
+article_comments,content,text,NO
+article_comments,created_at,timestamp with time zone,YES
+articles,id,uuid,NO
+articles,title,text,NO
+articles,slug,text,NO
+articles,content,text,YES
+articles,excerpt,text,YES
+articles,category,text,YES
+articles,cover_image,text,YES
+articles,status,text,YES
+articles,author_id,uuid,YES
+articles,published_at,timestamp with time zone,YES
+articles,created_at,timestamp with time zone,YES
+articles,updated_at,timestamp with time zone,YES
+articles,views_count,integer,YES
+articles,likes_count,integer,YES
+articles,shares_count,integer,YES
+articles,comments_count,integer,YES
+articles,tags,ARRAY,YES
+articles,is_featured,boolean,YES
+auth_users_view,id,uuid,YES
+auth_users_view,email,character varying,YES
+auth_users_view,created_at,timestamp with time zone,YES
+categories,id,uuid,NO
+categories,name,text,NO
+categories,slug,text,NO
+categories,created_at,timestamp with time zone,YES
+categories,updated_at,timestamp with time zone,YES
+disposisi_surat_masuk,id_disposisi,integer,NO
+disposisi_surat_masuk,id_surat_masuk,integer,NO
+disposisi_surat_masuk,id_desa_pamong,integer,YES
+disposisi_surat_masuk,disposisi_ke,character varying,YES
+identitas_desa,id,bigint,NO
+identitas_desa,nama_desa,text,NO
+identitas_desa,kode_desa,text,NO
+identitas_desa,kode_pos,text,YES
+identitas_desa,nama_kecamatan,text,NO
+identitas_desa,kode_kecamatan,text,NO
+identitas_desa,nama_kepala_camat,text,YES
+identitas_desa,nip_kepala_camat,text,YES
+identitas_desa,nama_kabupaten,text,NO
+identitas_desa,kode_kabupaten,text,NO
+identitas_desa,nama_provinsi,text,NO
+identitas_desa,kode_provinsi,text,NO
+identitas_desa,alamat_kantor,text,YES
+identitas_desa,email_desa,text,YES
+identitas_desa,telepon,text,YES
+identitas_desa,website,text,YES
+identitas_desa,kantor_desa,text,YES
+identitas_desa,logo,text,YES
+identitas_desa,lat,text,YES
+identitas_desa,lng,text,YES
+identitas_desa,zoom,integer,YES
+identitas_desa,map_tipe,text,YES
+identitas_desa,path,text,YES
+identitas_desa,warna,text,YES
+identitas_desa,created_at,timestamp with time zone,NO
+identitas_desa,updated_at,timestamp with time zone,NO
+identitas_desa,sebutan_desa,text,YES
+identitas_desa,singkatan_desa,text,YES
+identitas_desa,sebutan_kabupaten,text,YES
+identitas_desa,sebutan_kabupaten_singkat,text,YES
+identitas_desa,sebutan_kecamatan,text,YES
+identitas_desa,sebutan_kecamatan_singkat,text,YES
+identitas_desa,sebutan_dusun,text,YES
+identitas_desa,sejarah,text,YES
+identitas_desa,visi,text,YES
+identitas_desa,misi,text,YES
+klasifikasi_surat,id,integer,NO
+klasifikasi_surat,kode,character varying,NO
+klasifikasi_surat,nama,character varying,NO
+klasifikasi_surat,uraian,text,NO
+klasifikasi_surat,enabled,integer,NO
+log_surat,id,integer,NO
+log_surat,id_format_surat,integer,NO
+log_surat,id_pend,uuid,YES
+log_surat,id_pamong,integer,NO
+log_surat,id_user,integer,NO
+log_surat,tanggal,timestamp with time zone,YES
+log_surat,bulan,character varying,YES
+log_surat,tahun,character varying,YES
+log_surat,no_surat,character varying,YES
+log_surat,nama_surat,character varying,YES
+log_surat,lampiran,character varying,YES
+log_surat,nik_non_warga,numeric,YES
+log_surat,nama_non_warga,character varying,YES
+log_surat,keterangan,character varying,YES
+log_surat,lokasi_arsip,character varying,YES
+log_surat,urls_id,integer,YES
+log_surat,status,smallint,NO
+log_surat,log_verifikasi,character varying,YES
+log_surat,tte,smallint,YES
+log_surat,verifikasi_operator,smallint,YES
+log_surat,verifikasi_kades,smallint,YES
+log_surat,verifikasi_sekdes,smallint,YES
+log_surat,isi_surat,text,YES
+log_surat,deleted_at,timestamp with time zone,YES
+pamong_desa,pamong_id,integer,NO
+pamong_desa,pamong_nama,character varying,YES
+pamong_desa,gelar_depan,character varying,YES
+pamong_desa,gelar_belakang,character varying,YES
+pamong_desa,pamong_nip,character varying,YES
+pamong_desa,pamong_tag_id_card,character varying,YES
+pamong_desa,pamong_pin,character varying,YES
+pamong_desa,pamong_nik,character varying,YES
+pamong_desa,pamong_status,smallint,YES
+pamong_desa,pamong_tgl_terdaftar,date,YES
+pamong_desa,pamong_ttd,smallint,YES
+pamong_desa,foto,text,YES
+pamong_desa,id_pend,uuid,YES
+pamong_desa,pamong_tempatlahir,character varying,YES
+pamong_desa,pamong_tanggallahir,date,YES
+pamong_desa,pamong_sex,smallint,YES
+pamong_desa,pamong_pendidikan,integer,YES
+pamong_desa,pamong_agama,integer,YES
+pamong_desa,pamong_nosk,character varying,YES
+pamong_desa,pamong_tglsk,date,YES
+pamong_desa,pamong_masajab,character varying,YES
+pamong_desa,urut,integer,YES
+pamong_desa,pamong_niap,character varying,YES
+pamong_desa,pamong_pangkat,character varying,YES
+pamong_desa,pamong_nohenti,character varying,YES
+pamong_desa,pamong_tglhenti,date,YES
+pamong_desa,pamong_ub,smallint,NO
+pamong_desa,atasan,integer,YES
+pamong_desa,bagan_tingkat,smallint,YES
+pamong_desa,jabatan_id,integer,YES
+penduduk,id,uuid,NO
+penduduk,nik,text,NO
+penduduk,nama,text,NO
+penduduk,no_kk,text,YES
+penduduk,hubungan_keluarga,text,YES
+penduduk,jenis_kelamin,text,YES
+penduduk,agama,text,YES
+penduduk,status_penduduk,text,YES
+penduduk,tempat_lahir,text,YES
+penduduk,tanggal_lahir,date,YES
+penduduk,waktu_lahir,text,YES
+penduduk,detail_tempat_lahir,text,YES
+penduduk,cara_lahir,text,YES
+penduduk,anak_ke,integer,YES
+penduduk,berat_lahir,text,YES
+penduduk,panjang_lahir,text,YES
+penduduk,golongan_darah,text,YES
+penduduk,pendidikan_kk,text,YES
+penduduk,pendidikan_saat_ini,text,YES
+penduduk,pekerjaan,text,YES
+penduduk,nik_ayah,text,YES
+penduduk,nama_ayah,text,YES
+penduduk,nik_ibu,text,YES
+penduduk,nama_ibu,text,YES
+penduduk,alamat_rt,text,YES
+penduduk,alamat_sebelumnya,text,YES
+penduduk,alamat_saat_ini,text,YES
+penduduk,dusun,text,YES
+penduduk,rt,text,YES
+penduduk,rw,text,YES
+penduduk,telepon,text,YES
+penduduk,email,text,YES
+penduduk,status_kawin,text,YES
+penduduk,foto_url,text,YES
+penduduk,created_at,timestamp with time zone,YES
+penduduk,gelar_depan,text,YES
+penduduk,gelar_belakang,text,YES
+penduduk,akta_kelahiran_nomor,text,YES
+penduduk,keahlian_khusus,text,YES
+penduduk,kepesertaan_asuransi,text,YES
+penduduk,cacat_fisik_mental,text,YES
+penduduk,sakit_menahun,text,YES
+penduduk,status_kehamilan,text,YES
+penduduk,status_ekonomi_dtks,text,YES
+penduduk,penghasilan_rata_rata,text,YES
+penduduk,kepemilikan_rumah,text,YES
+penduduk,sumber_air_minum,text,YES
+penduduk,akun_facebook,text,YES
+penduduk,akun_instagram,text,YES
+penduduk,akun_twitter,text,YES
+penduduk,id_sosial_lainnya,text,YES
+penduduk,scan_ktp_url,text,YES
+penduduk,scan_kk_url,text,YES
+penduduk,scan_akta_lahir_url,text,YES
+penduduk,scan_akta_nikah_url,text,YES
+penduduk,scan_ijazah_url,text,YES
+penduduk,scan_paspor_url,text,YES
+penduduk,tanggal_perkawinan,date,YES
+penduduk,kewarganegaraan,text,YES
+penduduk,no_paspor,text,YES
+penduduk,no_kitap,text,YES
+penduduk,rumah_tangga_id,uuid,YES
+penduduk,nama_desa,text,YES
+penduduk,nama_kecamatan,text,YES
+penduduk,nama_kabupaten,text,YES
+penduduk,nama_provinsi,text,YES
+penduduk,id_kk,integer,YES
+penduduk,kk_level,integer,YES
+penduduk,no_kk_sebelumnya,text,YES
+penduduk,id_rtm,text,YES
+penduduk,rtm_level,integer,YES
+penduduk,id_cluster,integer,YES
+penduduk,status,integer,YES
+penduduk,status_dasar,integer,YES
+penduduk,sex,integer,YES
+penduduk,tempatlahir,text,YES
+penduduk,tanggallahir,date,YES
+penduduk,tempat_dilahirkan,integer,YES
+penduduk,jenis_kelahiran,integer,YES
+penduduk,kelahiran_anak_ke,integer,YES
+penduduk,penolong_kelahiran,integer,YES
+penduduk,agama_id,integer,YES
+penduduk,pendidikan_kk_id,integer,YES
+penduduk,pendidikan_sedang_id,integer,YES
+penduduk,pekerjaan_id,integer,YES
+penduduk,warganegara_id,integer,YES
+penduduk,golongan_darah_id,integer,YES
+penduduk,cacat_id,integer,YES
+penduduk,sakit_menahun_id,integer,YES
+penduduk,cara_kb_id,integer,YES
+penduduk,bahasa_id,integer,YES
+penduduk,dokumen_pasport,text,YES
+penduduk,dokumen_kitas,text,YES
+penduduk,tanggal_akhir_paspor,date,YES
+penduduk,akta_lahir,text,YES
+penduduk,akta_perkawinan,text,YES
+penduduk,akta_perceraian,text,YES
+penduduk,tanggalperceraian,date,YES
+penduduk,tanggalperkawinan,date,YES
+penduduk,ktp_el,integer,YES
+penduduk,status_rekam,integer,YES
+penduduk,tag_id_card,text,YES
+penduduk,tempat_cetak_ktp,text,YES
+penduduk,tanggal_cetak_ktp,date,YES
+penduduk,ayah_nik,text,YES
+penduduk,ibu_nik,text,YES
+penduduk,alamat_sekarang,text,YES
+penduduk,hubung_warga,text,YES
+penduduk,email_token,text,YES
+penduduk,email_tgl_kadaluarsa,timestamp without time zone,YES
+penduduk,email_tgl_verifikasi,timestamp without time zone,YES
+penduduk,telegram,text,YES
+penduduk,telegram_token,text,YES
+penduduk,telegram_tgl_kadaluarsa,timestamp without time zone,YES
+penduduk,telegram_tgl_verifikasi,timestamp without time zone,YES
+penduduk,foto,text,YES
+penduduk,hamil,integer,YES
+penduduk,id_asuransi,integer,YES
+penduduk,no_asuransi,text,YES
+penduduk,bpjs_ketenagakerjaan,text,YES
+penduduk,suku,text,YES
+penduduk,negara_asal,text,YES
+penduduk,ket,text,YES
+penduduk,created_by,integer,YES
+penduduk,updated_at,timestamp without time zone,YES
+penduduk,updated_by,integer,YES
+pengaturan_aplikasi,key,text,NO
+pengaturan_aplikasi,value,text,NO
+pengaturan_aplikasi,keterangan,text,YES
+pengaturan_aplikasi,created_at,timestamp with time zone,NO
+pengaturan_aplikasi,updated_at,timestamp with time zone,NO
+permohonan_surat,id,integer,NO
+permohonan_surat,id_pemohon,uuid,YES
+permohonan_surat,id_surat,integer,NO
+permohonan_surat,isian_form,text,NO
+permohonan_surat,status,smallint,NO
+permohonan_surat,alasan,character varying,YES
+permohonan_surat,keterangan,text,YES
+permohonan_surat,no_hp_aktif,character varying,NO
+permohonan_surat,syarat,text,NO
+permohonan_surat,created_at,timestamp with time zone,YES
+permohonan_surat,updated_at,timestamp with time zone,YES
+permohonan_surat,no_antrian,character varying,YES
+profiles,id,uuid,NO
+profiles,full_name,text,YES
+profiles,avatar_url,text,YES
+profiles,role,USER-DEFINED,NO
+profiles,created_at,timestamp with time zone,NO
+profiles,updated_at,timestamp with time zone,YES
+rbac_permissions,id,uuid,NO
+rbac_permissions,role,text,NO
+rbac_permissions,resource,text,NO
+rbac_permissions,can_view,boolean,NO
+rbac_permissions,can_read,boolean,NO
+rbac_permissions,can_create,boolean,NO
+rbac_permissions,can_update,boolean,NO
+rbac_permissions,can_delete,boolean,NO
+rbac_roles,key,text,NO
+rbac_roles,name,text,NO
+rbac_roles,description,text,YES
+ref_agama,id,integer,NO
+ref_agama,nama,character varying,NO
+ref_asuransi,id,integer,NO
+ref_asuransi,nama,character varying,NO
+ref_cacat,id,integer,NO
+ref_cacat,nama,character varying,NO
+ref_cara_kb,id,integer,NO
+ref_cara_kb,nama,character varying,YES
+ref_golongan_darah,id,integer,NO
+ref_golongan_darah,nama,character varying,NO
+ref_hubungan_keluarga,id,integer,NO
+ref_hubungan_keluarga,nama,character varying,NO
+ref_jenis_kelamin,id,integer,NO
+ref_jenis_kelamin,nama,character varying,YES
+ref_pekerjaan,id,integer,NO
+ref_pekerjaan,nama,character varying,YES
+ref_pendidikan,id,integer,NO
+ref_pendidikan,nama,character varying,NO
+ref_pendidikan_kk,id,integer,NO
+ref_pendidikan_kk,nama,character varying,NO
+ref_sakit_menahun,id,integer,NO
+ref_sakit_menahun,nama,character varying,NO
+ref_status_kawin,id,integer,NO
+ref_status_kawin,nama,character varying,NO
+ref_status_penduduk,id,integer,NO
+ref_status_penduduk,nama,character varying,YES
+ref_syarat_surat,ref_syarat_id,integer,NO
+ref_syarat_surat,ref_syarat_nama,character varying,NO
+ref_warganegara,id,integer,NO
+ref_warganegara,nama,character varying,NO
+rumah_tangga,id,uuid,NO
+rumah_tangga,no_rtm,character varying,NO
+rumah_tangga,kepala_rtm_id,uuid,YES
+rumah_tangga,tgl_daftar,timestamp with time zone,YES
+rumah_tangga,kelas_sosial,integer,YES
+rumah_tangga,bdt,character varying,YES
+rumah_tangga,alamat,text,YES
+rumah_tangga,rt,character varying,YES
+rumah_tangga,rw,character varying,YES
+rumah_tangga,dusun,text,YES
+rumah_tangga,keterangan,text,YES
+rumah_tangga,created_at,timestamp with time zone,YES
+rumah_tangga,updated_at,timestamp with time zone,YES
+surat_formats,id,integer,NO
+surat_formats,nama,character varying,NO
+surat_formats,url_surat,character varying,NO
+surat_formats,kode_surat,character varying,YES
+surat_formats,lampiran,character varying,YES
+surat_formats,kunci,smallint,NO
+surat_formats,favorit,smallint,NO
+surat_formats,jenis,smallint,NO
+surat_formats,mandiri,smallint,YES
+surat_formats,masa_berlaku,integer,YES
+surat_formats,satuan_masa_berlaku,character varying,YES
+surat_formats,qr_code,smallint,NO
+surat_formats,logo_garuda,smallint,NO
+surat_formats,syarat_surat,text,YES
+surat_formats,template,text,YES
+surat_formats,template_desa,text,YES
+surat_formats,form_isian,text,YES
+surat_formats,kode_isian,text,YES
+surat_formats,orientasi,character varying,YES
+surat_formats,ukuran,character varying,YES
+surat_formats,margin,text,YES
+surat_formats,footer,integer,NO
+surat_formats,header,integer,NO
+surat_formats,format_nomor,character varying,YES
+surat_formats,created_at,timestamp with time zone,YES
+surat_formats,created_by,integer,YES
+surat_formats,updated_at,timestamp with time zone,YES
+surat_formats,updated_by,integer,YES
+surat_keluar,id,integer,NO
+surat_keluar,nomor_urut,smallint,YES
+surat_keluar,nomor_surat,character varying,YES
+surat_keluar,kode_surat,character varying,YES
+surat_keluar,tanggal_surat,date,NO
+surat_keluar,tanggal_catat,timestamp with time zone,YES
+surat_keluar,tujuan,character varying,YES
+surat_keluar,isi_singkat,character varying,YES
+surat_keluar,berkas_scan,character varying,YES
+surat_keluar,ekspedisi,smallint,YES
+surat_keluar,tanggal_pengiriman,date,YES
+surat_keluar,tanda_terima,character varying,YES
+surat_keluar,keterangan,character varying,YES
+surat_keluar,created_at,timestamp with time zone,YES
+surat_keluar,created_by,integer,NO
+surat_keluar,updated_at,timestamp with time zone,YES
+surat_keluar,updated_by,integer,NO
+surat_keluar,lokasi_arsip,character varying,YES
+surat_last_number,key,text,NO
+surat_last_number,last_number,integer,YES
+surat_last_number,updated_at,timestamp with time zone,NO
+surat_masuk,id,integer,NO
+surat_masuk,nomor_urut,smallint,YES
+surat_masuk,tanggal_penerimaan,date,NO
+surat_masuk,nomor_surat,character varying,YES
+surat_masuk,kode_surat,character varying,YES
+surat_masuk,tanggal_surat,date,NO
+surat_masuk,pengirim,character varying,YES
+surat_masuk,isi_singkat,character varying,YES
+surat_masuk,isi_disposisi,character varying,YES
+surat_masuk,berkas_scan,character varying,YES
+surat_masuk,lokasi_arsip,character varying,YES
+tweb_rtm_raw,id,integer,NO
+tweb_rtm_raw,nik_kepala,integer,NO
+tweb_rtm_raw,no_kk,character varying,NO
+tweb_rtm_raw,tgl_daftar,timestamp without time zone,NO
+tweb_rtm_raw,kelas_sosial,integer,YES
+tweb_rtm_raw,bdt,character varying,YES
+wilayah_desa,kode_desa,character varying,NO
+wilayah_desa,nama_desa,character varying,NO
+wilayah_desa,nama_kecamatan,character varying,NO
+wilayah_desa,nama_kabupaten,character varying,NO
+wilayah_desa,nama_provinsi,character varying,NO
+wilayah_dusun,id,bigint,NO
+wilayah_dusun,nama,text,NO
+wilayah_dusun,kepala_nik,text,YES
+wilayah_dusun,kantor_alamat,text,YES
+wilayah_dusun,kantor_latitude,double precision,YES
+wilayah_dusun,kantor_longitude,double precision,YES
+wilayah_dusun,created_at,timestamp with time zone,NO
+wilayah_dusun,updated_at,timestamp with time zone,NO
+wilayah_rt,id,bigint,NO
+wilayah_rt,rw_id,bigint,NO
+wilayah_rt,nomor_rt,smallint,NO
+wilayah_rt,kepala_nik,text,YES
+wilayah_rt,created_at,timestamp with time zone,NO
+wilayah_rt,updated_at,timestamp with time zone,NO
+wilayah_rw,id,bigint,NO
+wilayah_rw,dusun_id,bigint,NO
+wilayah_rw,nomor_rw,smallint,NO
+wilayah_rw,kepala_nik,text,YES
+wilayah_rw,created_at,timestamp with time zone,NO
+wilayah_rw,updated_at,timestamp with time zone,NO

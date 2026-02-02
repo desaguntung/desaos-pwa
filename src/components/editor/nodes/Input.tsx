@@ -39,7 +39,7 @@ export const Input = ({
       // In DataRow, label prop is used as variable key
       const value = data.form_data?.[label || ""];
       return (
-        <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'var(--font-sans)' }}>
+        <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'Arial, sans-serif' }}>
           {value || "-"}
         </span>
       );
@@ -254,6 +254,8 @@ export const InputSettings = () => {
     </div>
   );
 };
+
+Input.displayName = "Input";
 
 Input.craft = {
   props: {

@@ -4,59 +4,9 @@ import { useRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, ArrowRight, Eye } from "lucide-react";
+import NewsCard, { NewsItem } from "./NewsCard";
 
-export interface NewsItem {
-  title: string;
-  excerpt: string;
-  href: string;
-  imageSrc: string;
-  tag?: string;
-  date?: string;
-  views?: number;
-}
-
-function NewsCard({ item }: { item: NewsItem }) {
-  return (
-    <Link href={item.href} className="group block h-full w-full">
-      <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-zinc-900 shadow-lg ring-1 ring-white/10 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl aspect-[4/5] md:aspect-[3/4]">
-        {/* Image Background */}
-        <div className="absolute inset-0">
-          <img
-            src={item.imageSrc}
-            alt={item.title}
-            className="h-full w-full object-cover transition-transform duration-700 will-change-transform group-hover:scale-110"
-          />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-90" />
-        </div>
-
-        {/* Badge */}
-        {item.tag && (
-          <span className="absolute right-5 top-5 z-20 inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-md ring-1 ring-white/20 transition-colors group-hover:bg-white/30">
-            {item.tag}
-          </span>
-        )}
-
-        {/* Content */}
-        <div className="absolute inset-x-0 bottom-0 z-20 p-6 flex flex-col justify-end">
-          <h3 className="line-clamp-2 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl mb-3 drop-shadow-md">
-            {item.title}
-          </h3>
-          <p className="line-clamp-2 text-sm leading-relaxed text-zinc-300 mb-6 opacity-90">
-            {item.excerpt}
-          </p>
-          
-          <div className="flex items-center gap-3 text-sm font-semibold text-white/90 group-hover:text-white">
-            <span>Baca Selengkapnya</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-all duration-300 group-hover:translate-x-2 group-hover:bg-white group-hover:text-black">
-                <ArrowRight className="h-4 w-4" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+export type { NewsItem };
 
 function ViewAllCard() {
   return (

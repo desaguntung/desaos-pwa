@@ -1,12 +1,55 @@
 import { useNode } from "@craftjs/core";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import ContentEditable from "react-contenteditable";
 import { useSuratContext } from "@/lib/contexts/SuratContext";
 import { 
   AlignLeft, AlignCenter, AlignRight, AlignJustify, 
   Bold, Italic, Underline, Strikethrough,
-  Type, Move, Palette, Layout
+  Type, Move, Palette, Layout, PlusCircle
 } from "lucide-react";
+
+const AVAILABLE_VARIABLES = [
+  { label: "Nama Desa", value: "Nama_Desa" },
+  { label: "Sebutan Desa", value: "Sebutan_Desa" },
+  { label: "Kecamatan", value: "Nama_Kecamatan" },
+  { label: "Kabupaten", value: "Nama_Kabupaten" },
+  { label: "Sebutan Kabupaten", value: "Sebutan_Kabupaten" },
+  { label: "Provinsi", value: "Nama_Provinsi" },
+  { label: "Alamat Desa", value: "Alamat_Desa" },
+  { label: "Kode Pos", value: "Kode_Pos" },
+  { label: "Website", value: "Website" },
+  { label: "Email Desa", value: "Email_Desa" },
+  { label: "Telepon Desa", value: "Telepon_Desa" },
+  { label: "Kode Desa", value: "Kode_Desa" },
+  
+  { label: "Nomor Surat", value: "Nomor_Surat" },
+  { label: "Tanggal Surat", value: "Tanggal_Surat" },
+  { label: "Kode Surat", value: "Kode_Surat" },
+  
+  { label: "Nama Pamong", value: "Nama_Pamong" },
+  { label: "NIP Pamong", value: "NIP_Pamong" },
+  { label: "Pangkat Pamong", value: "Pangkat_Pamong" },
+  { label: "Jabatan (Penandatangan)", value: "Penandatangan" },
+
+  // Penduduk
+  { label: "Nama Penduduk", value: "Nama_Penduduk" },
+  { label: "NIK", value: "NIK_Penduduk" },
+  { label: "No. KK", value: "No_KK" },
+  { label: "Tempat Lahir", value: "Tempat_Lahir" },
+  { label: "Tanggal Lahir", value: "Tanggal_Lahir_Penduduk" },
+  { label: "Jenis Kelamin", value: "Jenis_Kelamin" },
+  { label: "Agama", value: "Agama" },
+  { label: "Pekerjaan", value: "Pekerjaan" },
+  { label: "Pendidikan", value: "Pendidikan" },
+  { label: "Status Kawin", value: "Status_Kawin" },
+  { label: "Alamat Penduduk", value: "Alamat_Penduduk" },
+  { label: "RT", value: "RT" },
+  { label: "RW", value: "RW" },
+  { label: "Dusun", value: "Dusun" },
+  { label: "Warga Negara", value: "Warganegara" },
+  { label: "Nama Ayah", value: "Nama_Ayah" },
+  { label: "Nama Ibu", value: "Nama_Ibu" },
+];
 
 export const Text = ({ 
   text, 
@@ -14,7 +57,7 @@ export const Text = ({
   textAlign = "left", 
   fontWeight = "normal",
   color = "#000000",
-  fontFamily = "var(--font-sans)",
+  fontFamily = "Arial, sans-serif",
   lineHeight = "1.5",
   letterSpacing = "0",
   textDecoration = "none",
@@ -27,11 +70,77 @@ export const Text = ({
   marginLeft = "0",
   marginRight = "0"
 }: any) => {
-  const { connectors: { connect, drag }, selected, actions: { setProp } } = useNode((state) => ({
+  const { connectors: { connect, drag }, selected, actions: { setProp }, insertVariable } = useNode((state) => ({
     selected: state.events.selected,
+    insertVariable: state.data.props.insertVariable,
   }));
   const [editable, setEditable] = useState(false);
   const { mode, data } = useSuratContext();
+
+  const contentEditableRef = useRef<HTMLElement>(null);
+  const savedRange = useRef<Range | null>(null);
+
+  // Handle selection change to save cursor position
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      if (!editable) return;
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const el = contentEditableRef.current;
+        if (el && el.contains(range.commonAncestorContainer)) {
+          savedRange.current = range.cloneRange();
+        }
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, [editable]);
+
+  // Handle variable insertion request from settings
+  useEffect(() => {
+    if (insertVariable) {
+      if (!editable) {
+        setEditable(true);
+        return; // Wait for next render where editable is true
+      }
+
+      const el = contentEditableRef.current;
+      if (el) {
+        el.focus();
+        
+        // Restore selection if available
+        const sel = window.getSelection();
+        let rangeRestored = false;
+
+        if (sel && savedRange.current) {
+            // Validate that the saved range is actually inside this element
+            if (el.contains(savedRange.current.commonAncestorContainer)) {
+                sel.removeAllRanges();
+                sel.addRange(savedRange.current);
+                rangeRestored = true;
+            }
+        }
+
+        // If no valid selection restored, move cursor to end
+        if (!rangeRestored && sel) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false); // false = end
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        // Insert text at cursor
+        // Note: insertText command is deprecated but widely supported and handles undo/redo + HTML cleanup well
+        document.execCommand('insertText', false, ` [${insertVariable}] `);
+        
+        // Clear the request
+        setProp((props: any) => props.insertVariable = null);
+      }
+    }
+  }, [insertVariable, editable, setProp]);
   
   // Replace variables in preview mode
   const displayContent = useMemo(() => {
@@ -45,6 +154,18 @@ export const Text = ({
       return str.replace(/\w\S*/g, (txt) => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       });
+    };
+
+    // Helper for Date Formatting
+    const formatDate = (dateStr: string | undefined) => {
+        if (!dateStr) return "";
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr; // Return original if invalid date
+            return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+        } catch (e) {
+            return dateStr;
+        }
     };
     
     // Dictionary of values (raw)
@@ -79,8 +200,11 @@ export const Text = ({
     if (data.pamong) {
       variables['penandatangan'] = data.pamong.jabatan || data.pamong.pangkat || "";
       variables['nama_pamong'] = data.pamong.nama || "";
+      variables['nama-pamong'] = variables['nama_pamong']; // Alias for dashed
       variables['nip_pamong'] = data.pamong.nip || "";
+      variables['nip-pamong'] = variables['nip_pamong']; // Alias for dashed
       variables['pangkat_pamong'] = data.pamong.pangkat || "";
+      variables['pangkat-pamong'] = variables['pangkat_pamong']; // Alias for dashed
     }
 
     if (data.surat) {
@@ -91,11 +215,103 @@ export const Text = ({
        variables['kode_surat'] = data.surat.kode || "";
     }
 
+    // Combine penduduk and form_data for variable resolution
+    const pendudukData = data.penduduk || {};
+    const formData = data.form_data || {};
+    
+    // Helper to get value from either source
+    const getValue = (keys: string[]) => {
+        for (const key of keys) {
+            if (pendudukData[key] !== undefined && pendudukData[key] !== null) return pendudukData[key];
+            if (formData[key] !== undefined && formData[key] !== null) return formData[key];
+        }
+        return "";
+    };
+
+    if (data.penduduk || data.form_data) {
+      variables['nama_penduduk'] = getValue(['nama', 'nama_lengkap', 'nama_pemohon']);
+      variables['nik_penduduk'] = getValue(['nik', 'nik_pemohon']);
+      variables['no_kk'] = getValue(['no_kk', 'nomor_kk']);
+      
+      variables['tempat_lahir'] = getValue(['tempat_lahir', 'tempatlahir', 'tempat_kelahiran']);
+      
+      const tglLahirRaw = getValue(['tanggal_lahir', 'tanggallahir', 'tgl_lahir']);
+      variables['tanggal_lahir_penduduk'] = formatDate(tglLahirRaw);
+      variables['tanggal_lahir'] = variables['tanggal_lahir_penduduk'];
+      
+      // Combined Tempat/Tanggal Lahir
+      const tempat = variables['tempat_lahir'];
+      const tgl = variables['tanggal_lahir_penduduk'];
+      variables['tempat_tanggal_lahir'] = (tempat && tgl) ? `${tempat}, ${tgl}` : (tempat || tgl);
+      variables['ttl'] = variables['tempat_tanggal_lahir']; // Alias
+      variables['tempat_tgl_lahir'] = variables['tempat_tanggal_lahir']; // Alias
+      variables['tempat-tanggal-lahir'] = variables['tempat_tanggal_lahir']; // Alias for dashed
+      variables['tempat-tgl-lahir'] = variables['tempat_tanggal_lahir']; // Alias for dashed
+
+      // Jenis Kelamin
+      const sex = getValue(['sex', 'jenis_kelamin', 'jk', 'gender']);
+      let jk = sex;
+      if (sex == 1 || sex === "1") jk = "Laki-laki";
+      else if (sex == 2 || sex === "2") jk = "Perempuan";
+      else if (typeof sex === 'string') {
+          if (sex.toUpperCase() === "L" || sex.toUpperCase() === "LAKI-LAKI") jk = "Laki-laki";
+          else if (sex.toUpperCase() === "P" || sex.toUpperCase() === "PEREMPUAN") jk = "Perempuan";
+      }
+      variables['jenis_kelamin'] = jk || "";
+      variables['jk'] = jk || ""; // Alias
+      variables['sex'] = jk || ""; // Alias
+      variables['jenis-kelamin'] = jk || ""; // Alias for dashed
+
+      variables['agama'] = getValue(['agama']);
+      variables['pekerjaan'] = getValue(['pekerjaan', 'pekerjaan_kk']);
+      variables['pendidikan'] = getValue(['pendidikan', 'pendidikan_kk', 'pendidikan_terakhir']);
+      variables['status_kawin'] = getValue(['status_kawin', 'status_perkawinan']);
+      
+      // Alamat
+      const jalan = getValue(['alamat', 'alamat_sekarang', 'alamat_jalan', 'alamat_saat_ini', 'jalan', 'alamat_sebelumnya']);
+      const rtVal = getValue(['rt']);
+      const rwVal = getValue(['rw']);
+      const dusunVal = getValue(['dusun', 'dusun_sekarang']);
+      
+      const rt = (rtVal && rtVal !== "-" && rtVal !== "0") ? `RT ${rtVal}` : "";
+      const rw = (rwVal && rwVal !== "-" && rwVal !== "0") ? `RW ${rwVal}` : "";
+      
+      let dusunStr = "";
+      if (dusunVal) {
+          dusunStr = dusunVal.toLowerCase().includes('dusun') ? dusunVal : `Dusun ${dusunVal}`;
+      }
+      
+      // Prevent duplication if jalan already contains dusun
+      if (jalan && dusunStr && jalan.toLowerCase().includes(dusunStr.toLowerCase())) {
+          dusunStr = "";
+      }
+      
+      const fullAddress = [jalan, dusunStr, rt, rw].filter(Boolean).join(" ");
+      
+      variables['alamat_penduduk'] = fullAddress;
+      variables['alamat_tempat_tinggal'] = fullAddress;
+      variables['alamat-tempat-tinggal'] = fullAddress; // Alias for dashed
+      variables['alamat'] = fullAddress;
+      variables['alamat_lengkap'] = fullAddress; // Alias
+      
+      variables['rt'] = rtVal || "";
+      variables['rw'] = rwVal || "";
+      variables['dusun'] = dusunVal || "";
+      
+      variables['warganegara'] = getValue(['warga_negara', 'warganegara', 'kewarganegaraan', 'status_kewarganegaraan']) || "WNI";
+      variables['kewarganegaraan'] = variables['warganegara'];
+      variables['wn'] = variables['warganegara']; // Alias
+      variables['warga-negara'] = variables['warganegara']; // Alias for dashed
+
+      variables['nama_ayah'] = getValue(['ayah', 'nama_ayah']);
+      variables['nama_ibu'] = getValue(['ibu', 'nama_ibu']);
+    }
+
     // Replacer function using Regex to capture key and respect casing
-    // Pattern: [key]
-    processedText = processedText.replace(/\[([a-zA-Z0-9_]+)\]/g, (match: string, key: string) => {
-        const lowerKey = key.toLowerCase();
-        const value = variables[lowerKey];
+    // Pattern: [key] - Allow alphanumeric, underscore, dash, space, AND SLASH
+    processedText = processedText.replace(/\[([a-zA-Z0-9_\-\s\/]+)\]/g, (match: string, key: string) => {
+        const lowerKey = key.toLowerCase().replace(/[\s\/]+/g, '_'); // Convert spaces/slashes to underscores
+        const value = variables[lowerKey] || variables[key.toLowerCase()]; // Try converted key first, then raw lowercase
         
         if (value === undefined) return match; // Keep placeholder if variable not found
 
@@ -147,6 +363,7 @@ export const Text = ({
       }}
     >
       <ContentEditable
+        innerRef={contentEditableRef}
         html={displayContent}
         disabled={!editable || mode === 'preview'}
         onChange={(e) => setProp((props: any) => (props.text = e.target.value))}
@@ -178,8 +395,44 @@ export const TextSettings = () => {
     setProp((props: any) => (props[key] = value));
   };
 
+  const [selectedVariable, setSelectedVariable] = useState("");
+
+  const handleInsertVariable = () => {
+      if(!selectedVariable) return;
+      // Trigger insertion in Text component via prop
+      setProp((props: any) => {
+          props.insertVariable = selectedVariable;
+      });
+      setSelectedVariable("");
+  };
+
   return (
     <div className="flex flex-col gap-1">
+      <SettingsSection title="Insert Variable" icon={PlusCircle}>
+         <div className="flex gap-1">
+            <select 
+                value={selectedVariable} 
+                onChange={(e) => setSelectedVariable(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+                <option value="">Select Variable...</option>
+                {AVAILABLE_VARIABLES.map((v) => (
+                    <option key={v.value} value={v.value}>{v.label}</option>
+                ))}
+            </select>
+            <button 
+                onClick={handleInsertVariable}
+                disabled={!selectedVariable}
+                className="px-2 py-1.5 bg-blue-50 text-blue-600 rounded-md text-xs font-medium hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200"
+            >
+                Add
+            </button>
+         </div>
+         <p className="text-[10px] text-gray-400 mt-1">
+            Select a variable to insert into the text content.
+         </p>
+      </SettingsSection>
+
       <SettingsSection title="Typography" icon={Type}>
         {/* Font Family */}
         <div className="space-y-1">
@@ -355,6 +608,8 @@ export const TextSettings = () => {
   );
 };
 
+Text.displayName = "Text";
+
 Text.craft = {
   props: {
     text: "Edit text here...",
@@ -362,7 +617,7 @@ Text.craft = {
     textAlign: "left",
     fontWeight: "400",
     color: "#000000",
-    fontFamily: "var(--font-sans)",
+    fontFamily: "Arial, sans-serif",
     lineHeight: "1.5",
     letterSpacing: "0",
     textDecoration: "none",

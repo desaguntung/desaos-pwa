@@ -1,10 +1,10 @@
 import { Element } from "@craftjs/core";
-import { Page } from "./nodes/Page";
-import { KopSurat } from "./nodes/KopSurat";
-import { Text } from "./nodes/Text";
-import { DataRow } from "./nodes/DataRow";
-import { Signature } from "./nodes/Signature";
-import { OpeningText, ClosingText, CommonPendudukData } from "./LegacyComponents";
+import { Page } from "@/components/editor/nodes/Page";
+import { KopSurat } from "@/components/editor/nodes/KopSurat";
+import { Text } from "@/components/editor/nodes/Text";
+import { DataRow } from "@/components/editor/nodes/DataRow";
+import { Signature } from "@/components/editor/nodes/Signature";
+import { OpeningText, ClosingText, CommonPendudukData } from "@/components/editor/LegacyComponents";
 
 export const loadTemplatePart3 = (type: string) => {
   if (type === "izin_orangtua") {

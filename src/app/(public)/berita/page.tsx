@@ -1,84 +1,67 @@
 import { createSupabaseServerClient } from "@/utils/supabase/server";
-import AllNewsClient, { Article } from "@/components/public/AllNewsClient";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
+import NewsPortalClient from "@/components/public/portal/NewsPortalClient";
+import MobileNewsView from "@/components/mobile/MobileNewsView";
+import MobileNavDock from "@/components/mobile/MobileNavDock";
+import { NewsItem } from "@/components/public/NewsCard";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Semua Berita | Desa Digital",
+  title: "Berita & Artikel | Desa Digital",
   description: "Arsip lengkap berita, kegiatan, dan informasi terkini desa.",
 };
 
 export const revalidate = 60; // Revalidate every minute
 
-export default async function AllNewsPage() {
+export default async function NewsPage() {
   const supabase = createSupabaseServerClient();
   
-  // Fetch all published articles with graceful fallback for optional columns
-  let articles: any[] = [];
-  
-  try {
-    // 1. Try fetching with all desired fields (views, author)
-    // Note: This assumes a foreign key relation 'articles.author_id' -> 'profiles.id' exists and is named 'profiles' or similar.
-    // If 'views' column is missing, this will throw code 42703.
-    const { data, error } = await supabase
-      .from("articles")
-      .select(`
-        id, 
-        title, 
-        excerpt, 
-        slug, 
-        cover_image, 
-        category, 
-        published_at, 
-        author_id, 
-        views,
-        author:profiles(full_name)
-      `)
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
+  // Fetch initial data (Fetch more for portal layout)
+  const { data: articles, count } = await supabase
+    .from("articles")
+    .select("id, title, slug, excerpt, cover_image, category, published_at, views_count", { count: "exact" })
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(20);
 
-    if (error) throw error;
-    articles = data || [];
-  } catch (error: any) {
-    // 2. Fallback if 'views' or relation doesn't exist
-    // Check for "column does not exist" or specific relation errors
-    if (error.code === '42703' || error.code === 'PGRST200') {
-        // console.warn("Optional columns/relations missing, falling back to basic fetch.", error.message);
-        const { data, error: retryError } = await supabase
-          .from("articles")
-          .select("id, title, excerpt, slug, cover_image, category, published_at, author_id")
-          .eq("status", "published")
-          .order("published_at", { ascending: false });
-          
-        if (retryError) {
-          console.error("Critical error fetching articles:", retryError);
-        } else {
-          articles = data || [];
-        }
-    } else {
-       console.error("Error fetching articles:", error);
-    }
-  }
+  // Fetch categories
+  const { data: categoriesData } = await supabase
+    .from("categories")
+    .select("name")
+    .order("name");
 
-  // Transform data to match Article interface
-  const formattedArticles: Article[] = articles.map((article: any) => ({
-    id: article.id,
+  const categories = categoriesData ? ["Semua", ...categoriesData.map(c => c.name)] : ["Semua"];
+
+  // Map to NewsItem interface
+  const newsItems: NewsItem[] = (articles || []).map((article) => ({
     title: article.title,
-    excerpt: article.excerpt || "",
-    slug: article.slug,
-    cover_image: article.cover_image,
-    category: article.category,
-    published_at: article.published_at,
-    views: article.views || 0,
-    author: article.author ? { full_name: article.author.full_name } : undefined,
+    excerpt: article.excerpt,
+    href: `/berita/${article.slug}?from=/berita`,
+    imageSrc: article.cover_image || "/images/placeholder.jpg",
+    tag: article.category,
+    date: article.published_at,
+    views: article.views_count
   }));
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Navbar />
-      <AllNewsClient initialArticles={formattedArticles} />
-      <Footer />
-    </div>
+    <>
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <NewsPortalClient 
+          initialItems={newsItems} 
+          categories={categories}
+        />
+      </div>
+
+      {/* Mobile View */}
+      <div className="block md:hidden">
+        <MobileNewsView 
+          newsItems={newsItems} 
+          categories={categories}
+        />
+        <MobileNavDock />
+      </div>
+    </>
   );
 }

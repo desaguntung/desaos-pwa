@@ -7,7 +7,7 @@ export default async function FormatEditorEditPage({ params }: { params: Promise
   
   // Fetch existing template and details
   const { data: format } = await supabase
-    .from("tweb_surat_format")
+    .from("surat_formats")
     .select("template, nama, url_surat")
     .eq("id", id)
     .single();

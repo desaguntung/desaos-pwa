@@ -409,11 +409,12 @@ export default function ManagementRolePage() {
       setSavingMatrix(false);
     }
   };
+
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
+      <div className="flex-1 flex flex-col h-full bg-gray-50 overflow-y-auto">
         <div className="px-6 py-4">
-          <p className="text-xs text-secondary-text">Memuat konfigurasi role...</p>
+          <p className="text-xs text-gray-500">Memuat konfigurasi role...</p>
         </div>
       </div>
     );
@@ -421,9 +422,9 @@ export default function ManagementRolePage() {
 
   if (currentRole !== "super_admin") {
     return (
-      <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
+      <div className="flex-1 flex flex-col h-full bg-gray-50 overflow-y-auto">
         <div className="px-6 py-4">
-          <p className="text-xs text-secondary-text">
+          <p className="text-xs text-gray-500">
             Hanya Super Admin yang dapat mengakses halaman Management Role.
           </p>
         </div>
@@ -432,289 +433,246 @@ export default function ManagementRolePage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
-      <header className="sticky top-0 bg-body-bg/80 backdrop-blur-md border-b border-zinc-200 z-10">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <h2 className="text-sm font-medium text-primary-text">Management Role</h2>
-            <div className="h-4 w-px bg-zinc-200" />
-            <div className="flex items-center gap-1 text-xs text-secondary-text">
-              <span>Pengaturan</span>
-              <span className="text-zinc-200">/</span>
-              <span>Pengguna</span>
-              <span className="text-zinc-200">/</span>
-              <span className="text-primary-text font-medium">Management Role</span>
-            </div>
+    <div className="flex-1 flex flex-col h-full bg-gray-50 overflow-y-auto">
+      <div className="p-6 max-w-5xl mx-auto w-full pb-12">
+        {/* Page Header */}
+        <div className="mb-6 flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            Management Role
+          </h1>
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <span>Pengaturan</span>
+            <span className="text-gray-300">/</span>
+            <span>Pengguna</span>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-900">Management Role</span>
           </div>
         </div>
-      </header>
 
-      <div className="p-6 max-w-5xl mx-auto w-full space-y-6 pb-12">
-        <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3 items-start">
-          <Info className="w-4 h-4 text-amber-600 mt-0.5" />
+        {/* Alert Box */}
+        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 mb-6 flex gap-3 items-start">
+          <Info className="w-5 h-5 text-yellow-600 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-amber-900">Konfigurasi Hak Akses Role</p>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
+            <p className="font-medium text-yellow-900 mb-1">Konfigurasi Hak Akses Role</p>
+            <p className="text-sm text-yellow-800 leading-relaxed">
               Halaman ini menampilkan dan mengatur hak akses untuk setiap role pada setiap menu
-              (resource).
-            </p>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              Anda dapat menambahkan role baru dan mengatur hak Lihat, Baca, Tulis, Ubah, dan
+              (resource). Anda dapat menambahkan role baru dan mengatur hak Lihat, Baca, Tulis, Ubah, dan
               Hapus untuk setiap role pada setiap resource.
             </p>
           </div>
         </div>
 
-        {errorMessage && (
-          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-            {errorMessage}
-          </div>
-        )}
+        {/* Main Card Wrapper */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 
-        {successMessage && (
-          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-3 py-2">
-            {successMessage}
-          </div>
-        )}
-
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold text-secondary-text uppercase tracking-widest">
-              Role yang Tersedia
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {roles.length === 0 ? (
-              <p className="text-xs text-secondary-text">
-                Belum ada role yang terdaftar. Tambahkan role pertama Anda menggunakan formulir
-                di bawah.
-              </p>
-            ) : (
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-zinc-50 border-b border-zinc-200">
-                    <th className="px-3 py-2 text-[10px] font-bold text-secondary-text uppercase tracking-wider">
-                      Key
-                    </th>
-                    <th className="px-3 py-2 text-[10px] font-bold text-secondary-text uppercase tracking-wider">
-                      Nama
-                    </th>
-                    <th className="px-3 py-2 text-[10px] font-bold text-secondary-text uppercase tracking-wider">
-                      Deskripsi
-                    </th>
-                    <th className="px-3 py-2 text-[10px] font-bold text-secondary-text uppercase tracking-wider text-right">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200">
-                  {roles.map((role) => (
-                    <tr key={role.key} className="hover:bg-zinc-50 transition-colors">
-                      <td className="px-3 py-2 text-primary-text">{role.key}</td>
-                      <td className="px-3 py-2 text-secondary-text">{role.name.toUpperCase()}</td>
-                      <td className="px-3 py-2 text-secondary-text">
-                        {role.description ?? "-"}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {role.key === "super_admin" ? (
-                          <span className="text-[11px] text-secondary-text">
-                            Tidak dapat dihapus
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRole(role.key)}
-                            className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] text-rose-600 border border-zinc-200 rounded-md bg-white"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Hapus</span>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <form onSubmit={handleCreateRole} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input
-              type="text"
-              required
-              value={newRoleKey}
-              onChange={(e) => setNewRoleKey(e.target.value)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
-              placeholder="Key role, mis. kader_posyandu"
-            />
-            <input
-              type="text"
-              required
-              value={newRoleName}
-              onChange={(e) => setNewRoleName(e.target.value)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
-              placeholder="Nama role"
-            />
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newRoleDescription}
-                onChange={(e) => setNewRoleDescription(e.target.value)}
-                className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs flex-1"
-                placeholder="Deskripsi (opsional)"
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary-text text-white rounded-md"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah</span>
-              </button>
+          {errorMessage && (
+            <div className="mb-6 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-4 py-3">
+              {errorMessage}
             </div>
-          </form>
-        </div>
+          )}
 
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            {loadingMatrix && (
-              <div className="px-4 py-2 text-[11px] text-secondary-text">
-                Memuat matriks hak akses...
-              </div>
-            )}
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200">
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
-                    Resource
-                  </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
-                    Deskripsi
-                  </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
-                    Role & Hak Akses
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 text-sm">
-                {RESOURCES.map((resource) => (
-                  <tr key={resource.key} className="bg-zinc-50">
-                    <td className="px-4 py-3 text-xs text-primary-text whitespace-nowrap align-top">
-                      {resource.label}
-                    </td>
-                    <td className="px-4 py-3 text-[11px] text-secondary-text align-top">
-                      {resource.description}
-                    </td>
-                    <td className="px-0 py-0 align-top">
-                      <div className="divide-y divide-zinc-200">
-                        <div className="grid grid-cols-6 items-center px-4 py-2 bg-zinc-100">
-                          <div className="text-[10px] font-semibold text-secondary-text text-center">
-                            Lihat
-                          </div>
-                          <div className="text-[10px] font-semibold text-secondary-text text-center">
-                            Baca
-                          </div>
-                          <div className="text-[10px] font-semibold text-secondary-text text-center">
-                            Tulis
-                          </div>
-                          <div className="text-[10px] font-semibold text-secondary-text text-center">
-                            Ubah
-                          </div>
-                          <div className="text-[10px] font-semibold text-secondary-text text-center">
-                            Hapus
-                          </div>
-                          <div className="text-[10px] font-semibold text-secondary-text">
-                            Role
-                          </div>
-                        </div>
-                        {roles.map((role) => {
-                          const flags =
-                            permissions[role.key]?.[resource.key] ??
-                            ({
-                              can_view: false,
-                              can_read: false,
-                              can_create: false,
-                              can_update: false,
-                              can_delete: false,
-                            } as RbacActionFlags);
+          {successMessage && (
+            <div className="mb-6 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-4 py-3">
+              {successMessage}
+            </div>
+          )}
 
-                          return (
-                            <div
-                              key={role.key}
-                              className="grid grid-cols-6 items-center px-4 py-2 hover:bg-zinc-50 transition-colors"
-                            >
-                              <div className="flex items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={flags.can_view}
-                                  onChange={() =>
-                                    handleTogglePermission(role.key, resource.key, "can_view")
-                                  }
-                                  disabled={savingMatrix}
-                                  className="w-3.5 h-3.5"
-                                />
-                              </div>
-                              <div className="flex items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={flags.can_read}
-                                  onChange={() =>
-                                    handleTogglePermission(role.key, resource.key, "can_read")
-                                  }
-                                  disabled={savingMatrix}
-                                  className="w-3.5 h-3.5"
-                                />
-                              </div>
-                              <div className="flex items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={flags.can_create}
-                                  onChange={() =>
-                                    handleTogglePermission(role.key, resource.key, "can_create")
-                                  }
-                                  disabled={savingMatrix}
-                                  className="w-3.5 h-3.5"
-                                />
-                              </div>
-                              <div className="flex items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={flags.can_update}
-                                  onChange={() =>
-                                    handleTogglePermission(role.key, resource.key, "can_update")
-                                  }
-                                  disabled={savingMatrix}
-                                  className="w-3.5 h-3.5"
-                                />
-                              </div>
-                              <div className="flex items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={flags.can_delete}
-                                  onChange={() =>
-                                    handleTogglePermission(role.key, resource.key, "can_delete")
-                                  }
-                                  disabled={savingMatrix}
-                                  className="w-3.5 h-3.5"
-                                />
-                              </div>
-                              <div className="text-[11px] text-secondary-text">
-                                {role.name}
+          {/* Component B: Role Table */}
+          <div className="mb-10">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Role yang Tersedia</h3>
+            
+            <div className="space-y-4">
+              {roles.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">
+                  Belum ada role yang terdaftar. Tambahkan role pertama Anda menggunakan formulir di bawah.
+                </p>
+              ) : (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                          Key
+                        </th>
+                        <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                          Nama
+                        </th>
+                        <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                          Deskripsi
+                        </th>
+                        <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 text-right">
+                          Aksi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 bg-white">
+                      {roles.map((role) => (
+                        <tr key={role.key} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 text-sm text-gray-900 font-medium">{role.key}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{role.name.toUpperCase()}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {role.description ?? "-"}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {role.key === "super_admin" ? (
+                              <span className="text-xs text-gray-400 italic">
+                                Tidak dapat dihapus
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRole(role.key)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Hapus</span>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Footer Form */}
+              <form onSubmit={handleCreateRole} className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                <input
+                  type="text"
+                  required
+                  value={newRoleKey}
+                  onChange={(e) => setNewRoleKey(e.target.value)}
+                  className="bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-gray-200 rounded-md text-sm py-2 px-3 placeholder-gray-400"
+                  placeholder="Key role, mis. kader_posyandu"
+                />
+                <input
+                  type="text"
+                  required
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  className="bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-gray-200 rounded-md text-sm py-2 px-3 placeholder-gray-400"
+                  placeholder="Nama role"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newRoleDescription}
+                    onChange={(e) => setNewRoleDescription(e.target.value)}
+                    className="bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-gray-200 rounded-md text-sm py-2 px-3 placeholder-gray-400 flex-1"
+                    placeholder="Deskripsi (opsional)"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-md px-4 py-2 text-sm inline-flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tambah</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Component C: Permission Matrix */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Resource & Hak Akses</h3>
+            
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                {loadingMatrix && (
+                  <div className="px-6 py-4 text-sm text-gray-500 bg-gray-50 border-b border-gray-200">
+                    Memuat matriks hak akses...
+                  </div>
+                )}
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-1/4">
+                        Resource
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-1/4">
+                        Deskripsi
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-1/2">
+                        Role & Hak Akses
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {RESOURCES.map((resource) => (
+                      <tr key={resource.key} className="border-b-4 border-gray-50 last:border-0">
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 align-top">
+                          {resource.label}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-gray-500 align-top leading-relaxed">
+                          {resource.description}
+                        </td>
+                        <td className="px-0 py-0 align-top">
+                          <div className="divide-y divide-gray-100">
+                            {/* Matrix Header for this Resource */}
+                            <div className="grid grid-cols-6 items-center px-4 py-2 bg-gray-50/50 border-b border-gray-100">
+                              {["Lihat", "Baca", "Tulis", "Ubah", "Hapus"].map((label) => (
+                                <div key={label} className="text-[10px] font-semibold text-gray-400 text-center uppercase tracking-wider">
+                                  {label}
+                                </div>
+                              ))}
+                              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider pl-2">
+                                Role
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                            
+                            {/* Role Rows */}
+                            {roles.map((role) => {
+                              const flags =
+                                permissions[role.key]?.[resource.key] ??
+                                ({
+                                  can_view: false,
+                                  can_read: false,
+                                  can_create: false,
+                                  can_update: false,
+                                  can_delete: false,
+                                } as RbacActionFlags);
+
+                              return (
+                                <div
+                                  key={role.key}
+                                  className="grid grid-cols-6 items-center px-4 py-3 hover:bg-blue-50/30 transition-colors"
+                                >
+                                  {["can_view", "can_read", "can_create", "can_update", "can_delete"].map((perm) => (
+                                    <div key={perm} className="flex items-center justify-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={flags[perm as keyof RbacActionFlags]}
+                                        onChange={() =>
+                                          handleTogglePermission(
+                                            role.key,
+                                            resource.key,
+                                            perm as keyof RbacActionFlags
+                                          )
+                                        }
+                                        disabled={savingMatrix}
+                                        className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 cursor-pointer disabled:opacity-50"
+                                      />
+                                    </div>
+                                  ))}
+                                  <div className="text-xs font-medium text-gray-700 pl-2 truncate">
+                                    {role.name}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

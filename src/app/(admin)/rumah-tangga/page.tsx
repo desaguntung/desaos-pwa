@@ -256,128 +256,137 @@ export default function RumahTanggaPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-body-bg">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <PageHeader 
         title="Data Rumah Tangga"
         subtitle="Kependudukan / Rumah Tangga"
+        className="mb-6"
       />
 
-      <div className="flex-1 overflow-hidden p-4 md:p-6 space-y-4 flex flex-col">
-        {/* Toolbar: Search, View Toggle, Filter, Add */}
-        <div className="flex flex-row items-center justify-between gap-3">
-          {/* Left: Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari Rumah Tangga..."
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-300 transition-all shadow-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          {/* Right: View Toggle, Filter & Add */}
-          <div className="flex items-center gap-2">
-            {/* Desktop View Toggle */}
-            <div className="hidden md:flex items-center bg-gray-100/80 p-1 rounded-lg border border-gray-200/50">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
-                title="List View"
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
+      <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
+        {/* Main Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+          
+          {/* Toolbar: Search, View Toggle, Filter, Add */}
+          <div className="flex flex-row items-center justify-between gap-3 p-5 border-b border-gray-100">
+            {/* Left: Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari Rumah Tangga..."
+                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-300 transition-all shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
 
-            {/* Filter Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button 
-                   type="button"
-                   className={`group flex items-center justify-center gap-1.5 p-2 md:px-3 md:py-2 bg-white border rounded-md hover:bg-gray-50 transition-all text-xs font-medium shadow-sm ${
-                     (statusFilter !== "Semua" || dusunFilter !== "Semua")
-                       ? "border-slate-300 text-slate-800" 
-                       : "border-gray-200 text-slate-600"
-                   }`}
+            {/* Right: View Toggle, Filter & Add */}
+            <div className="flex items-center gap-2">
+              {/* Desktop View Toggle */}
+              <div className="hidden md:flex items-center bg-gray-100/80 p-1 rounded-lg border border-gray-200/50">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="List View"
                 >
-                   <span className="relative flex items-center">
-                     <span className="hidden md:inline mr-1.5">Filter</span>
-                     <Filter className="w-4 h-4 text-slate-500" />
-                     {(statusFilter !== "Semua" || dusunFilter !== "Semua") && (
-                       <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
-                         <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
-                       </span>
-                     )}
-                   </span>
+                  <ListIcon className="w-3.5 h-3.5" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                 align="end" 
-                 className="w-[280px] p-0 border border-gray-200 shadow-xl rounded-xl bg-white list-none z-50"
-                 sideOffset={8}
-                 onInteractOutside={() => setOpenFilterCategory(null)}
-               >
-                   <FilterList />
-               </DropdownMenuContent>
-            </DropdownMenu>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* Add Button */}
-            {canCreate && (
-              <Link
-                href="/rumah-tangga/tambah"
-                className="p-2 md:px-3 md:py-2 bg-slate-900 border border-slate-900 rounded-md hover:bg-slate-800 transition-colors text-white shadow-sm flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden md:inline text-xs font-medium">Tambah</span>
-              </Link>
-            )}
+              {/* Filter Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                     type="button"
+                     className={`group flex items-center justify-center gap-1.5 p-2 md:px-3 md:py-2 bg-white border rounded-md hover:bg-gray-50 transition-all text-xs font-medium shadow-sm ${
+                       (statusFilter !== "Semua" || dusunFilter !== "Semua")
+                         ? "border-slate-300 text-slate-800" 
+                         : "border-gray-200 text-slate-600"
+                     }`}
+                  >
+                     <span className="relative flex items-center">
+                       <span className="hidden md:inline mr-1.5">Filter</span>
+                       <Filter className="w-4 h-4 text-slate-500" />
+                       {(statusFilter !== "Semua" || dusunFilter !== "Semua") && (
+                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
+                           <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
+                         </span>
+                       )}
+                     </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                   align="end" 
+                   className="w-[280px] p-0 border border-gray-200 shadow-xl rounded-xl bg-white list-none z-50"
+                   sideOffset={8}
+                   onInteractOutside={() => setOpenFilterCategory(null)}
+                 >
+                     <FilterList />
+                 </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Add Button */}
+              {canCreate && (
+                <Link
+                  href="/rumah-tangga/tambah"
+                  className="p-2 md:px-3 md:py-2 bg-slate-900 border border-slate-900 rounded-md hover:bg-slate-800 transition-colors text-white shadow-sm flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden md:inline text-xs font-medium">Tambah</span>
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Unified Scrollable Table Container */}
-        <div className="flex-1 overflow-hidden">
-          <div className="border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col bg-white shadow-sm">
-            <div className="flex-1 overflow-auto">
+          {/* Unified Scrollable Table Container */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="overflow-hidden h-full flex flex-col bg-white">
+              <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full">
               {/* Mobile Table View */}
               <table className="w-full text-left text-sm table-fixed md:hidden">
-                <thead className="bg-gray-50 sticky top-0 z-20" style={{ borderBottom: '1px solid hsla(var(--ds-gray-200-value), 1)' }}>
+                <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200">
                   <tr>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[12%] text-center border-b border-gray-200">No</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[38%] border-b border-gray-200">Rumah Tangga</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[25%] border-b border-gray-200">Lokasi</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[10%] text-center border-b border-gray-200">Angt</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[15%] text-center border-b border-gray-200">Aksi</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider w-[12%] text-center border-b border-gray-200">No</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider w-[38%] text-left border-b border-gray-200">Rumah Tangga</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider w-[25%] text-left border-b border-gray-200">Lokasi</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider w-[10%] text-center border-b border-gray-200">Angt</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider w-[15%] text-center border-b border-gray-200">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-500">Memuat data...</td>
+                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-gray-500">Memuat data...</td>
                     </tr>
                   ) : paginatedRumahTangga.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-500">Tidak ada data ditemukan.</td>
+                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-gray-500">Tidak ada data ditemukan.</td>
                     </tr>
                   ) : (
                     paginatedRumahTangga.map((rtm, i) => (
-                      <tr key={rtm.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-2.5 px-3 align-middle text-center text-xs text-slate-500">
+                      <tr key={rtm.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-3 align-middle text-center text-xs text-gray-500">
                           {(currentPage - 1) * rowsPerPage + i + 1}
                         </td>
-                        <td className="py-2.5 px-3 align-middle">
+                        <td className="py-3 px-3 align-middle">
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-medium text-xs text-slate-900 line-clamp-1">{rtm.kepala_rtm?.nama || "-"}</span>
-                            <span className="text-[10px] text-slate-500">{rtm.no_rtm}</span>
+                            <div className="flex items-center gap-1.5">
+                               <Home className="w-3.5 h-3.5 text-gray-400" />
+                               <span className="font-medium text-xs text-gray-900 line-clamp-1 capitalize">
+                                 {rtm.kepala_rtm?.nama?.toLowerCase() || "-"}
+                               </span>
+                            </div>
+                            <span className="text-[10px] text-gray-500 font-mono">{rtm.no_rtm}</span>
                             {rtm.bdt && (
                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-emerald-50 text-emerald-700 w-fit">
                                  Bansos
@@ -385,22 +394,24 @@ export default function RumahTanggaPage() {
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 align-middle">
+                        <td className="py-3 px-3 align-middle">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] text-slate-600 line-clamp-1">{rtm.dusun || "-"}</span>
-                            <span className="text-[9px] text-slate-400">RT {rtm.rt}/{rtm.rw}</span>
+                            <span className="text-[10px] text-gray-600 line-clamp-1">{rtm.dusun || "-"}</span>
+                            <span className="text-[9px] text-gray-400">RT {rtm.rt}/{rtm.rw}</span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 align-middle text-center">
-                          <span className="text-xs font-medium text-slate-700">{rtm.jumlah_anggota || 0}</span>
+                        <td className="py-3 px-3 align-middle text-center">
+                          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                            {rtm.jumlah_anggota || 0}
+                          </span>
                         </td>
-                        <td className="py-2.5 px-3 align-middle text-center">
+                        <td className="py-3 px-3 align-middle text-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+                                className="h-7 w-7 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
@@ -439,65 +450,80 @@ export default function RumahTanggaPage() {
               </table>
 
               {/* Desktop Table View */}
-              <table className="hidden md:table w-full text-left text-sm">
-                <thead className="bg-gray-50 sticky top-0 z-20" style={{ borderBottom: '1px solid hsla(var(--ds-gray-200-value), 1)' }}>
+              <table className="hidden md:table w-full text-left text-sm table-fixed">
+                <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200">
                   <tr>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[5%] text-center border-b border-gray-200">No</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[15%] border-b border-gray-200">No. RTM</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[20%] border-b border-gray-200">Kepala Rumah Tangga</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[25%] border-b border-gray-200">Alamat</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[15%] border-b border-gray-200">Dusun / RW / RT</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[8%] text-center border-b border-gray-200">Anggota</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[8%] text-center border-b border-gray-200">Aksi</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-12 text-center border-b border-gray-200">No</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%] text-left border-b border-gray-200">No. RTM</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%] text-left border-b border-gray-200">Kepala Rumah Tangga</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%] text-left border-b border-gray-200">Alamat</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%] text-left border-b border-gray-200">Dusun / RW / RT</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[8%] text-center border-b border-gray-200">Anggota</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[8%] text-center border-b border-gray-200">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-500">Memuat data...</td>
+                      <td colSpan={7} className="h-32 text-center text-gray-500 text-sm">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="h-5 w-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+                          <span>Memuat data...</span>
+                        </div>
+                      </td>
                     </tr>
                   ) : paginatedRumahTangga.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-500">Tidak ada data ditemukan.</td>
+                      <td colSpan={7} className="h-48 text-center text-gray-500 text-sm">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Search className="w-8 h-8 text-gray-300" />
+                          <p className="text-gray-900 font-medium">Tidak ada data ditemukan</p>
+                          <p className="text-gray-500">Coba ubah filter atau kata kunci pencarian</p>
+                        </div>
+                      </td>
                     </tr>
                   ) : (
                     paginatedRumahTangga.map((rtm, i) => (
-                      <tr key={rtm.id} className="hover:bg-slate-50/80 transition-colors group">
-                        <td className="py-3 px-4 align-middle text-center text-xs text-slate-500 w-[5%]">
+                      <tr key={rtm.id} className="hover:bg-gray-50 transition-colors group cursor-pointer border-b border-gray-100 last:border-0">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-500 text-center w-12 antialiased tracking-tight">
                           {(currentPage - 1) * rowsPerPage + i + 1}
                         </td>
-                        <td className="py-3 px-4 align-middle text-xs font-medium text-slate-700 w-[15%]">
-                          {rtm.no_rtm}
+                        <td className="py-4 px-4 align-middle w-[15%]">
+                          <span className="text-xs font-mono text-gray-500 truncate block antialiased tracking-tight">
+                            {rtm.no_rtm}
+                          </span>
                           {rtm.bdt && (
-                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                               Bansos
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[20%]">
+                        <td className="py-4 px-4 align-middle w-[20%]">
                           <div className="flex items-center gap-2">
-                            <Home className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="font-medium text-slate-700">{(rtm.kepala_rtm?.nama || "-").toUpperCase()}</span>
+                            <Home className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm font-medium text-gray-900 truncate block capitalize antialiased tracking-tight">
+                              {rtm.kepala_rtm?.nama?.toLowerCase() || "-"}
+                            </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[25%] truncate max-w-[200px]" title={rtm.alamat || ""}>
+                        <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[25%] antialiased tracking-tight truncate" title={rtm.alamat || ""}>
                           {rtm.alamat || "-"}
                         </td>
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[15%]">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[15%] antialiased tracking-tight">
                           {rtm.dusun || "-"} / {rtm.rw || "-"} / {rtm.rt || "-"}
                         </td>
-                        <td className="py-3 px-4 align-middle text-center text-xs text-slate-600 w-[8%]">
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">
+                        <td className="py-4 px-4 align-middle text-center w-[8%]">
+                          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
                             {rtm.jumlah_anggota || 0}
                           </span>
                         </td>
-                        <td className="py-3 px-4 align-middle text-center w-[8%]">
+                        <td className="py-4 px-4 align-middle text-center w-[8%]">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+                                className="h-8 w-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors"
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
@@ -534,46 +560,34 @@ export default function RumahTanggaPage() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Pagination */}
-            <div className="border-t border-gray-200 bg-gray-50/50 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Rows per page</span>
-                <select
-                  className="h-8 w-16 rounded-md border border-gray-200 bg-white text-xs text-slate-700 focus:border-slate-400 focus:outline-none px-2"
-                  value={rowsPerPage}
-                  onChange={(e) => {
-                    setRowsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
+            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-4 pb-4 border-t border-gray-100 bg-white">
+              <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500">
+                      Menampilkan {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, filteredRumahTangga.length)} dari {filteredRumahTangga.length} data
+                  </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">
-                  {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, filteredRumahTangga.length)} of {filteredRumahTangga.length}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    className="p-1 rounded-md hover:bg-gray-200 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    className="p-1 rounded-md hover:bg-gray-200 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-9 px-3"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-9 px-3"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
               </div>
             </div>
           </div>

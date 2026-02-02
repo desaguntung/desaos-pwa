@@ -36,9 +36,10 @@ interface ArticleDetailClientProps {
     };
   };
   readTime: number;
+  backLink?: string;
 }
 
-export default function ArticleDetailClient({ article, readTime }: ArticleDetailClientProps) {
+export default function ArticleDetailClient({ article, readTime, backLink = "/" }: ArticleDetailClientProps) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -48,14 +49,38 @@ export default function ArticleDetailClient({ article, readTime }: ArticleDetail
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [backUrl, setBackUrl] = useState(backLink);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 100);
     };
     window.addEventListener("scroll", handleScroll);
+    
+    // Smart Back Button Logic
+    if (typeof window !== 'undefined' && document.referrer) {
+      try {
+        const referrer = new URL(document.referrer);
+        if (referrer.origin === window.location.origin) {
+           // If coming from Home -> Back to Home
+           if (referrer.pathname === "/") {
+             setBackUrl("/");
+           } 
+           // If coming from /berita -> Back to /berita
+           else if (referrer.pathname.startsWith("/berita")) {
+             setBackUrl("/berita");
+           }
+        }
+      } catch (e) {
+        // ignore invalid URLs
+      }
+    }
+
+    // Increment View Count
+    incrementArticleView(article.slug);
+
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [article.slug]);
 
   const handleCopyLink = async () => {
     try {
@@ -100,39 +125,12 @@ export default function ArticleDetailClient({ article, readTime }: ArticleDetail
       
       {/* Scroll Progress Bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 z-[100] h-1 bg-blue-600 origin-left"
+        className="fixed top-[48px] md:top-[44px] left-0 right-0 z-[100] h-1 bg-blue-600 origin-left"
         style={{ scaleX }}
       />
 
-      {/* Floating Header (Desktop Only) - Appears on Scroll */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: isScrolled ? 0 : -100 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="hidden md:flex fixed top-0 left-0 right-0 z-40 h-16 items-center justify-between border-b border-zinc-200/80 bg-white/80 px-4 backdrop-blur-md md:px-8"
-      >
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/" 
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <h2 className="text-sm font-semibold text-zinc-900 line-clamp-1 max-w-md">
-            {article.title}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handleCopyLink}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
-            title="Salin Tautan"
-          >
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
-          </button>
-        </div>
-      </motion.header>
-
+      {/* Floating Header removed as per user request */}
+      
       <main className="pb-24 pt-24 md:pt-32">
         <article className="mx-auto max-w-[980px] px-5 md:px-8">
           
@@ -143,7 +141,7 @@ export default function ArticleDetailClient({ article, readTime }: ArticleDetail
             className="mb-8 md:hidden"
           >
             <Link 
-              href="/" 
+              href={backUrl} 
               className="inline-flex items-center text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />

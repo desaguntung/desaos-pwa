@@ -12,7 +12,8 @@ import {
   PenTool,
   RotateCw,
   Eye,
-  X
+  X,
+  Send
 } from "lucide-react";
 import { 
   getFormatSurat, 
@@ -26,7 +27,7 @@ import {
   IdentitasDesa
 } from "@/lib/services/surat";
 import { Editor } from "@/components/editor/Editor";
-import { extractFieldsFromTemplate, FormFieldDefinition } from "@/lib/services/surat-flow";
+import { extractFieldsFromTemplate, FormFieldDefinition, SuratFlowStatus } from "@/lib/services/surat-flow";
 import { getResidents, Resident } from "@/lib/services/penduduk";
 import ResidentPickerModal from "@/components/ResidentPickerModal";
 import FormatPickerModal from "@/components/FormatPickerModal";
@@ -223,16 +224,22 @@ export default function CetakSuratPage() {
         no_surat: nomorSurat || `SURAT/${new Date().getFullYear()}/${Math.floor(Math.random() * 1000)}`, // Auto generate if empty
         nama_surat: selectedFormat.nama,
         keterangan: keterangan,
-        status: 1, // 1 = Cetak
+        status: SuratFlowStatus.PENDING_SEKDES, // 1 = Menunggu Verifikasi Sekdes
         nama_non_warga: selectedResident.nama,
         form_data: dynamicValues // Save dynamic values
       });
 
-      alert("Surat berhasil dicetak (disimpan ke arsip)!");
-      router.push("/surat/keluar");
-    } catch (error) {
+      alert("Surat berhasil diproses dan dikirim ke Verifikasi!");
+      router.push("/surat/verifikasi");
+    } catch (error: any) {
       console.error("Error creating surat:", error);
-      alert("Gagal mencetak surat.");
+      
+      // Check for specific error about missing column
+      if (error?.code === '42703' && error?.message?.includes('form_data')) {
+         alert("GAGAL: Kolom 'form_data' tidak ditemukan di database.\n\nMohon jalankan script SQL 'supabase_schema_update_form_data.sql' di Supabase SQL Editor untuk memperbaiki masalah ini.");
+      } else {
+         alert("Gagal memproses surat. Silakan coba lagi atau hubungi administrator.");
+      }
     } finally {
       setLoading(false);
     }
@@ -268,8 +275,8 @@ export default function CetakSuratPage() {
               disabled={loading}
               className="px-3 py-1.5 text-xs font-medium text-white bg-primary-text rounded-md hover:bg-primary-text/90 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer className="w-3.5 h-3.5" />
-              {loading ? "Mencetak..." : "Cetak Surat"}
+              <Send className="w-3.5 h-3.5" />
+              {loading ? "Memproses..." : "Proses Surat"}
             </button>
           </div>
         }
@@ -303,6 +310,27 @@ export default function CetakSuratPage() {
                 </button>
               </div>
             </div>
+
+            {/* Data Otomatis (Dari Database) */}
+            {selectedResident && (
+              <div className="px-5 sm:px-6 pb-6 pt-2 bg-zinc-50/50 border-y border-zinc-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <RotateCw className="w-3.5 h-3.5 text-zinc-400" />
+                  <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+                    Data Otomatis (Dari Database)
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <InputField label="Nama Lengkap" value={selectedResident.nama} readOnly className="bg-white/50" />
+                   <InputField label="NIK" value={selectedResident.nik} readOnly className="bg-white/50" />
+                   <InputField label="Tempat, Tanggal Lahir" value={`${selectedResident.tempat_lahir || '-'}, ${selectedResident.tanggal_lahir || '-'}`} readOnly className="bg-white/50" />
+                   <InputField label="Alamat" value={selectedResident.alamat_saat_ini || '-'} readOnly className="bg-white/50" />
+                </div>
+                <p className="mt-3 text-[10px] text-zinc-400 italic">
+                  * Data ini akan otomatis dimasukkan ke dalam surat. Anda tidak perlu mengisinya secara manual.
+                </p>
+              </div>
+            )}
 
             {/* Section 2: Format & Isi */}
             <div className="p-5 sm:p-6">
@@ -477,23 +505,7 @@ export default function CetakSuratPage() {
               />
             </div>
 
-            {/* Data Otomatis (Preview) */}
-            {selectedFormat && selectedResident && (
-              <div className="p-5 sm:p-6 bg-zinc-50/50">
-                <div className="flex items-center gap-2 mb-4">
-                  <RotateCw className="w-3.5 h-3.5 text-zinc-400" />
-                  <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
-                    Data Otomatis (Dari Database)
-                  </h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <InputField label="Nama Lengkap" value={selectedResident.nama} readOnly />
-                   <InputField label="NIK" value={selectedResident.nik} readOnly />
-                   <InputField label="Tempat, Tanggal Lahir" value={`${selectedResident.tempat_lahir || '-'}, ${selectedResident.tanggal_lahir || '-'}`} readOnly />
-                   <InputField label="Alamat" value={selectedResident.alamat_saat_ini || '-'} readOnly />
-                </div>
-              </div>
-            )}
+
 
             {/* Penanda Tangan (Hidden/Disabled) */}
             <div className="hidden">

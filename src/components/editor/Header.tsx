@@ -70,6 +70,7 @@ export const Header = ({ onSave, zoom, setZoom, readOnly, hideNavigation }: { on
 
       {/* Center: Canvas Controls (Undo/Redo & Zoom) - Hidden on mobile if needed, or condensed */}
       <div className="hidden md:flex items-center gap-2">
+         {!readOnly && (
          <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg border border-zinc-200/50">
             <button 
               onClick={() => actions.history.undo()}
@@ -88,6 +89,7 @@ export const Header = ({ onSave, zoom, setZoom, readOnly, hideNavigation }: { on
               <Redo className="w-3.5 h-3.5" />
             </button>
          </div>
+         )}
 
          <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg border border-zinc-200/50">
             <button 

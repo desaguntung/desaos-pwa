@@ -529,16 +529,19 @@ export default function KeluargaPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-body-bg">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <PageHeader 
         title="Data Keluarga"
         subtitle="Kependudukan / Keluarga"
+        className="mb-6"
       />
 
-      <div className="flex-1 overflow-hidden p-4 md:p-6 space-y-4 flex flex-col">
-        {/* Toolbar: Search, View Toggle, Filter, Add */}
-        <div className="flex flex-row items-center justify-between gap-3">
+      <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
+        {/* Main Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+          {/* Toolbar: Search, View Toggle, Filter, Add */}
+          <div className="flex flex-row items-center justify-between gap-3 p-5 border-b border-gray-100">
           {/* Left: Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -620,28 +623,28 @@ export default function KeluargaPage() {
         {/* Unified Scrollable Table Container */}
         <div className="flex-1 overflow-hidden">
           <div className="border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col bg-white shadow-sm">
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full">
               {/* Mobile Table View */}
               <table className="w-full text-left text-sm table-fixed md:hidden">
-                <thead className="bg-gray-50 sticky top-0 z-20" style={{ borderBottom: '1px solid hsla(var(--ds-gray-200-value), 1)' }}>
+                <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200">
                   <tr>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[12%] text-center border-b border-gray-200">No</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[38%] border-b border-gray-200">Keluarga</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[25%] border-b border-gray-200">Lokasi</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[10%] text-center border-b border-gray-200">Angt</th>
-                    <th className="h-10 px-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-[15%] text-center border-b border-gray-200">Aksi</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 w-[12%] text-center">No</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 w-[38%] text-left">Keluarga</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 w-[25%] text-left">Lokasi</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 w-[10%] text-center">Angt</th>
+                    <th className="h-10 px-3 text-[10px] font-medium text-gray-500 w-[15%] text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="h-32 text-center text-slate-500 text-xs">
+                      <td colSpan={5} className="h-32 text-center text-gray-500 text-xs">
                         Memuat data...
                       </td>
                     </tr>
                   ) : filteredFamilies.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="h-32 text-center text-slate-500 text-xs">
+                      <td colSpan={5} className="h-32 text-center text-gray-500 text-xs">
                         Tidak ada data keluarga ditemukan
                       </td>
                     </tr>
@@ -652,19 +655,19 @@ export default function KeluargaPage() {
                         className="hover:bg-gray-50 transition-colors group cursor-pointer border-b border-gray-100 last:border-0"
                         onClick={() => handleOpenDetail(keluarga.nomorKK)}
                       >
-                        <td className="py-3 px-3 align-top text-[10px] text-slate-500 text-center">
+                        <td className="py-3 px-3 align-top text-[10px] text-gray-500 text-center antialiased tracking-tight">
                           {(currentPage - 1) * rowsPerPage + index + 1}
                         </td>
 
                         <td className="py-3 px-3 align-top w-[38%]">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[12px] text-slate-900 leading-tight font-medium">
+                            <span className="text-xs text-gray-900 leading-tight font-medium antialiased tracking-tight">
                               {keluarga.nomorKK}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono capitalize">
+                            <span className="text-[10px] text-gray-500 font-medium capitalize antialiased tracking-tight">
                               {keluarga.headName || "-"}
                             </span>
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium border w-fit mt-1 
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium border w-fit mt-1 antialiased tracking-tight
                               ${keluarga.statusColor === "emerald" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
                                 keluarga.statusColor === "red" ? "bg-rose-50 text-rose-700 border-rose-200" :
                                 keluarga.statusColor === "blue" ? "bg-blue-50 text-blue-700 border-blue-200" :
@@ -674,19 +677,19 @@ export default function KeluargaPage() {
                           </div>
                         </td>
 
-                        <td className="py-3 px-3 align-top text-[11px] text-slate-600 w-[25%]">
+                        <td className="py-3 px-3 align-top text-[10px] text-gray-600 w-[25%] antialiased tracking-tight">
                           <div className="flex flex-col">
-                            <span className="text-slate-900 leading-tight">
+                            <span className="text-gray-900 leading-tight">
                               {keluarga.dusunRwRt}
                             </span>
-                            <span className="text-slate-500 text-[10px] mt-0.5">
+                            <span className="text-gray-500 text-[9px] mt-0.5">
                               {keluarga.addressLine}
                             </span>
                           </div>
                         </td>
 
-                        <td className="py-3 px-3 align-top text-[11px] text-slate-600 w-[10%] text-center">
-                          <span className="inline-flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-700 rounded-full text-[10px] font-medium">
+                        <td className="py-3 px-3 align-top text-[10px] text-gray-600 w-[10%] text-center antialiased tracking-tight">
+                          <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-medium">
                             {keluarga.totalMembers}
                           </span>
                         </td>
@@ -698,14 +701,14 @@ export default function KeluargaPage() {
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-6 w-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md p-0"
+                                  className="h-6 w-6 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md p-0"
                                 >
                                   <MoreVertical className="w-3.5 h-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-[160px]">
                                 <DropdownMenuItem onClick={() => handleOpenDetail(keluarga.nomorKK)}>
-                                  <Eye className="w-3.5 h-3.5 mr-2 text-slate-500" />
+                                  <Eye className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                   Lihat Detail
                                 </DropdownMenuItem>
                                 {canUpdate && (
@@ -714,7 +717,7 @@ export default function KeluargaPage() {
                                       href={`/keluarga/tambah?no_kk=${encodeURIComponent(keluarga.nomorKK)}`}
                                       className="flex items-center w-full cursor-pointer"
                                     >
-                                      <Pencil className="w-3.5 h-3.5 mr-2 text-slate-500" />
+                                      <Pencil className="w-3.5 h-3.5 mr-2 text-gray-500" />
                                       Edit Data
                                     </Link>
                                   </DropdownMenuItem>
@@ -743,34 +746,34 @@ export default function KeluargaPage() {
               <table className="hidden md:table w-full text-left text-sm table-fixed">
                 <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200">
                   <tr>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[4%] text-center border-b border-gray-200">No</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[14%] border-b border-gray-200">Nomor KK</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[18%] border-b border-gray-200">Kepala Keluarga</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[12%] border-b border-gray-200">NIK Kepala</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[15%] border-b border-gray-200">Alamat</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[10%] border-b border-gray-200">Dusun</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-[8%] text-center border-b border-gray-200">Anggota</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right w-[10%] border-b border-gray-200">Status</th>
-                    <th className="h-10 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-center w-[8%] border-b border-gray-200">Aksi</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-12 text-center">No</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[14%] text-left">Nomor KK</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[18%] text-left">Kepala Keluarga</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[12%] text-left">NIK Kepala</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[15%] text-left">Alamat</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[10%] text-left">Dusun</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 w-[8%] text-center">Anggota</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 text-right w-[10%]">Status</th>
+                    <th className="h-10 px-4 text-xs font-medium text-gray-500 text-center w-[8%]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="h-32 text-center text-slate-500 text-xs">
+                      <td colSpan={9} className="h-32 text-center text-gray-500 text-sm">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <div className="h-5 w-5 border-2 border-gray-200 border-t-slate-500 rounded-full animate-spin" />
+                          <div className="h-5 w-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
                           <span>Memuat data...</span>
                         </div>
                       </td>
                     </tr>
                   ) : filteredFamilies.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="h-48 text-center text-slate-500 text-xs">
+                      <td colSpan={9} className="h-48 text-center text-gray-500 text-sm">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <Search className="w-8 h-8 text-slate-300" />
-                          <p className="text-slate-900 font-medium">Tidak ada data ditemukan</p>
-                          <p className="text-slate-500">Coba ubah filter atau kata kunci pencarian</p>
+                          <Search className="w-8 h-8 text-gray-300" />
+                          <p className="text-gray-900 font-medium">Tidak ada data ditemukan</p>
+                          <p className="text-gray-500">Coba ubah filter atau kata kunci pencarian</p>
                         </div>
                       </td>
                     </tr>
@@ -781,46 +784,46 @@ export default function KeluargaPage() {
                         className="hover:bg-gray-50 transition-colors group cursor-pointer border-b border-gray-100 last:border-0"
                         onClick={() => handleOpenDetail(keluarga.nomorKK)}
                       >
-                        <td className="py-3 px-4 align-middle text-xs text-slate-500 text-center">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-500 text-center antialiased tracking-tight">
                           {(currentPage - 1) * rowsPerPage + index + 1}
                         </td>
                         
-                        <td className="py-3 px-4 align-middle w-[14%]">
-                          <span className="text-xs font-medium text-slate-900 truncate block">
+                        <td className="py-4 px-4 align-middle w-[14%]">
+                          <span className="text-xs font-mono text-gray-500 truncate block antialiased tracking-tight">
                             {keluarga.nomorKK}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 align-middle w-[18%]">
-                          <span className="text-xs text-slate-600 truncate block capitalize">
+                        <td className="py-4 px-4 align-middle w-[18%]">
+                          <span className="text-sm font-medium text-gray-900 truncate block capitalize antialiased tracking-tight">
                             {keluarga.headName || "-"}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 align-middle w-[12%]">
-                          <span className="text-xs text-slate-500 font-mono">
+                        <td className="py-4 px-4 align-middle w-[12%]">
+                          <span className="text-xs font-mono text-gray-500 truncate block antialiased tracking-tight">
                             {keluarga.headNik || "-"}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[15%]">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[15%] antialiased tracking-tight">
                           <span className="truncate block">
                             {keluarga.addressLine}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[10%]">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[10%] antialiased tracking-tight">
                           <span className="truncate block">
                             {keluarga.dusunRwRt}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 align-middle text-xs text-slate-600 w-[8%] text-center">
+                        <td className="py-4 px-4 align-middle text-sm text-gray-600 w-[8%] text-center antialiased tracking-tight">
                           {keluarga.totalMembers}
                         </td>
 
-                        <td className="py-3 px-4 align-middle text-right w-[10%]">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border shadow-sm
+                        <td className="py-4 px-4 align-middle text-right w-[10%]">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border shadow-sm antialiased tracking-tight
                             ${keluarga.statusColor === "emerald" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
                               keluarga.statusColor === "red" ? "bg-rose-50 text-rose-700 border-rose-200" :
                               keluarga.statusColor === "blue" ? "bg-blue-50 text-blue-700 border-blue-200" :
@@ -829,14 +832,14 @@ export default function KeluargaPage() {
                           </span>
                         </td>
 
-                        <td className="py-2.5 px-4 align-middle text-center w-[8%]">
-                          <div onClick={(e) => e.stopPropagation()}>
+                        <td className="py-4 px-4 align-middle text-center w-[8%]">
+                          <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+                                  className="h-8 w-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors"
                                 >
                                   <MoreHorizontal className="w-4 h-4" />
                                 </Button>
@@ -879,9 +882,9 @@ export default function KeluargaPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-4 border-t border-gray-100 bg-white">
               <div className="flex items-center gap-4">
-                <span className="text-xs text-slate-500">
+                <span className="text-sm text-gray-500">
                   Menampilkan {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, filteredFamilies.length)} dari {filteredFamilies.length} data
                 </span>
                 <div className="hidden md:flex items-center gap-2">
@@ -891,7 +894,7 @@ export default function KeluargaPage() {
                       setRowsPerPage(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="h-7 text-xs border border-gray-200 rounded px-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-300 text-slate-600"
+                    className="h-8 text-sm border border-gray-200 rounded-md px-2 bg-white focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-600"
                   >
                     <option value={10}>10 baris</option>
                     <option value={25}>25 baris</option>
@@ -905,15 +908,17 @@ export default function KeluargaPage() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="p-1.5 rounded-md border border-gray-200 text-slate-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sebelumnya</span>
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-md border border-gray-200 text-slate-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
+                  <span className="hidden sm:inline">Selanjutnya</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1260,6 +1265,7 @@ export default function KeluargaPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

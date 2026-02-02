@@ -1,13 +1,13 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { createSessionServerClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function updateFormatTemplate(id: string, json: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSessionServerClient();
   
   const { error } = await supabase
-    .from("tweb_surat_format")
+    .from("surat_formats")
     .update({ template: json })
     .eq("id", id);
 

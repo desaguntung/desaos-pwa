@@ -13,20 +13,22 @@ import {
   Search,
   ChevronDown,
   Map,
-  Compass
+  Compass,
+  ShieldCheck
 } from "lucide-react";
-import { Text } from "./nodes/Text";
-import { Container } from "./nodes/Container";
-import { Variable } from "./nodes/Variable";
-import { Input } from "./nodes/Input";
-import { Row } from "./nodes/Row";
-import { KopSurat } from "./nodes/KopSurat";
-import { Signature } from "./nodes/Signature";
-import { DataRow } from "./nodes/DataRow";
-import { Page } from "./nodes/Page";
-import { Table } from "./nodes/Table";
-import { LandSketch } from "./nodes/LandSketch";
-import { LandBoundaries } from "./nodes/LandBoundaries";
+import { Text } from "@/components/editor/nodes/Text";
+import { Container } from "@/components/editor/nodes/Container";
+import { Variable } from "@/components/editor/nodes/Variable";
+import { Input } from "@/components/editor/nodes/Input";
+import { Row } from "@/components/editor/nodes/Row";
+import { KopSurat } from "@/components/editor/nodes/KopSurat";
+import { Signature } from "@/components/editor/nodes/Signature";
+import { DataRow } from "@/components/editor/nodes/DataRow";
+import { Page } from "@/components/editor/nodes/Page";
+import { Table } from "@/components/editor/nodes/Table";
+import { LandSketch } from "@/components/editor/nodes/LandSketch";
+import { LandBoundaries } from "@/components/editor/nodes/LandBoundaries";
+import { FooterBSrE } from "@/components/editor/nodes/FooterBSrE";
 import { useState } from "react";
 
 interface ToolboxItemProps {
@@ -126,6 +128,7 @@ export const Toolbox = () => {
         { icon: Type, title: "Teks", description: "Teks bebas", element: <Element is={Text} text="Teks Baru" /> },
         { icon: Tag, title: "Variabel", description: "Data otomatis (Database)", element: <Element is={Variable} /> },
         { icon: PenTool, title: "TTD", description: "Area tanda tangan", element: <Signature /> },
+        { icon: ShieldCheck, title: "Footer BSrE", description: "Teks TTE BSrE (Fixed Bottom)", element: <FooterBSrE /> },
         { icon: TableIcon, title: "Tabel", description: "Tabel data", element: <Element is={Table} /> }
       ]
     },

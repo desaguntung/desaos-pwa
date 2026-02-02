@@ -33,7 +33,7 @@ export function PageHeader({
     const segments = pathname.split('/').filter(Boolean);
     
     return (
-      <div className="flex items-center gap-1 text-[10px] text-secondary-text mt-0.5">
+      <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
         <Link href="/" className="hover:text-primary-text transition-colors flex items-center">
           <Home className="w-3 h-3" />
         </Link>

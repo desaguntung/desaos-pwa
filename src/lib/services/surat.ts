@@ -65,6 +65,7 @@ export interface LogSurat {
   isi_surat?: string;
   url_surat?: string; // Derived or joined
   form_data?: any; // JSONB data for dynamic forms
+  signed_file_path?: string; // Path to the uploaded signed file
 }
 
 export interface DisposisiSurat {
@@ -128,6 +129,9 @@ export interface IdentitasDesa {
   sebutan_kecamatan?: string;
   sebutan_kecamatan_singkat?: string;
   sebutan_dusun?: string;
+  sejarah?: string;
+  visi?: string;
+  misi?: string;
 }
 
 export interface PengaturanAplikasi {
@@ -297,28 +301,24 @@ export async function incrementNomorSurat(key: string) {
 
 // --- Surat Masuk ---
 
-export async function getPamong(status: number | null = 1) {
+export async function getPamong() {
   const supabase = createSupabaseBrowserClient();
-  let query = supabase
-    .from("tweb_desa_pamong")
-    .select(`
-      *,
-      penduduk:id_pend (
-        nama,
-        nik
-      )
-    `)
-    .order("pamong_nama", { ascending: true });
-    
-  if (status !== null) {
-    query = query.eq("pamong_status", status);
-  }
-
-  const { data, error } = await query;
+  // Try to fetch from pamong_desa first (more likely correct in this schema)
+  const { data, error } = await supabase
+    .from("pamong_desa") 
+    .select("*");
 
   if (error) {
-    console.error("Error fetching pamong:", error);
-    throw error;
+    // Fallback to 'pamong' if 'pamong_desa' fails (legacy support)
+    const { data: dataLegacy, error: errorLegacy } = await supabase
+      .from("pamong")
+      .select("*");
+      
+    if (errorLegacy) {
+      console.error("Error fetching pamong:", errorLegacy);
+      throw errorLegacy;
+    }
+    return dataLegacy as Pamong[];
   }
   return data as Pamong[];
 }
@@ -326,7 +326,7 @@ export async function getPamong(status: number | null = 1) {
 export async function createPamong(pamong: Partial<Pamong>) {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from("tweb_desa_pamong")
+    .from("pamong_desa")
     .insert([pamong])
     .select()
     .single();
@@ -341,7 +341,7 @@ export async function createPamong(pamong: Partial<Pamong>) {
 export async function updatePamong(id: number, pamong: Partial<Pamong>) {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from("tweb_desa_pamong")
+    .from("pamong_desa")
     .update(pamong)
     .eq("pamong_id", id)
     .select()
@@ -357,7 +357,7 @@ export async function updatePamong(id: number, pamong: Partial<Pamong>) {
 export async function deletePamong(id: number) {
   const supabase = createSupabaseBrowserClient();
   const { error } = await supabase
-    .from("tweb_desa_pamong")
+    .from("pamong_desa")
     .delete()
     .eq("pamong_id", id);
 
@@ -449,7 +449,7 @@ export async function getKlasifikasiSurat() {
 export async function getFormatSurat() {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from("tweb_surat_format")
+    .from("surat_formats")
     .select("*")
     .order("nama", { ascending: true });
 
@@ -462,16 +462,16 @@ export async function getFormatSurat() {
 
 // --- Log Surat (Surat Keluar / Arsip) ---
 
-export async function getLogSurat() {
+export const getLogSurat = async () => {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
     .from("log_surat")
     .select(`
       *,
-      tweb_surat_format (
+      surat_formats (
         nama
       ),
-      penduduk:id_pend (
+      penduduk (
         nama,
         nik
       )
@@ -480,13 +480,47 @@ export async function getLogSurat() {
 
   if (error) {
     console.error("Error fetching log surat:", error);
-    throw error;
+    return null;
   }
-  return data as (LogSurat & { 
-    tweb_surat_format?: { nama: string };
-    penduduk?: { nama: string; nik: string };
-  })[];
-}
+
+  return data;
+};
+
+export const updateLogSuratStatus = async (id: number, status: number) => {
+  const supabase = createSupabaseBrowserClient();
+  const { error } = await supabase
+    .from("log_surat")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) throw error;
+};
+
+export const uploadSignedSurat = async (id: number, file: File) => {
+  const supabase = createSupabaseBrowserClient();
+  const fileExt = file.name.split('.').pop();
+  // Use timestamp for uniqueness and cleanliness
+  const fileName = `${id}-signed-${Date.now()}.${fileExt}`;
+  const filePath = `signed_surat/${fileName}`;
+  
+  // Upload to storage
+  const { error: uploadError } = await supabase.storage.from('surat-documents').upload(filePath, file);
+  if (uploadError) {
+      console.error("Storage upload error:", uploadError);
+      throw uploadError;
+  }
+  
+  // Update database
+  const { error: updateError } = await supabase.from("log_surat").update({ status: 4, signed_file_path: filePath }).eq("id", id);
+  if (updateError) {
+      console.error("Database update error:", updateError);
+      // Try to clean up the uploaded file if DB update fails (optional but good practice)
+      await supabase.storage.from('surat-documents').remove([filePath]);
+      throw updateError;
+  }
+  
+  return filePath;
+};
 
 export async function getLogSuratDetail(id: number) {
   const supabase = createSupabaseBrowserClient();
@@ -494,7 +528,7 @@ export async function getLogSuratDetail(id: number) {
     .from("log_surat")
     .select(`
       *,
-      tweb_surat_format (*),
+      surat_formats (*),
       penduduk:id_pend (*),
       pamong:id_pamong (*)
     `)
@@ -542,7 +576,7 @@ export interface PermohonanSurat {
     nama: string;
     nik: string;
   };
-  tweb_surat_format?: {
+  surat_formats?: {
     nama: string;
   };
 }
@@ -557,7 +591,7 @@ export async function getPermohonanSurat() {
         nama,
         nik
       ),
-      tweb_surat_format:id_surat (
+      surat_formats:id_surat (
         nama
       )
     `)

@@ -1,6 +1,6 @@
 import { useNode, Element } from "@craftjs/core";
-import { Text } from "./nodes/Text";
-import { DataRow } from "./nodes/DataRow";
+import { Text } from "@/components/editor/nodes/Text";
+import { DataRow } from "@/components/editor/nodes/DataRow";
 
 export const OpeningText = ({ text }: { text?: string }) => (
   <>

@@ -4,6 +4,7 @@ import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import { Metadata } from "next";
 import ArticleDetailClient from "@/components/public/ArticleDetailClient";
+import MobileArticlePageWrapper from "@/components/mobile/MobileArticlePageWrapper";
 
 export const revalidate = 60;
 
@@ -11,6 +12,7 @@ interface PageProps {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -40,8 +42,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ArticleDetailPage({ params }: PageProps) {
+export default async function ArticleDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  let backLink = typeof resolvedSearchParams.from === 'string' ? resolvedSearchParams.from : "/";
+  
+  // Security check: Ensure backLink is an internal path
+  if (!backLink.startsWith("/")) {
+    backLink = "/";
+  }
+  
   const supabase = createSupabaseServerClient();
   
   // Fetch Article
@@ -83,10 +93,13 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
-      <Navbar />
-      <ArticleDetailClient article={articleData} readTime={readTime} />
-      <Footer />
-    </div>
+    <>
+      <div className="hidden md:block">
+        <ArticleDetailClient article={articleData} readTime={readTime} backLink={backLink} />
+      </div>
+      <div className="block md:hidden">
+        <MobileArticlePageWrapper article={articleData} slug={slug} />
+      </div>
+    </>
   );
 }

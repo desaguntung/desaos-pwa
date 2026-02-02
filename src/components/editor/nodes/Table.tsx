@@ -1,5 +1,5 @@
 import { useNode, Element } from "@craftjs/core";
-import { Text } from "./Text";
+import { Text } from "@/components/editor/nodes/Text";
 import { Grid3X3, Palette, Type, Layout } from "lucide-react";
 
 export const Table = ({ 

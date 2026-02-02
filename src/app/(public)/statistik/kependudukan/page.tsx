@@ -1,7 +1,6 @@
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/utils/supabase/server";
 import StatisticsView, { StatsData } from "@/components/public/statistik/StatisticsView";
-import Navbar from "@/components/public/Navbar";
-import Footer from "@/components/public/Footer";
+import HeroSection from "@/components/public/HeroSection";
 
 export const metadata = {
   title: "Statistik Kependudukan - DesaOS",
@@ -37,7 +36,6 @@ export default async function StatistikPage({
     console.error("CRITICAL ERROR: SUPABASE_SERVICE_ROLE_KEY is missing in environment variables.");
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
             <div className="pt-32 px-6 text-center">
                 <h1 className="text-2xl font-bold text-red-600">Konfigurasi Server Belum Lengkap</h1>
                 <p className="text-zinc-600 mt-2 max-w-lg mx-auto">
@@ -52,7 +50,6 @@ export default async function StatistikPage({
                     </ol>
                 </div>
             </div>
-            <Footer />
         </div>
     );
   }
@@ -113,7 +110,6 @@ export default async function StatistikPage({
     // Return empty state or error UI
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
             <div className="pt-32 px-6 text-center">
                 <h1 className="text-2xl font-bold text-zinc-900">Gagal memuat data statistik.</h1>
                 <p className="text-zinc-500 mt-2">Silakan coba lagi nanti.</p>
@@ -123,7 +119,6 @@ export default async function StatistikPage({
                   </pre>
                 )}
             </div>
-            <Footer />
         </div>
     );
   }
@@ -383,12 +378,20 @@ export default async function StatistikPage({
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <Navbar />
-      <main className="pt-[44px]">
-        <StatisticsView data={statsData} villageName={villageName} category={category} />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <HeroSection 
+        title="Data Statistik"
+        subtitle={villageName}
+        description="Data kependudukan yang transparan dan akuntabel."
+        size="medium"
+        variant="centered"
+        bgClass="bg-zinc-50"
+      />
+      <div className="min-h-screen bg-[#f5f5f7]">
+        <div className="-mt-10 relative z-20 pt-8">
+           <StatisticsView data={statsData} villageName={villageName} category={category} />
+        </div>
+      </div>
+    </>
   );
 }

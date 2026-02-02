@@ -9,7 +9,8 @@ import {
   User, 
   Hash, 
   Search,
-  Check
+  Check,
+  FileText
 } from 'lucide-react';
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
@@ -101,6 +102,20 @@ export default function IdentitasDesaPage() {
   const [namaKepalaCamat, setNamaKepalaCamat] = useState("");
   const [nipKepalaCamat, setNipKepalaCamat] = useState("");
   
+  // Profil Desa
+  const [sejarah, setSejarah] = useState("");
+  const [visi, setVisi] = useState("");
+  const [misi, setMisi] = useState("");
+  
+  // Geografis
+  const [luasWilayah, setLuasWilayah] = useState("");
+  const [batasUtara, setBatasUtara] = useState("");
+  const [batasSelatan, setBatasSelatan] = useState("");
+  const [batasTimur, setBatasTimur] = useState("");
+  const [batasBarat, setBatasBarat] = useState("");
+  const [ketinggian, setKetinggian] = useState("");
+  const [petaWilayah, setPetaWilayah] = useState("");
+
   // Field tambahan
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -161,6 +176,18 @@ export default function IdentitasDesaPage() {
         setNamaKepalaCamat(data.nama_kepala_camat || "");
         setNipKepalaCamat(data.nip_kepala_camat || "");
         
+        setSejarah(data.sejarah || "");
+        setVisi(data.visi || "");
+        setMisi(data.misi || "");
+
+        setLuasWilayah(data.luas_wilayah || "");
+        setBatasUtara(data.batas_utara || "");
+        setBatasSelatan(data.batas_selatan || "");
+        setBatasTimur(data.batas_timur || "");
+        setBatasBarat(data.batas_barat || "");
+        setKetinggian(data.ketinggian || "");
+        setPetaWilayah(data.peta_wilayah || "");
+
         setLat(data.lat || "");
         setLng(data.lng || "");
         setZoom(data.zoom ? String(data.zoom) : "");
@@ -175,6 +202,11 @@ export default function IdentitasDesaPage() {
   }, [supabase]);
 
   const handleSave = async () => {
+    if (!kodeDesa) {
+      toast.error("Harap pilih desa terlebih dahulu!");
+      return;
+    }
+
     setSaving(true);
     const payload = {
       nama_desa: desaQuery,
@@ -200,25 +232,41 @@ export default function IdentitasDesaPage() {
       warna: warna,
       logo: logo,
       kantor_desa: kantorDesa,
+      sejarah: sejarah,
+      visi: visi,
+      misi: misi,
+      luas_wilayah: luasWilayah,
+      batas_utara: batasUtara,
+      batas_selatan: batasSelatan,
+      batas_timur: batasTimur,
+      batas_barat: batasBarat,
+      ketinggian: ketinggian,
+      peta_wilayah: petaWilayah,
       updated_at: new Date().toISOString(),
     };
 
-    const { data: existing } = await supabase.from("identitas_desa").select("id").limit(1).single();
+    try {
+      const { data: existing, error: fetchError } = await supabase.from("identitas_desa").select("id").limit(1).single();
+      
+      let error;
+      if (existing) {
+         const res = await supabase.from("identitas_desa").update(payload).eq("id", existing.id);
+         error = res.error;
+      } else {
+         // Add created_at for new records if missing in DB default (safety)
+         const insertPayload = { ...payload, created_at: new Date().toISOString() };
+         const res = await supabase.from("identitas_desa").insert(insertPayload);
+         error = res.error;
+      }
 
-    let error;
-    if (existing) {
-       const res = await supabase.from("identitas_desa").update(payload).eq("id", existing.id);
-       error = res.error;
-    } else {
-       const res = await supabase.from("identitas_desa").insert(payload);
-       error = res.error;
-    }
-
-    setSaving(false);
-    if (error) {
-      toast.error("Gagal menyimpan perubahan: " + error.message);
-    } else {
-      toast.success("Berhasil menyimpan perubahan");
+      if (error) throw error;
+      
+      toast.success("Berhasil menyimpan data identitas desa");
+    } catch (err: any) {
+      console.error("Error saving identitas:", err);
+      toast.error("Gagal menyimpan: " + (err.message || "Terjadi kesalahan"));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -498,6 +546,111 @@ export default function IdentitasDesaPage() {
                 <div className="space-y-2">
                   <Label>Kode Provinsi</Label>
                   <Input value={kodeProvinsi} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
+                </div>
+              </div>
+            </SectionContainer>
+
+            <SectionContainer title="Profil Desa" icon={FileText}>
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="sejarah">Sejarah Desa</Label>
+                  <Textarea
+                    id="sejarah"
+                    value={sejarah}
+                    onChange={(e) => setSejarah(e.target.value)}
+                    placeholder="Ceritakan sejarah desa..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="visi">Visi</Label>
+                    <Textarea
+                      id="visi"
+                      value={visi}
+                      onChange={(e) => setVisi(e.target.value)}
+                      placeholder="Visi desa..."
+                      className="min-h-[150px]"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="misi">Misi</Label>
+                    <Textarea
+                      id="misi"
+                      value={misi}
+                      onChange={(e) => setMisi(e.target.value)}
+                      placeholder="Misi desa..."
+                      className="min-h-[150px]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </SectionContainer>
+
+            <SectionContainer title="Data Geografis" icon={MapPin}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Luas Wilayah</Label>
+                  <Input 
+                    value={luasWilayah}
+                    onChange={(e) => setLuasWilayah(e.target.value)}
+                    placeholder="Contoh: 1250 Ha"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Ketinggian (mdpl)</Label>
+                  <Input 
+                    value={ketinggian}
+                    onChange={(e) => setKetinggian(e.target.value)}
+                    placeholder="Contoh: 500 mdpl"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Batas Utara</Label>
+                  <Input 
+                    value={batasUtara}
+                    onChange={(e) => setBatasUtara(e.target.value)}
+                    placeholder="Desa/Kecamatan..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Batas Selatan</Label>
+                  <Input 
+                    value={batasSelatan}
+                    onChange={(e) => setBatasSelatan(e.target.value)}
+                    placeholder="Desa/Kecamatan..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Batas Timur</Label>
+                  <Input 
+                    value={batasTimur}
+                    onChange={(e) => setBatasTimur(e.target.value)}
+                    placeholder="Desa/Kecamatan..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Batas Barat</Label>
+                  <Input 
+                    value={batasBarat}
+                    onChange={(e) => setBatasBarat(e.target.value)}
+                    placeholder="Desa/Kecamatan..."
+                  />
+                </div>
+                
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Peta Wilayah (Embed HTML / URL Gambar)</Label>
+                  <Textarea
+                    value={petaWilayah}
+                    onChange={(e) => setPetaWilayah(e.target.value)}
+                    placeholder="Paste kode embed Google Maps iframe atau URL gambar peta..."
+                    rows={3}
+                  />
+                  <p className="text-xs text-zinc-500">
+                    Disarankan menggunakan Embed Map dari Google Maps.
+                  </p>
                 </div>
               </div>
             </SectionContainer>

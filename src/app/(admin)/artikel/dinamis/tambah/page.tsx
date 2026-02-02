@@ -20,6 +20,8 @@ import AIChatSidebar from "@/components/features/ai/AIChatSidebar";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 
+import { addCategory } from "@/app/actions/categories";
+
 export default function TambahArtikelPage() {
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
@@ -34,7 +36,7 @@ export default function TambahArtikelPage() {
   const [user, setUser] = useState<any>(null);
 
   // Category management state
-  const [categories, setCategories] = useState(["Berita Desa", "Pengumuman", "Kesehatan", "Pembangunan", "Kegiatan"]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
@@ -44,15 +46,39 @@ export default function TambahArtikelPage() {
       setUser(user);
     };
     getUser();
+    fetchCategories();
   }, []);
 
-  const handleAddCategory = () => {
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('name')
+      .order('name');
+    
+    if (data) {
+      setCategories(data.map(c => c.name));
+    }
+  };
+
+  const handleAddCategory = async () => {
     if (newCategory && !categories.includes(newCategory)) {
-      setCategories([...categories, newCategory]);
-      setCategory(newCategory);
-      setNewCategory("");
-      setIsAddingCategory(false);
-      toast.success("Kategori berhasil ditambahkan");
+      setIsSubmitting(true);
+      try {
+        const result = await addCategory(newCategory);
+        if (result.error) {
+          toast.error("Gagal menambahkan kategori: " + result.error);
+        } else {
+          setCategories([...categories, newCategory]);
+          setCategory(newCategory);
+          setNewCategory("");
+          setIsAddingCategory(false);
+          toast.success("Kategori berhasil ditambahkan");
+        }
+      } catch (e) {
+        toast.error("Terjadi kesalahan");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 

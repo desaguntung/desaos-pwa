@@ -1,7 +1,7 @@
 import { useNode, Element, useEditor } from "@craftjs/core";
-import { Text } from "./Text";
-import { Variable } from "./Variable";
-import { Input } from "./Input";
+import { Text } from "@/components/editor/nodes/Text";
+import { Variable } from "@/components/editor/nodes/Variable";
+import { Input } from "@/components/editor/nodes/Input";
 import { Type, LayoutTemplate, AlignLeft, Hash } from "lucide-react";
 
 export const DataRow = ({ 
@@ -61,7 +61,7 @@ export const DataRow = ({
     >
        {/* Numbering Column - Auto-calculated */}
        <div className="w-8 pt-0.5 text-right pr-1">
-          <span style={{ fontSize: `${fontSize}px`, fontFamily: 'var(--font-sans)' }} className="leading-relaxed">{rowNumber}</span>
+          <span style={{ fontSize: `${fontSize}px`, fontFamily: 'Arial, sans-serif' }} className="leading-relaxed">{rowNumber}</span>
        </div>
        
        <div style={{ width: `${gap}px` }}></div> {/* Spacer */}

@@ -42,7 +42,7 @@ export default function ViewSuratPage() {
             }),
             nama_surat: log.nama_surat,
             keterangan: log.keterangan,
-            kode: log.kode_surat || log.tweb_surat_format?.kode_surat
+            kode: log.kode_surat || log.surat_formats?.kode_surat
         },
         desa: {
             // TODO: Fetch real desa config
@@ -82,24 +82,24 @@ export default function ViewSuratPage() {
     return <div className="flex items-center justify-center h-screen text-zinc-500">Loading...</div>;
   }
 
-  if (!data || !data.tweb_surat_format) {
+  if (!data || !data.surat_formats) {
     return <div className="flex items-center justify-center h-screen text-red-500">Data tidak ditemukan atau format surat hilang.</div>;
   }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-body-bg overflow-hidden">
       <PageHeader 
-        title={`Lihat Surat: ${data.tweb_surat_format.nama}`}
+        title={`Lihat Surat: ${data.surat_formats.nama}`}
         subtitle={`Nomor: ${data.no_surat}`}
         showBackButton={true}
         backButtonHref="/surat/arsip"
       />
       <div className="flex-1 overflow-hidden">
         <Editor
-          initialJson={data.tweb_surat_format.template}
-          letterType={data.tweb_surat_format.kode_surat} // Fallback
-          letterName={data.tweb_surat_format.nama}
-          id={data.tweb_surat_format.id.toString()}
+          initialJson={data.surat_formats.template}
+          letterType={data.surat_formats.kode_surat} // Fallback
+          letterName={data.surat_formats.nama}
+          id={data.surat_formats.id.toString()}
           previewData={previewData}
           readOnly={true}
           hideHeaderNavigation={true}

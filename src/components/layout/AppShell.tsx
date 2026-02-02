@@ -48,7 +48,7 @@ function MobileSidebar() {
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-body-bg">
+    <div className="flex h-screen overflow-hidden bg-gray-50/50">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 flex-col h-full border-r border-border-color bg-sidebar-bg flex-shrink-0">
         <Sidebar />

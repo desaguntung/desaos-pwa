@@ -1,11 +1,18 @@
 import { useNode, Element, useEditor } from "@craftjs/core";
-import { Plus, Trash2, FileText, Maximize, Image as ImageIcon, Layers, Settings } from "lucide-react";
+import { Plus, Trash2, FileText, Maximize, Image as ImageIcon, Layers, Settings, Ruler } from "lucide-react";
+import { FooterArea } from "@/components/editor/nodes/FooterArea";
+import { FooterBSrE } from "@/components/editor/nodes/FooterBSrE";
 
 interface PageProps {
   children?: React.ReactNode;
   size?: "A4" | "F4";
   orientation?: "portrait" | "landscape";
-  padding?: string;
+  padding?: string; // Deprecated but kept for backward compatibility logic
+  paddingTop?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+  marginUnit?: "mm" | "cm" | "in" | "px";
   watermarkType?: "none" | "text" | "image";
   watermarkText?: string;
   watermarkImage?: string;
@@ -26,6 +33,11 @@ export const Page = ({
   size = "A4", 
   orientation = "portrait", 
   padding = "40",
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  marginUnit = "cm",
   watermarkType = "none",
   watermarkText = "DRAFT",
   watermarkImage = "",
@@ -37,14 +49,16 @@ export const Page = ({
   watermarkGapX = 40,
   watermarkGapY = 40,
   watermarkLetterSpacing = 0,
-  watermarkFontFamily = "var(--font-sans)",
+  watermarkFontFamily = "Arial, sans-serif",
   watermarkGridType = "grid"
 }: PageProps) => {
   const { connectors: { connect, drag }, selected, id, parent } = useNode((state) => ({
     selected: state.events.selected,
     parent: state.data.parent
   }));
-  const { actions: { add, delete: deleteNode }, query } = useEditor();
+  const { actions: { add, delete: deleteNode }, query, enabled } = useEditor((state) => ({
+    enabled: state.options.enabled
+  }));
 
   // Safe values to prevent NaN issues
   const safeGapX = isNaN(Number(watermarkGapX)) ? 40 : Number(watermarkGapX);
@@ -52,6 +66,15 @@ export const Page = ({
   const safeFontSize = isNaN(Number(watermarkFontSize)) ? 24 : Number(watermarkFontSize);
   const safeOpacity = isNaN(Number(watermarkOpacity)) ? 0.1 : Number(watermarkOpacity);
   const safeLetterSpacing = isNaN(Number(watermarkLetterSpacing)) ? 0 : Number(watermarkLetterSpacing);
+
+  // Default Margin Logic
+  // If specific margins are not set, use default 2.54 cm (standard) or fallback to old padding behavior if needed.
+  // Since we are migrating, we will default to 2.54 cm if values are undefined.
+  // Note: 2.54 cm = 1 inch.
+  const mt = paddingTop !== undefined ? paddingTop : 2.54;
+  const mb = paddingBottom !== undefined ? paddingBottom : 2.54;
+  const ml = paddingLeft !== undefined ? paddingLeft : 2.54;
+  const mr = paddingRight !== undefined ? paddingRight : 2.54;
 
   // Dimensions in mm
   const dimensions = {
@@ -115,7 +138,8 @@ export const Page = ({
 
   return (
     <div className="relative group/page-wrapper mb-16 mx-auto w-fit">
-        {/* Top Controls */}
+        {/* Top Controls - Only show when enabled (editing mode) */}
+        {enabled && (
         <div className="absolute -top-12 left-0 right-0 flex justify-center items-center gap-2 opacity-0 group-hover/page-wrapper:opacity-100 transition-opacity z-20">
              <button 
                 onClick={() => handleAddPage('before')} 
@@ -129,14 +153,18 @@ export const Page = ({
                 </span>
              </button>
         </div>
+        )}
 
         <div
           ref={(ref) => { if (ref) connect(drag(ref)); }}
-          className={`bg-white shadow-lg transition-all relative font-surat ${selected ? "ring-2 ring-blue-500 ring-offset-4" : ""}`}
+          className={`bg-white shadow-2xl transition-all relative font-surat ${selected ? "ring-2 ring-blue-500 ring-offset-4" : ""}`}
           style={{
             width: width,
             minHeight: height,
-            padding: `${padding}px`,
+            paddingTop: `${mt}${marginUnit}`,
+            paddingBottom: `${mb}${marginUnit}`,
+            paddingLeft: `${ml}${marginUnit}`,
+            paddingRight: `${mr}${marginUnit}`,
             position: "relative",
             overflow: "hidden" // To clip watermark
           }}
@@ -236,9 +264,13 @@ export const Page = ({
           <div className="relative h-full">
              {children}
           </div>
+
+          {/* Footer Area - Persistent */}
+          <Element id="page_footer" is={FooterArea} canvas />
         </div>
 
         {/* Bottom Controls */}
+        {enabled && (
         <div className="absolute -bottom-10 left-0 right-0 flex justify-center items-center opacity-0 group-hover/page-wrapper:opacity-100 transition-opacity z-20 hover:opacity-100">
             <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-zinc-200 p-1.5 rounded-full shadow-sm transform hover:scale-105 transition-transform">
                 <button 
@@ -258,6 +290,7 @@ export const Page = ({
                 </button>
             </div>
         </div>
+        )}
     </div>
   );
 };
@@ -281,6 +314,23 @@ export const PageSettings = () => {
 
   const handlePropChange = (key: string, value: any) => {
     setProp((props: any) => (props[key] = value));
+  };
+
+  const handleUnitChange = (newUnit: string) => {
+      // Resetting to defaults is safer for UX to avoid huge/tiny margins when switching units.
+      // This ensures the user starts with a valid "industry standard" margin for the selected unit.
+      let defaults = { top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 };
+      if (newUnit === "mm") defaults = { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4 };
+      if (newUnit === "px") defaults = { top: 96, bottom: 96, left: 96, right: 96 };
+      if (newUnit === "in") defaults = { top: 1, bottom: 1, left: 1, right: 1 };
+      
+      setProp((props: any) => {
+          props.marginUnit = newUnit;
+          props.paddingTop = defaults.top;
+          props.paddingBottom = defaults.bottom;
+          props.paddingLeft = defaults.left;
+          props.paddingRight = defaults.right;
+      });
   };
 
   return (
@@ -307,16 +357,77 @@ export const PageSettings = () => {
           </div>
       </SettingsSection>
 
-      <SettingsSection title="Layout" icon={Maximize}>
-         <div className="space-y-1">
-            <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Internal Padding (px)</label>
-            <input
-              type="number"
-              value={props.padding}
-              onChange={(e) => handlePropChange("padding", e.target.value)}
-              className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md"
-            />
-          </div>
+      <SettingsSection title="Page Margins" icon={Maximize}>
+         {/* Unit Selector */}
+         <div className="space-y-1 mb-2">
+            <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Unit</label>
+            <div className="flex bg-zinc-100 rounded-md p-1 gap-1">
+               {["cm", "mm", "in", "px"].map((unit) => (
+                   <button 
+                    key={unit}
+                    onClick={() => handleUnitChange(unit)} 
+                    className={`flex-1 text-xs py-1.5 rounded ${props.marginUnit === unit ? "bg-white shadow-sm text-blue-600 font-medium" : "text-zinc-500 hover:text-zinc-900"}`}
+                   >
+                       {unit}
+                   </button>
+               ))}
+            </div>
+         </div>
+
+         <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Top</label>
+                <div className="flex items-center border border-zinc-200 rounded-md bg-white overflow-hidden">
+                    <input
+                    type="number"
+                    step="0.1"
+                    value={props.paddingTop ?? 2.54}
+                    onChange={(e) => handlePropChange("paddingTop", parseFloat(e.target.value))}
+                    className="w-full px-2 py-1.5 text-xs outline-none"
+                    />
+                    <span className="text-[10px] text-zinc-400 pr-2 bg-zinc-50 h-full flex items-center px-1 border-l border-zinc-100">{props.marginUnit || "cm"}</span>
+                </div>
+            </div>
+            <div className="space-y-1">
+                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Bottom</label>
+                <div className="flex items-center border border-zinc-200 rounded-md bg-white overflow-hidden">
+                    <input
+                    type="number"
+                    step="0.1"
+                    value={props.paddingBottom ?? 2.54}
+                    onChange={(e) => handlePropChange("paddingBottom", parseFloat(e.target.value))}
+                    className="w-full px-2 py-1.5 text-xs outline-none"
+                    />
+                    <span className="text-[10px] text-zinc-400 pr-2 bg-zinc-50 h-full flex items-center px-1 border-l border-zinc-100">{props.marginUnit || "cm"}</span>
+                </div>
+            </div>
+            <div className="space-y-1">
+                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Left</label>
+                <div className="flex items-center border border-zinc-200 rounded-md bg-white overflow-hidden">
+                    <input
+                    type="number"
+                    step="0.1"
+                    value={props.paddingLeft ?? 2.54}
+                    onChange={(e) => handlePropChange("paddingLeft", parseFloat(e.target.value))}
+                    className="w-full px-2 py-1.5 text-xs outline-none"
+                    />
+                    <span className="text-[10px] text-zinc-400 pr-2 bg-zinc-50 h-full flex items-center px-1 border-l border-zinc-100">{props.marginUnit || "cm"}</span>
+                </div>
+            </div>
+            <div className="space-y-1">
+                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Right</label>
+                <div className="flex items-center border border-zinc-200 rounded-md bg-white overflow-hidden">
+                    <input
+                    type="number"
+                    step="0.1"
+                    value={props.paddingRight ?? 2.54}
+                    onChange={(e) => handlePropChange("paddingRight", parseFloat(e.target.value))}
+                    className="w-full px-2 py-1.5 text-xs outline-none"
+                    />
+                    <span className="text-[10px] text-zinc-400 pr-2 bg-zinc-50 h-full flex items-center px-1 border-l border-zinc-100">{props.marginUnit || "cm"}</span>
+                </div>
+            </div>
+         </div>
       </SettingsSection>
 
       <SettingsSection title="Watermark" icon={Layers}>
@@ -439,79 +550,7 @@ export const PageSettings = () => {
                     />
                 </div>
             </div>
-
-             <div className="space-y-1 mt-2">
-                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider flex justify-between">
-                    <span>Letter Spacing</span>
-                    <span>{props.watermarkLetterSpacing}em</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={props.watermarkLetterSpacing}
-                  onChange={(e) => handlePropChange("watermarkLetterSpacing", parseFloat(e.target.value))}
-                  className="w-full accent-blue-600 h-1 bg-zinc-200 rounded-lg appearance-none cursor-pointer"
-                />
-            </div>
             </>
-         )}
-
-         {props.watermarkType === "image" && (
-            <div className="space-y-1 mt-2">
-                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Upload</label>
-                <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-zinc-200 border-dashed rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-2 pb-3">
-                        <ImageIcon className="w-5 h-5 text-zinc-400 mb-1" />
-                        <p className="text-[9px] text-zinc-500">Click to upload</p>
-                    </div>
-                    <input 
-                        type="file" 
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                    handlePropChange("watermarkImage", ev.target?.result);
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                        }}
-                    />
-                </label>
-                {props.watermarkImage && (
-                    <div className="mt-2 relative group">
-                        <img src={props.watermarkImage} alt="Preview" className="h-16 w-full object-contain rounded bg-zinc-50 border border-zinc-200" />
-                        <button 
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handlePropChange("watermarkImage", "")}
-                        >
-                            <Trash2 size={10} />
-                        </button>
-                    </div>
-                )}
-            </div>
-         )}
-         
-         {props.watermarkType !== "none" && (
-            <div className="space-y-1 mt-2">
-                <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider flex justify-between">
-                    <span>Opacity</span>
-                    <span>{Math.round(props.watermarkOpacity * 100)}%</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={props.watermarkOpacity}
-                  onChange={(e) => handlePropChange("watermarkOpacity", parseFloat(e.target.value))}
-                  className="w-full accent-blue-600 h-1 bg-zinc-200 rounded-lg appearance-none cursor-pointer"
-                />
-            </div>
          )}
       </SettingsSection>
     </div>
@@ -523,7 +562,11 @@ Page.craft = {
   props: {
     size: "A4",
     orientation: "portrait",
-    padding: "40",
+    paddingTop: 2.54,
+    paddingBottom: 2.54,
+    paddingLeft: 2.54,
+    paddingRight: 2.54,
+    marginUnit: "cm",
     watermarkType: "none",
     watermarkText: "DRAFT",
     watermarkImage: "",
@@ -531,6 +574,7 @@ Page.craft = {
     watermarkColor: "#6b7280",
     watermarkFontSize: 24,
     watermarkPattern: "diagonal",
+    watermarkIsWave: false,
     watermarkGapX: 40,
     watermarkGapY: 40,
     watermarkLetterSpacing: 0,

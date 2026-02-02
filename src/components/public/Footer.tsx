@@ -34,7 +34,7 @@ export default function Footer() {
 
 
         {/* Links Grid - 5 Columns */}
-        <nav className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8 mb-8 items-start" aria-label="Direktori Desa">
+        <nav className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8 mb-8 items-start" aria-label="Direktori Desa">
           {/* Column 1: Profil Desa */}
           <div className="space-y-6">
             <FooterColumn 
@@ -124,7 +124,7 @@ export default function Footer() {
               <div>
                 Hak cipta © {currentYear} DesaOS. Seluruh hak cipta dilindungi undang-undang.
               </div>
-              <div className="flex flex-wrap gap-x-4">
+              <div className="hidden md:flex flex-wrap gap-x-4">
                 <Link href="#" className="hover:text-[--apple-text-dark] hover:underline border-r border-zinc-300 pr-4 last:border-0">Kebijakan Privasi</Link>
                 <Link href="#" className="hover:text-[--apple-text-dark] hover:underline border-r border-zinc-300 pr-4 last:border-0">Ketentuan Layanan</Link>
                 <Link href="#" className="hover:text-[--apple-text-dark] hover:underline border-r border-zinc-300 pr-4 last:border-0">Peta Situs</Link>

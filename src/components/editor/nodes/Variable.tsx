@@ -71,7 +71,7 @@ export const Variable = ({
   if (mode === 'preview') {
     const value = getValue(data, name || "");
     return (
-      <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'var(--font-sans)' }}>
+      <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'Arial, sans-serif' }}>
         {value || "-"}
       </span>
     );
@@ -222,6 +222,8 @@ export const VariableSettings = () => {
     </div>
   );
 };
+
+Variable.displayName = "Variable";
 
 Variable.craft = {
   props: {

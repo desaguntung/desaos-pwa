@@ -40,18 +40,18 @@ const navItems: NavItem[] = [
       col1: {
         title: "Tentang Desa",
         items: [
-          { label: "Sejarah Desa", href: "#" },
-          { label: "Visi & Misi", href: "#" },
-          { label: "Struktur Organisasi", href: "#" },
-          { label: "Geografis Desa", href: "#" },
-          { label: "Demografi", href: "#" },
+          { label: "Sejarah Desa", href: "/profil/sejarah" },
+          { label: "Visi & Misi", href: "/profil/visi-misi" },
+          { label: "Struktur Organisasi", href: "/profil/struktur-organisasi" },
+          { label: "Geografis Desa", href: "/profil/geografis" },
+          { label: "Demografi", href: "/statistik/kependudukan" },
         ],
       },
       col2: {
         title: "Lainnya",
         items: [
-          { label: "Peta Desa", href: "#" },
-          { label: "Prestasi Desa", href: "#" },
+          { label: "Peta Desa", href: "/profil/peta" },
+          { label: "Prestasi Desa", href: "/profil/prestasi" },
         ],
       },
     },

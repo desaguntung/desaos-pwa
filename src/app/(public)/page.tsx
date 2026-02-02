@@ -1,11 +1,10 @@
-import Navbar from "@/components/public/Navbar";
 import HeroSection from "@/components/public/HeroSection";
 import OfficialsSection from "@/components/public/OfficialsSection";
 import FeatureSection from "@/components/public/FeatureSection";
-import Footer from "@/components/public/Footer";
-import { AppleLogo } from "@/components/public/AppleLogo";
 import NewsSection, { NewsItem } from "@/components/public/NewsSection";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import MobileNavDock from "@/components/mobile/MobileNavDock";
+import MobileHomeView from "@/components/mobile/MobileHomeView";
 
 export default async function PublicHome() {
   const supabase = createSupabaseServerClient();
@@ -32,7 +31,7 @@ export default async function PublicHome() {
   const newsItems: NewsItem[] = (articles || []).map((article) => ({
     title: article.title,
     excerpt: article.excerpt || "",
-    href: `/berita/${article.slug}`,
+    href: `/berita/${article.slug}?from=/`,
     imageSrc: article.cover_image || "https://placehold.co/600x400?text=No+Image",
     tag: article.category || "Berita Desa",
     date: article.published_at,
@@ -40,10 +39,9 @@ export default async function PublicHome() {
   }));
 
   return (
-    <div className="bg-white min-h-screen font-sans">
-      <Navbar />
-      
-      <main className="pt-[44px]">
+    <main>
+      {/* --- DESKTOP AREA (DO NOT TOUCH CONTENTS) --- */}
+      <div className="hidden md:block">
         {/* Hero 1: Sambutan Kepala Desa */}
         <HeroSection 
           title="Selamat Datang."
@@ -62,9 +60,13 @@ export default async function PublicHome() {
         <FeatureSection />
         <NewsSection items={newsItems} />
         <OfficialsSection />
-      </main>
+      </div>
 
-      <Footer />
-    </div>
+      {/* --- NEW MOBILE AREA --- */}
+      <div className="block md:hidden">
+        <MobileHomeView identitas={identitas} newsItems={newsItems} />
+        <MobileNavDock />
+      </div>
+    </main>
   );
 }

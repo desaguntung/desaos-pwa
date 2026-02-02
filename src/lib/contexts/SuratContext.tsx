@@ -8,6 +8,7 @@ export interface SuratContextType {
     penduduk?: any;
     form_data?: any;
     pamong?: any;
+    signature?: any;
   };
 }
 
