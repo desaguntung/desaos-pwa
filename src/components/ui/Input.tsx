@@ -1,13 +1,34 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  startIcon?: React.ReactNode;
+}
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className = "", type, ...props }, ref) => {
+  ({ className = "", type, startIcon, ...props }, ref) => {
+    const baseStyles = "flex h-9 w-full rounded-md border border-border-color bg-card-bg px-3 py-1 text-sm font-normal tracking-[-0.01em] text-primary-text antialiased file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 placeholder:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-200 dark:focus-visible:ring-gray-700 disabled:cursor-not-allowed disabled:opacity-70 disabled:bg-body-bg disabled:text-secondary-text transition-shadow";
+
+    if (startIcon) {
+      return (
+        <div className="relative w-full">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-text pointer-events-none">
+            {startIcon}
+          </div>
+          <input
+            type={type}
+            className={cn(baseStyles, "pl-9", className)}
+            ref={ref}
+            {...props}
+          />
+        </div>
+      );
+    }
+
     return (
       <input
         type={type}
-        className={`flex h-9 w-full rounded-md border border-border-color bg-card-bg px-3 py-1 text-[14px] font-medium tracking-[-0.01em] text-primary-text ring-offset-sidebar-bg file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-text disabled:cursor-not-allowed disabled:opacity-50 transition-shadow dark:bg-zinc-900 dark:border-zinc-700 dark:text-white ${className}`}
+        className={cn(baseStyles, className)}
         ref={ref}
         {...props}
       />

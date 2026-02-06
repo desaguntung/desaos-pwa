@@ -248,7 +248,7 @@ export const InputSettings = () => {
           </div>
       </div>
       
-      <p className="text-[10px] text-gray-400 mt-2">
+      <p className="text-xs text-gray-400 mt-2">
         This field will appear as an input form when creating the letter.
       </p>
     </div>

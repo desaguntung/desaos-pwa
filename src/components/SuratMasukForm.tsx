@@ -3,13 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Save, 
-  ArrowLeft,
-  Calendar,
   FileText,
-  Hash,
-  User,
-  Files
+  Save
 } from "lucide-react";
 import { 
   SuratMasuk, 
@@ -18,16 +13,37 @@ import {
   createSuratMasuk, 
   updateSuratMasuk 
 } from "@/lib/services/surat";
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+
+// Standard Components
+import { FormLayout } from "@/components/layout/FormLayout";
+import { FormSidebarNav } from "@/components/layout/FormSidebarNav";
+import { 
+  InputField, 
+  SelectField, 
+  DatePickerField, 
+  TextAreaField,
+  SectionTitle
+} from "@/components/ui/FormFields";
+import { toast } from "sonner";
 
 interface SuratMasukFormProps {
   initialData?: SuratMasuk;
-  isEdit?: boolean;
+  mode?: "create" | "edit";
+  title?: string;
+  subtitle?: string;
+  backButtonHref?: string;
 }
 
-export default function SuratMasukForm({ initialData, isEdit = false }: SuratMasukFormProps) {
+export default function SuratMasukForm({ 
+  initialData, 
+  mode = "create",
+  title,
+  subtitle,
+  backButtonHref = "/surat/masuk"
+}: SuratMasukFormProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [klasifikasiList, setKlasifikasiList] = useState<KlasifikasiSurat[]>([]);
   
   const [formData, setFormData] = useState<SuratMasuk>(
@@ -58,156 +74,179 @@ export default function SuratMasukForm({ initialData, isEdit = false }: SuratMas
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleValueChange = (name: keyof SuratMasuk, value: any) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    setIsSubmitting(true);
     try {
-      if (isEdit && initialData?.id) {
+      if (mode === "edit" && initialData?.id) {
         await updateSuratMasuk(initialData.id, formData);
+        toast.success("Surat masuk berhasil diperbarui");
       } else {
         await createSuratMasuk(formData);
+        toast.success("Surat masuk berhasil ditambahkan");
       }
       router.push("/surat/masuk");
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving surat:", error);
-      alert("Gagal menyimpan data surat.");
+      toast.error(error.message || "Gagal menyimpan data surat");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  // Scroll Spy
+  const [activeSection, setActiveSection] = useState("informasi-surat");
+  const sections = [
+    { id: "informasi-surat", label: "Informasi Surat" }
+  ];
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      setActiveSection(id);
+    }
+  };
+
+  const formActions = (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        onClick={() => router.push(backButtonHref)}
+        disabled={isSubmitting}
+      >
+        Batal
+      </Button>
+      <Button 
+        type="submit" 
+        onClick={() => handleSubmit()}
+        disabled={isSubmitting} 
+        className="min-w-[120px]"
+      >
+        {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+      </Button>
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white rounded-lg border border-zinc-200 shadow-sm p-6">
-        <h3 className="text-sm font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-          <FileText className="w-4 h-4" />
-          Informasi Surat
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Kode Surat */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Kode Surat</label>
-            <select
-              name="kode_surat"
+    <FormLayout
+      title={title || (mode === "create" ? "Tambah Surat Masuk" : "Edit Surat Masuk")}
+      subtitle={subtitle || (mode === "create" ? "Catat surat masuk baru" : "Perbarui data surat masuk")}
+      backButtonHref={backButtonHref}
+      actions={formActions}
+      sidebar={
+        <FormSidebarNav
+          sections={sections}
+          activeSection={activeSection}
+          onSectionClick={scrollToSection}
+        />
+      }
+    >
+      <div className="space-y-8 pb-24">
+        <div 
+          id="informasi-surat"
+          className="bg-card-bg rounded-xl shadow-sm border border-border-color p-6 md:p-8 space-y-8 scroll-mt-24"
+        >
+        <div className="space-y-6">
+          <SectionTitle 
+            title="Informasi Surat" 
+            description="Detail data surat masuk" 
+            icon={FileText} 
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SelectField 
+              label="Kode Surat"
               value={formData.kode_surat}
+              onValueChange={(val) => handleValueChange("kode_surat", val)}
+              options={klasifikasiList.map(k => ({ 
+                label: `${k.kode} - ${k.nama}`, 
+                value: k.kode 
+              }))}
+            />
+
+            <InputField 
+              label="Nomor Surat"
+              name="nomor_surat"
+              value={formData.nomor_surat}
               onChange={handleChange}
-              className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              placeholder="Contoh: 140/001/X/2023"
               required
-            >
-              <option value="">Pilih Kode Klasifikasi...</option>
-              {klasifikasiList.map((k) => (
-                <option key={k.id} value={k.kode}>
-                  {k.kode} - {k.nama}
-                </option>
-              ))}
-            </select>
-          </div>
+            />
 
-          {/* Nomor Surat */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Nomor Surat</label>
-            <div className="relative">
-              <Hash className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="text"
-                name="nomor_surat"
-                value={formData.nomor_surat}
-                onChange={handleChange}
-                className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                placeholder="Contoh: 140/001/X/2023"
-                required
-              />
-            </div>
-          </div>
+            <DatePickerField 
+              label="Tanggal Surat"
+              name="tanggal_surat"
+              value={formData.tanggal_surat}
+              onChange={handleChange}
+              required
+            />
 
-          {/* Tanggal Surat */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Tanggal Surat</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="date"
-                name="tanggal_surat"
-                value={formData.tanggal_surat}
-                onChange={handleChange}
-                className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                required
-              />
-            </div>
-          </div>
+            <DatePickerField 
+              label="Tanggal Penerimaan"
+              name="tanggal_penerimaan"
+              value={formData.tanggal_penerimaan}
+              onChange={handleChange}
+              required
+            />
 
-          {/* Tanggal Penerimaan */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Tanggal Penerimaan</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="date"
-                name="tanggal_penerimaan"
-                value={formData.tanggal_penerimaan}
-                onChange={handleChange}
-                className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Pengirim */}
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Pengirim</label>
-            <div className="relative">
-              <User className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="text"
+            <div className="md:col-span-2">
+              <InputField 
+                label="Pengirim"
                 name="pengirim"
                 value={formData.pengirim}
                 onChange={handleChange}
-                className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 placeholder="Nama instansi atau perseorangan pengirim"
                 required
               />
             </div>
-          </div>
 
-          {/* Isi Singkat */}
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-xs font-medium text-zinc-500 uppercase">Isi Singkat / Perihal</label>
-            <textarea
-              name="isi_singkat"
-              value={formData.isi_singkat}
+            <div className="md:col-span-2">
+              <TextAreaField 
+                label="Isi Singkat / Perihal"
+                name="isi_singkat"
+                value={formData.isi_singkat}
+                onChange={handleChange}
+                placeholder="Ringkasan isi surat..."
+                required
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+               <TextAreaField 
+                label="Isi Disposisi (Opsional)"
+                name="isi_disposisi"
+                value={formData.isi_disposisi || ""}
+                onChange={handleChange}
+                placeholder="Instruksi disposisi..."
+              />
+            </div>
+            
+            <InputField 
+              label="Lokasi Arsip (Opsional)"
+              name="lokasi_arsip"
+              value={formData.lokasi_arsip || ""}
               onChange={handleChange}
-              rows={3}
-              className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              placeholder="Ringkasan isi surat..."
-              required
+              placeholder="Lemari/Rak/Binder"
             />
           </div>
         </div>
       </div>
-
-      <div className="flex items-center justify-end gap-3">
-        <Link
-          href="/surat/masuk"
-          className="px-4 py-2 text-xs font-medium text-secondary-text bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-        >
-          Batal
-        </Link>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          <Save className="w-3.5 h-3.5" />
-          {loading ? "Menyimpan..." : "Simpan Surat"}
-        </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

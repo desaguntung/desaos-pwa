@@ -2,16 +2,50 @@
 
 @layer base {
   :root {
-    /* Light Mode (Default) */
-    --body-bg: #FAFAFA; /* Zinc-50 */
+    /* System Font Stack - Modern & Performant */
+    --font-sans: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+
+    /* Light Mode (Slate/Professional SaaS) */
+    --body-bg: #f8fafc; /* Slate-50 */
     --sidebar-bg: #FFFFFF;
     --card-bg: #FFFFFF;
-    --primary-text: #18181B; /* Zinc-900 */
-    --secondary-text: #71717A; /* Zinc-500 */
-    --border-color: #E4E4E7; /* Zinc-200 */
+    --primary-text: #0f172a; /* Slate-900 */
+    --secondary-text: #64748b; /* Slate-500 */
+    --border-color: #e2e8f0; /* Slate-200 */
+    --hover-bg: #f1f5f9; /* Slate-100 */
+    --scrollbar-thumb: #cbd5e1; /* Slate-300 */
+    --scrollbar-thumb-hover: #94a3b8; /* Slate-400 */
+    --primary-btn-bg: #0f172a; /* Slate-900 */
+    --primary-btn-text: #ffffff; /* White */
     --accent: #3B82F6; /* Blue-500 */
-    --ds-gray-200-value: 240, 5.9%, 90%;
+    --ds-gray-200-value: 226, 23%, 91%; /* Slate-200 */
     
+    /* Status Colors */
+    --success-bg: #ecfdf5; /* Emerald-50 */
+    --success-text: #047857; /* Emerald-700 */
+    --success-border: #d1fae5; /* Emerald-100 */
+    
+    --warning-bg: #fffbeb; /* Amber-50 */
+    --warning-text: #b45309; /* Amber-700 */
+    --warning-border: #fef3c7; /* Amber-100 */
+    
+    --error-bg: #fff1f2; /* Rose-50 */
+    --error-text: #be123c; /* Rose-700 */
+    --error-border: #ffe4e6; /* Rose-100 */
+    
+    --info-bg: #eff6ff; /* Blue-50 */
+    --info-text: #1d4ed8; /* Blue-700 */
+    --info-border: #dbeafe; /* Blue-100 */
+
+    /* Gender Colors */
+    --gender-male-bg: #eff6ff; /* Blue-50 */
+    --gender-male-text: #2563eb; /* Blue-600 */
+    --gender-male-border: #dbeafe; /* Blue-100 */
+
+    --gender-female-bg: #fdf2f8; /* Pink-50 */
+    --gender-female-text: #db2777; /* Pink-600 */
+    --gender-female-border: #fce7f3; /* Pink-100 */
+
     /* Chart Colors */
     --chart-1: #3b82f6;
     --chart-2: #ec4899;
@@ -21,21 +55,64 @@
     --chart-6: #6366f1;
     --chart-7: #06b6d4;
     --chart-8: #f43f5e;
+
+    /* Table Header Colors */
+    --table-header-bg: #f8fafcf2; /* Slate-50 with 95% opacity */
+    
+    /* Global Selection Color */
+    --selection-bg: #cbd5e1; /* Slate-300 */
+    --selection-text: #0f172a; /* Slate-900 */
+
+    /* Skeleton Colors */
+    --skeleton-bg: #e2e8f0; /* Slate-200 */
+    --skeleton-shimmer: rgba(255, 255, 255, 0.5);
   }
 
   .dark {
     /* Dark Mode - Professional SaaS Palette */
-    /* Using Zinc palette but slightly tuned for contrast and comfort */
-    --body-bg: #09090b; /* Zinc-950 */
-    --sidebar-bg: #18181b; /* Zinc-900 */
-    --card-bg: #18181b; /* Zinc-900 */
-    --primary-text: #fafafa; /* Zinc-50 */
-    --secondary-text: #a1a1aa; /* Zinc-400 */
-    --border-color: #27272a; /* Zinc-800 */
+    --body-bg: #020617; /* Slate-950 */
+    --sidebar-bg: #0f172a; /* Slate-900 */
+    --card-bg: #0f172a; /* Slate-900 */
+    --primary-text: #f8fafc; /* Slate-50 */
+    --secondary-text: #94a3b8; /* Slate-400 */
+    --border-color: #1e293b; /* Slate-800 */
+    --hover-bg: #1e293b; /* Slate-800 */
+    --scrollbar-thumb: #334155; /* Slate-700 */
+    --scrollbar-thumb-hover: #475569; /* Slate-600 */
     --accent: #60a5fa; /* Blue-400 */
-    --ds-gray-200-value: 240, 3.7%, 15.9%; /* Zinc-800 */
+    --ds-gray-200-value: 215, 27.9%, 16.9%; /* Slate-800 */
+    
+    /* Global Selection Color (Dark Mode) */
+    --selection-bg: #334155; /* Slate-700 */
+    --selection-text: #ffffff; /* White */
 
-    /* Chart Colors (Slightly adjusted for dark mode if needed, but keeping same for consistency for now) */
+    /* Status Colors (Dark Mode) */
+    --success-bg: #064e3b; /* Emerald-900 */
+    --success-text: #34d399; /* Emerald-400 */
+    --success-border: #065f46; /* Emerald-800 */
+    
+    --warning-bg: #451a03; /* Amber-950 */
+    --warning-text: #fbbf24; /* Amber-400 */
+    --warning-border: #78350f; /* Amber-900 */
+    
+    --error-bg: #4c0519; /* Rose-950 */
+    --error-text: #fb7185; /* Rose-400 */
+    --error-border: #881337; /* Rose-900 */
+    
+    --info-bg: #172554; /* Blue-950 */
+    --info-text: #60a5fa; /* Blue-400 */
+    --info-border: #1e3a8a; /* Blue-900 */
+
+    /* Gender Colors (Dark Mode) */
+    --gender-male-bg: rgba(30, 58, 138, 0.3); /* Blue-900/30 */
+    --gender-male-text: #60a5fa; /* Blue-400 */
+    --gender-male-border: #1e40af; /* Blue-800 */
+
+    --gender-female-bg: rgba(131, 24, 67, 0.3); /* Pink-900/30 */
+    --gender-female-text: #f472b6; /* Pink-400 */
+    --gender-female-border: #9d174d; /* Pink-800 */
+
+    /* Chart Colors */
     --chart-1: #3b82f6;
     --chart-2: #ec4899;
     --chart-3: #10b981;
@@ -44,6 +121,13 @@
     --chart-6: #6366f1;
     --chart-7: #06b6d4;
     --chart-8: #f43f5e;
+
+    /* Table Header Colors (Dark Mode) */
+    --table-header-bg: #1e293bf2; /* Slate-800 with 95% opacity */
+
+    /* Skeleton Colors (Dark Mode) */
+    --skeleton-bg: #334155; /* Slate-700 (Lighter than card-bg for visibility) */
+    --skeleton-shimmer: rgba(255, 255, 255, 0.1);
   }
 
   body {
@@ -51,6 +135,141 @@
     background-color: var(--body-bg);
     color: var(--primary-text);
     font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01"; /* Tabular nums & stylistic sets */
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.6; /* Premium Spacing */
+    letter-spacing: -0.01em; /* Apple-like tightness */
+  }
+
+  h1 { @apply text-2xl font-semibold tracking-tight; }
+  h2 { @apply text-xl font-semibold tracking-tight; }
+  h3 { @apply text-lg font-semibold tracking-tight; }
+  h4 { @apply text-base font-medium tracking-tight; }
+  h5 { @apply text-sm font-medium tracking-tight; }
+  h6 { @apply text-xs font-medium tracking-tight; }
+
+  /* Global Focus Ring Reset */
+  *, ::before, ::after {
+    @apply focus:ring-0 focus:outline-none;
+  }
+
+  /* Global Selection Styles */
+  ::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-text);
+  }
+
+  /* Global Table Styles - Apple Style */
+  tr {
+    @apply border-b border-border-color transition-colors duration-200;
+  }
+
+  /* Remove border for the last row in tbody to prevent double borders with container */
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  /* Empty & Loading States - Clean Look */
+  tr.empty-row, 
+  tr.loading-row {
+    border-bottom: none !important;
+    background-color: transparent !important;
+  }
+  
+  tr.empty-row:hover, 
+  tr.loading-row:hover {
+    background-color: transparent !important;
+  }
+
+  /* When table is in empty/loading state, hide header border or header itself if desired */
+  table.is-empty thead th,
+  table.is-loading thead th {
+    border-bottom: none !important;
+  }
+
+  /* Optional: Hide header entirely for cleaner empty state (uncomment if preferred) */
+  /* table.is-empty thead, table.is-loading thead { opacity: 0.5; } */
+
+  tr:hover {
+    background-color: var(--hover-bg);
+  }
+
+  th {
+    @apply text-secondary-text border-b border-border-color backdrop-blur-sm;
+    background-color: var(--table-header-bg);
+  }
+
+
+  /* Compact Typography Utilities */
+  .text-micro {
+    font-size: 0.625rem; /* 10px */
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+
+  .text-label {
+    font-size: 0.6875rem; /* 11px */
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    font-weight: 500;
+  }
+
+  .text-body-compact {
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.45;
+  }
+
+  /* Pagination Summary Text */
+  .pagination-summary {
+    @apply text-xs font-medium text-secondary-text;
+  }
+
+  /* Custom Scrollbar - Slim & Light */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  /* Sidebar Specific Scrollbar - Hidden */
+  .sidebar-scroll {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  /* Skeleton Shimmer Animation - Global Utility */
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .skeleton-shimmer {
+    @apply relative overflow-hidden;
+    background-color: var(--skeleton-bg);
+  }
+
+  .skeleton-shimmer::before {
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent to-transparent;
+    --tw-gradient-via: var(--skeleton-shimmer);
+    background-image: linear-gradient(to right, var(--tw-gradient-from) 0%, var(--tw-gradient-via) 50%, var(--tw-gradient-to) 100%);
+    content: '';
+    animation: shimmer 2s infinite;
   }
 }
 
@@ -66,7 +285,34 @@
   --color-primary-text: var(--primary-text);
   --color-secondary-text: var(--secondary-text);
   --color-border-color: var(--border-color);
+  --color-hover-bg: var(--hover-bg);
+  --color-primary-btn-bg: var(--primary-btn-bg);
+  --color-primary-btn-text: var(--primary-btn-text);
   --color-accent: var(--accent);
+  
+  --color-success-bg: var(--success-bg);
+  --color-success-text: var(--success-text);
+  --color-success-border: var(--success-border);
+  
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning-text);
+  --color-warning-border: var(--warning-border);
+  
+  --color-error-bg: var(--error-bg);
+  --color-error-text: var(--error-text);
+  --color-error-border: var(--error-border);
+  
+  --color-info-bg: var(--info-bg);
+  --color-info-text: var(--info-text);
+  --color-info-border: var(--info-border);
+
+  --color-gender-male-bg: var(--gender-male-bg);
+  --color-gender-male-text: var(--gender-male-text);
+  --color-gender-male-border: var(--gender-male-border);
+
+  --color-gender-female-bg: var(--gender-female-bg);
+  --color-gender-female-text: var(--gender-female-text);
+  --color-gender-female-border: var(--gender-female-border);
 
   /* Force HEX Colors for HTML2Canvas Compatibility (Tailwind v4 defaults to OKLCH/LAB) */
   --color-zinc-50: #fafafa;

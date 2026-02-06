@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { 
   getSuratTasks, 
@@ -17,25 +16,40 @@ import {
 import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong } from "@/lib/services/surat";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Editor } from "@/components/editor/Editor";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { Pagination } from "@/components/ui/Pagination";
 import { 
-  CheckCircle2, 
-  XCircle, 
+  CheckCircle as CheckCircle2, 
   Clock, 
   FileText, 
-  Send, 
-  History,
   Eye,
-  PenTool,
   User,
+  MagnifyingGlass as Search,
+  Filter as FilterIcon,
+  Check,
+  RefreshClockwise,
+  MoreHorizontal
+} from "geist-icons";
+import { 
+  Send, 
+  Upload, 
   Download,
-  Upload,
-  Printer
+  PenTool
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/Sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/Sheet";
+import { Badge } from "@/components/ui/Badge";
+import { DataTable, Column, MobileConfig } from "@/components/ui/DataTable";
+import { Card, CardContent } from "@/components/ui/Card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+
 // @ts-ignore
 import html2pdf from "html2pdf.js";
 
@@ -43,19 +57,19 @@ import html2pdf from "html2pdf.js";
 const getStatusBadge = (status: number) => {
   switch (status) {
     case SuratFlowStatus.DRAFT:
-      return <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">Draft</span>;
+      return <Badge variant="default">Draft</Badge>;
     case SuratFlowStatus.PENDING_SEKDES:
-      return <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">Verifikasi Sekdes</span>;
+      return <Badge variant="warning">Verifikasi Sekdes</Badge>;
     case SuratFlowStatus.PENDING_KADES:
-      return <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">Tanda Tangan Kades</span>;
+      return <Badge variant="info">Tanda Tangan Kades</Badge>;
     case SuratFlowStatus.SIGNED:
-      return <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Selesai (Ditandatangani)</span>;
+      return <Badge variant="success">Selesai (Ditandatangani)</Badge>;
     case SuratFlowStatus.REJECTED_SEKDES:
-      return <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">Ditolak Sekdes</span>;
+      return <Badge variant="error">Ditolak Sekdes</Badge>;
     case SuratFlowStatus.REJECTED_KADES:
-      return <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">Ditolak Kades</span>;
+      return <Badge variant="error">Ditolak Kades</Badge>;
     default:
-      return <span className="px-2 py-1 rounded-full text-xs bg-gray-100">Unknown</span>;
+      return <Badge variant="default">Unknown</Badge>;
   }
 };
 
@@ -63,6 +77,12 @@ export default function VerifikasiSuratPage() {
   const [role, setRole] = useState<'operator' | 'sekdes' | 'kades'>('operator'); // Simulating role
   const [tasks, setTasks] = useState<SuratTask[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   const [selectedSurat, setSelectedSurat] = useState<SuratTask | null>(null);
   const [detailSurat, setDetailSurat] = useState<any | null>(null);
@@ -96,6 +116,45 @@ export default function VerifikasiSuratPage() {
     }
   };
 
+  // Filter Logic
+  const filteredTasks = useMemo(() => {
+    let filtered = tasks;
+
+    // Status Filter
+    if (statusFilter !== "Semua") {
+       filtered = filtered.filter((r) => {
+         // Map badge status to filter string or simple check
+         const status = r.status;
+         // This is a simplification, ideally map enum to string
+         if (statusFilter === "Draft" && status === SuratFlowStatus.DRAFT) return true;
+         if (statusFilter === "Verifikasi Sekdes" && status === SuratFlowStatus.PENDING_SEKDES) return true;
+         if (statusFilter === "Tanda Tangan Kades" && status === SuratFlowStatus.PENDING_KADES) return true;
+         if (statusFilter === "Selesai" && status === SuratFlowStatus.SIGNED) return true;
+         if (statusFilter.includes("Ditolak") && (status === SuratFlowStatus.REJECTED_SEKDES || status === SuratFlowStatus.REJECTED_KADES)) return true;
+         return false;
+       });
+    }
+
+    // Search Filter
+    const searchLower = searchTerm.toLowerCase();
+    if (searchLower) {
+      filtered = filtered.filter((r) => 
+        (r.no_surat && r.no_surat.toLowerCase().includes(searchLower)) ||
+        (r.penduduk?.nama && r.penduduk.nama.toLowerCase().includes(searchLower)) ||
+        (r.penduduk?.nik && r.penduduk.nik.toLowerCase().includes(searchLower)) ||
+        (r.nama_surat && r.nama_surat.toLowerCase().includes(searchLower))
+      );
+    }
+
+    return filtered;
+  }, [tasks, statusFilter, searchTerm]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredTasks.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentData = filteredTasks.slice(startIndex, endIndex);
+
   const openReview = async (surat: SuratTask) => {
     setSelectedSurat(surat);
     setDetailSurat(null);
@@ -117,6 +176,85 @@ export default function VerifikasiSuratPage() {
     } finally {
       setLoadingDetail(false);
     }
+  };
+
+  const columns: Column<SuratTask>[] = useMemo(() => [
+    {
+      header: "Tanggal",
+      accessorKey: "tanggal",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5 text-secondary-text/70" />
+          {new Date(row.tanggal).toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric' })}
+        </div>
+      )
+    },
+    {
+      header: "Nomor Surat",
+      accessorKey: "no_surat",
+      className: "font-mono text-xs text-secondary-text",
+      cell: (row) => row.no_surat || "-"
+    },
+    {
+      header: "Jenis Surat",
+      accessorKey: "nama_surat",
+      className: "font-medium text-primary-text",
+      cell: (row) => row.surat_formats?.nama || row.nama_surat || "Surat Tanpa Judul"
+    },
+    {
+      header: "Penduduk",
+      accessorKey: "penduduk",
+      cell: (row) => (
+          <div className="flex flex-col">
+              <span className="text-primary-text font-medium">{row.penduduk?.nama || "Tanpa Nama"}</span>
+              <span className="text-secondary-text/70 text-xs">{row.penduduk?.nik || "-"}</span>
+          </div>
+      )
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      className: "text-center",
+      cell: (row) => getStatusBadge(row.status)
+    },
+    {
+      header: "Aksi",
+      accessorKey: "id",
+      className: "text-right",
+      cell: (row) => (
+          <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 px-3 text-xs gap-1.5 shadow-sm"
+              onClick={(e) => {
+                  e.stopPropagation();
+                  openReview(row);
+              }}
+          >
+              <Eye className="w-3.5 h-3.5" />
+              Detail & Proses
+          </Button>
+      )
+    }
+  ], []);
+
+  const mobileConfig: MobileConfig<SuratTask> = {
+    titleKey: (row) => row.surat_formats?.nama || row.nama_surat || "Surat Tanpa Judul",
+    subtitleKey: (row) => row.no_surat || "-",
+    statusKey: (row) => getStatusBadge(row.status),
+    action: (row) => (
+      <Button 
+          size="sm" 
+          variant="outline" 
+          className="h-8 w-8 p-0"
+          onClick={(e) => {
+              e.stopPropagation();
+              openReview(row);
+          }}
+      >
+          <Eye className="w-3.5 h-3.5" />
+      </Button>
+    )
   };
 
   const handleAction = async (action: 'submit' | 'approve' | 'reject' | 'sign') => {
@@ -181,7 +319,7 @@ export default function VerifikasiSuratPage() {
   const handleDownloadPdf = async () => {
       if (!selectedSurat || !detailSurat) return;
       
-      const element = document.querySelector('#surat-preview-wrapper .bg-white.shadow-2xl');
+      const element = document.querySelector('#surat-preview-wrapper .bg-white');
       if (!element) {
           alert("Gagal menemukan dokumen untuk didownload. Pastikan preview dokumen sudah muncul.");
           return;
@@ -227,21 +365,17 @@ export default function VerifikasiSuratPage() {
           
           clone.style.boxShadow = 'none';
           clone.style.margin = '0'; // Remove external margins
-          // clone.style.padding = '0'; // REMOVED: Do NOT reset padding, it is part of the document layout!
           
           clone.style.transform = 'none'; // Reset any scaling from preview
           clone.style.transformOrigin = 'top left';
 
           // MANUAL FIX: Ensure last element has no margin bottom
-           // This addresses the "invisible" cause #1
            const lastChild = clone.lastElementChild as HTMLElement;
            if (lastChild) {
                lastChild.style.marginBottom = '0';
-               // lastChild.style.paddingBottom = '0'; // REMOVED: Do not reset padding!
            }
           
           // Ensure the clone has the correct dimensions based on the target paper size
-          // This ensures WYSIWYG relative to the paper format
           const dimensions = {
               A4: { width: 210, height: 297 },
               F4: { width: 215, height: 330 },
@@ -253,30 +387,22 @@ export default function VerifikasiSuratPage() {
           const dim = dimensions[size] || dimensions.A4;
           
           // STRICT DIMENSION ENFORCEMENT
-          // Instead of relying on computed pixels (which depend on screen DPI/Zoom),
-          // we force the physical dimensions (mm) that jsPDF expects.
-          // This ensures 1:1 mapping between DOM element and PDF Page.
           clone.style.width = `${dim.width}mm`;
           clone.style.maxWidth = `${dim.width}mm`;
           clone.style.minWidth = `${dim.width}mm`;
           
           // Height strictness with SAFETY MARGIN
-          // We subtract 0.5mm from the element height to ensure it is strictly SMALLER than the PDF page.
-          // This prevents sub-pixel rendering issues where the browser renders 297mm as 297.0001mm, triggering a new page.
-          // The visual difference (0.5mm) is negligible/invisible to the naked eye.
           const safeHeight = dim.height - 0.5;
           clone.style.height = `${safeHeight}mm`; 
           clone.style.minHeight = `${safeHeight}mm`;
           clone.style.maxHeight = `${safeHeight}mm`;
           clone.style.overflow = 'hidden'; // Clip overflow
           
-          // CLEANUP FOOTER (User Suspicion)
-          // Find the FooterArea (usually absolute positioned at bottom) and ensure it behaves
+          // CLEANUP FOOTER
           const footerElement = clone.querySelector('[data-id="page_footer"]') || clone.querySelector('.absolute.bottom-0');
           if (footerElement) {
               (footerElement as HTMLElement).style.marginBottom = '0';
               (footerElement as HTMLElement).style.bottom = '0';
-              // Remove min-height to prevent it from being taller than necessary
               (footerElement as HTMLElement).style.minHeight = '0';
           }
 
@@ -286,19 +412,13 @@ export default function VerifikasiSuratPage() {
           container.style.left = '-9999px';
           container.style.top = '0';
           
-          // Container must also be constrained to the safe height
           container.style.width = `${dim.width}mm`;
           container.style.height = `${safeHeight}mm`;
           
-          // Apply computed styles that affect layout internals (fonts, line-heights)
-          // BUT NOT dimensions that conflict with the paper size.
           const computedStyle = window.getComputedStyle(element);
           
-          // Force box-sizing to border-box so padding doesn't add to width
           clone.style.boxSizing = 'border-box';
           
-          // Copy Padding - But be careful if padding + width > paper width
-          // If box-sizing is border-box, padding is included in width.
           clone.style.paddingTop = computedStyle.paddingTop;
           clone.style.paddingBottom = computedStyle.paddingBottom;
           clone.style.paddingLeft = computedStyle.paddingLeft;
@@ -307,13 +427,12 @@ export default function VerifikasiSuratPage() {
           container.appendChild(clone);
           document.body.appendChild(container);
           
-          // Wait for images/fonts to stabilize
           await new Promise(resolve => setTimeout(resolve, 100));
 
           const opt = {
               margin: 0,
-              filename: `${selectedSurat.surat_formats?.nama || 'Surat'}_${selectedSurat.penduduk?.nama || 'Warga'}.pdf`,
-              image: { type: 'jpeg', quality: 0.98 },
+              filename: `${(selectedSurat.surat_formats?.nama || 'Surat').replace(/\//g, '-')}_${selectedSurat.penduduk?.nama || 'Warga'}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 } as any,
               html2canvas: { 
                   scale: 2, 
                   useCORS: true, 
@@ -329,7 +448,7 @@ export default function VerifikasiSuratPage() {
               }
           };
 
-          await html2pdf().set(opt).from(clone).save();
+          await html2pdf().set(opt as any).from(clone).save();
           
           // Clean up
           document.body.removeChild(container);
@@ -403,100 +522,93 @@ export default function VerifikasiSuratPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-body-bg overflow-hidden">
+    <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Verifikasi Surat" 
         subtitle="Alur Persetujuan dan Tanda Tangan" 
-        actions={
-            // Role Switcher for Demo
-            <div className="flex gap-2 items-center bg-white p-1 rounded-lg border border-zinc-200">
-                <span className="text-xs font-medium px-2 text-zinc-500">Mode:</span>
-                <button 
-                    onClick={() => setRole('operator')} 
-                    className={`px-3 py-1 text-xs rounded-md transition-colors ${role === 'operator' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-zinc-50'}`}
-                >Operator</button>
-                <button 
-                    onClick={() => setRole('sekdes')} 
-                    className={`px-3 py-1 text-xs rounded-md transition-colors ${role === 'sekdes' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-zinc-50'}`}
-                >Sekdes</button>
-                <button 
-                    onClick={() => setRole('kades')} 
-                    className={`px-3 py-1 text-xs rounded-md transition-colors ${role === 'kades' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-zinc-50'}`}
-                >Kades</button>
-            </div>
-        }
       />
 
-      <div className="flex-1 overflow-y-auto p-6">
-        {loading ? (
-            <div className="flex items-center justify-center h-40">
-                <span className="text-zinc-400 text-sm">Loading tasks...</span>
+      {/* Toolbar */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Left: Search */}
+            <div className="w-full md:w-auto flex-1 relative max-w-sm">
+               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-text pointer-events-none">
+                   <Search className="w-4 h-4" />
+               </div>
+               <Input 
+                  placeholder="Cari nomor surat, nama..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+               />
             </div>
-        ) : tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">
-                <CheckCircle2 className="w-8 h-8 text-zinc-300 mb-2" />
-                <span className="text-zinc-500 font-medium">Tidak ada surat yang perlu diproses</span>
-                <span className="text-zinc-400 text-xs">Anda sudah menyelesaikan semua tugas.</span>
-            </div>
-        ) : (
-            <div className="bg-white rounded-lg border border-zinc-200 overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-medium">
-                            <tr>
-                                <th className="px-4 py-3 w-16 text-center">No</th>
-                                <th className="px-4 py-3">Tanggal</th>
-                                <th className="px-4 py-3">Nomor Surat</th>
-                                <th className="px-4 py-3">Jenis Surat</th>
-                                <th className="px-4 py-3">Penduduk</th>
-                                <th className="px-4 py-3 text-center">Status</th>
-                                <th className="px-4 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                            {tasks.map((task, index) => (
-                                <tr key={task.id} className="hover:bg-zinc-50/50 transition-colors">
-                                    <td className="px-4 py-3 text-center text-zinc-500">{index + 1}</td>
-                                    <td className="px-4 py-3 text-zinc-600">
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                                            {new Date(task.tanggal).toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric' })}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 font-mono text-xs text-zinc-600">
-                                        {task.no_surat || "-"}
-                                    </td>
-                                    <td className="px-4 py-3 font-medium text-zinc-800">
-                                        {task.surat_formats?.nama || task.nama_surat || "Surat Tanpa Judul"}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex flex-col">
-                                            <span className="text-zinc-800 font-medium">{task.penduduk?.nama || "Tanpa Nama"}</span>
-                                            <span className="text-zinc-400 text-xs">{task.penduduk?.nik || "-"}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        {getStatusBadge(task.status)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            className="h-8 px-3 text-xs gap-1.5"
-                                            onClick={() => openReview(task)}
-                                        >
-                                            <Eye className="w-3.5 h-3.5" />
-                                            Detail & Proses
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            
+            {/* Right: Actions & Filters */}
+            <div className="flex items-center gap-2 w-full md:w-auto justify-end overflow-x-auto pb-2 md:pb-0">
+                 {/* Role Switcher (Custom Segmented Control) */}
+                 <div className="flex bg-body-bg p-1 rounded-lg border border-border-color shrink-0">
+                    {(['operator', 'sekdes', 'kades'] as const).map((r) => (
+                        <Button
+                            key={r}
+                            variant={role === r ? 'primary' : 'ghost'}
+                            size="sm"
+                            onClick={() => setRole(r)}
+                            className={`h-7 px-3 text-xs capitalize ${role === r ? "shadow-sm" : "text-secondary-text hover:text-primary-text"}`}
+                        >
+                            {r}
+                        </Button>
+                    ))}
                 </div>
+
+                {/* Status Filter */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2 shrink-0 text-secondary-text">
+                            <FilterIcon className="w-3.5 h-3.5 mr-2" />
+                            <span className="hidden sm:inline text-xs font-medium">{statusFilter}</span>
+                            {statusFilter !== "Semua" && (
+                               <div className="ml-2 w-1.5 h-1.5 rounded-full bg-accent" />
+                            )}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[200px]">
+                        <DropdownMenuLabel>Filter Status</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {["Semua", "Draft", "Verifikasi Sekdes", "Tanda Tangan Kades", "Selesai", "Ditolak"].map((status) => (
+                            <DropdownMenuItem key={status} onClick={() => setStatusFilter(status)}>
+                                {status === statusFilter && <Check className="w-4 h-4 mr-2" />}
+                                <span className="flex-1">{status}</span>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Refresh */}
+                <Button variant="outline" size="icon" onClick={fetchTasks} className="shrink-0 text-secondary-text" title="Refresh Data">
+                    <RefreshClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
             </div>
-        )}
-      </div>
+        </div>
+      </Card>
+
+      <DataTable 
+          columns={columns} 
+          data={currentData} 
+          loading={loading}
+          mobileConfig={mobileConfig}
+          onRowClick={openReview}
+      />
+
+      <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredTasks.length}
+          itemsPerPage={pageSize}
+          onItemsPerPageChange={setPageSize}
+          sticky={true}
+      />
 
       {/* Review Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -508,11 +620,11 @@ export default function VerifikasiSuratPage() {
           <div className="flex-1 w-full h-full flex flex-col lg:flex-row overflow-hidden relative">
             
             {/* Left Panel: Preview */}
-            <div className="flex-1 border-r border-zinc-200 flex flex-col overflow-hidden bg-[#F3F4F6] relative">
+            <div className="flex-1 border-r border-border-color flex flex-col overflow-hidden bg-body-bg relative">
                {loadingDetail ? (
                  <div className="flex flex-col items-center justify-center h-full gap-3">
-                   <div className="w-8 h-8 border-2 border-zinc-200 border-t-zinc-600 rounded-full animate-spin" />
-                   <p className="text-sm text-zinc-500 font-medium">Memuat dokumen...</p>
+                   <div className="w-8 h-8 border-2 border-border-color border-t-primary-text rounded-full animate-spin" />
+                   <p className="text-sm text-secondary-text font-medium">Memuat dokumen...</p>
                  </div>
                ) : detailSurat && detailSurat.surat_formats?.template ? (
                  <div className="flex-1 w-full h-full relative" id="surat-preview-wrapper">
@@ -563,7 +675,6 @@ export default function VerifikasiSuratPage() {
                             const jenisKelamin = getJenisKelamin(p);
 
                             // Address Construction
-                            // Fallback to alamat_sebelumnya if alamat_saat_ini is empty
                             const jalanRaw = p.alamat_saat_ini || p.alamat_sebelumnya || p.alamat || "";
                             const jalan = (jalanRaw && jalanRaw !== '-') ? (jalanRaw.toLowerCase().startsWith('jl') ? jalanRaw : `Jl. ${jalanRaw}`) : '';
                             
@@ -582,18 +693,13 @@ export default function VerifikasiSuratPage() {
                                 nik: p.nik,
                                 tempat_lahir: tempatLahir,
                                 tanggal_lahir: tglFormatted,
-                                // Pre-formatted TTL for variables like [ttl] or [Tempat/Tanggal Lahir]
                                 ttl: `${tempatLahir}, ${tglFormatted}`,
                                 "tempat_tanggal_lahir": `${tempatLahir}, ${tglFormatted}`,
-                                
                                 sex: jenisKelamin,
                                 jenis_kelamin: jenisKelamin,
-                                
-                                // Explicitly provide formatted address
                                 alamat: alamatFull, 
                                 alamat_penduduk: alamatFull,
                                 alamat_tempat_tinggal: alamatFull,
-                                
                                 rt: p.rt,
                                 rw: p.rw,
                                 dusun: p.dusun,
@@ -615,13 +721,12 @@ export default function VerifikasiSuratPage() {
                             pangkat: p.pamong_pangkat,
                             jabatan: "Kepala Desa" 
                           } : undefined;
-                        })(),
-                        form_data: detailSurat.form_data
+                        })()
                       }}
                     />
                  </div>
                ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-zinc-400 gap-2">
+                 <div className="flex flex-col items-center justify-center h-full text-secondary-text gap-2">
                    <FileText className="w-16 h-16 opacity-10" />
                    <p className="font-medium">Tidak ada preview tersedia</p>
                  </div>
@@ -629,10 +734,10 @@ export default function VerifikasiSuratPage() {
             </div>
 
             {/* Right Panel: Info & Actions */}
-            <div className="w-full lg:w-[320px] flex-none flex flex-col bg-white border-l border-zinc-200 z-20 shadow-xl lg:shadow-none h-full font-sans">
+            <div className="w-full lg:w-[320px] flex-none flex flex-col bg-card-bg border-l border-border-color z-20 h-full font-sans">
                 {/* Header */}
-                <div className="h-16 border-b border-zinc-100 flex items-center justify-between px-5 bg-white shrink-0">
-                    <h2 className="font-semibold text-zinc-800 text-sm">Verifikasi Surat</h2>
+                <div className="h-16 border-b border-border-color flex items-center justify-between px-5 bg-card-bg shrink-0">
+                    <h2 className="font-semibold text-primary-text text-sm">Verifikasi Surat</h2>
                     <div className="flex items-center gap-2 scale-90 origin-right">
                          {getStatusBadge(selectedSurat.status)}
                     </div>
@@ -642,27 +747,27 @@ export default function VerifikasiSuratPage() {
                     <div className="p-4 space-y-6">
                         {/* Key Details Grid */}
                         <section>
-                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-3">Informasi Surat</h3>
+                            <h3 className="text-xs font-medium uppercase tracking-wide text-secondary-text mb-3">Informasi Surat</h3>
                             <div className="grid grid-cols-1 gap-y-3">
-                                <div className="flex justify-between items-start border-b border-zinc-50 pb-2">
-                                   <span className="text-xs text-zinc-500">Pemohon</span>
+                                <div className="flex justify-between items-start border-b border-border-color pb-2">
+                                   <span className="text-xs text-secondary-text">Pemohon</span>
                                    <div className="text-right">
-                                       <div className="text-xs font-medium text-zinc-900">{selectedSurat.penduduk?.nama || detailSurat?.penduduk?.nama}</div>
-                                       <div className="text-[10px] text-zinc-400 font-mono">{selectedSurat.penduduk?.nik || detailSurat?.penduduk?.nik}</div>
+                                       <div className="text-xs font-medium text-primary-text">{selectedSurat.penduduk?.nama || detailSurat?.penduduk?.nama}</div>
+                                       <div className="text-xs text-secondary-text font-mono">{selectedSurat.penduduk?.nik || detailSurat?.penduduk?.nik}</div>
                                    </div>
                                 </div>
                                 
-                                <div className="flex justify-between items-start border-b border-zinc-50 pb-2">
-                                   <span className="text-xs text-zinc-500">Jenis Surat</span>
+                                <div className="flex justify-between items-start border-b border-border-color pb-2">
+                                   <span className="text-xs text-secondary-text">Jenis Surat</span>
                                    <div className="text-right">
-                                       <div className="text-xs font-medium text-zinc-900">{selectedSurat.surat_formats?.nama || selectedSurat.nama_surat}</div>
-                                       <div className="text-[10px] text-zinc-400 font-mono">{selectedSurat.no_surat || "-"}</div>
+                                       <div className="text-xs font-medium text-primary-text">{selectedSurat.surat_formats?.nama || selectedSurat.nama_surat}</div>
+                                       <div className="text-[10px] text-secondary-text font-mono">{selectedSurat.no_surat || "-"}</div>
                                    </div>
                                 </div>
 
-                                <div className="flex justify-between items-center border-b border-zinc-50 pb-2">
-                                   <span className="text-xs text-zinc-500">Tanggal</span>
-                                   <span className="text-xs text-zinc-900">{new Date(selectedSurat.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+                                <div className="flex justify-between items-center border-b border-border-color pb-2">
+                                   <span className="text-xs text-secondary-text">Tanggal</span>
+                                   <span className="text-xs text-primary-text">{new Date(selectedSurat.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
                                 </div>
                             </div>
                         </section>
@@ -670,33 +775,33 @@ export default function VerifikasiSuratPage() {
                         {/* History */}
                         <section>
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Riwayat</h3>
-                            <span className="text-[10px] px-1.5 py-0.5 bg-zinc-100 rounded text-zinc-500">{history.length} aktivitas</span>
+                            <h3 className="text-xs font-medium uppercase tracking-wide text-secondary-text">Riwayat</h3>
+                            <span className="text-[10px] px-1.5 py-0.5 bg-body-bg rounded text-secondary-text border border-border-color">{history.length} aktivitas</span>
                           </div>
                           
-                          <div className="relative pl-4 border-l border-zinc-200 space-y-5 ml-1.5">
+                          <div className="relative pl-4 border-l border-border-color space-y-5 ml-1.5">
                             {history.map((log, i) => (
                               <div key={log.id} className="relative">
-                                <div className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors ${
-                                  i === 0 ? 'bg-blue-600 ring-2 ring-blue-50' : 'bg-zinc-300'
+                                <div className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-card-bg transition-colors ${
+                                  i === 0 ? 'bg-primary-text ring-2 ring-border-color' : 'bg-border-color'
                                 }`} />
                                 <div>
                                   <div className="flex flex-col">
-                                    <span className="font-medium text-zinc-900 text-xs">{log.action.toUpperCase().replace('_', ' ')}</span>
-                                    <span className="text-[10px] text-zinc-400">
+                                    <span className="font-medium text-primary-text text-xs">{log.action.toUpperCase().replace('_', ' ')}</span>
+                                    <span className="text-[10px] text-secondary-text">
                                       {new Date(log.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1.5 mt-1">
-                                    <div className="w-3.5 h-3.5 rounded-full bg-zinc-100 flex items-center justify-center text-[8px] font-bold text-zinc-500">
+                                    <div className="w-3.5 h-3.5 rounded-full bg-body-bg flex items-center justify-center text-[0.5rem] font-bold text-secondary-text border border-border-color">
                                       {(log.user_name || log.role || '?').charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="text-[10px] text-zinc-500">
+                                    <span className="text-[10px] text-secondary-text">
                                       {log.user_name || log.role}
                                     </span>
                                   </div>
                                   {log.comment && (
-                                    <div className="mt-2 text-xs bg-amber-50/50 p-2 rounded text-amber-800 border border-amber-100/50 italic">
+                                    <div className="mt-2 text-xs bg-warning-bg/50 p-2 rounded text-warning-text border border-warning-border/50 italic">
                                       "{log.comment}"
                                     </div>
                                   )}
@@ -709,7 +814,7 @@ export default function VerifikasiSuratPage() {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-3 flex-none">
+                <div className="p-4 border-t border-border-color bg-card-bg flex flex-col gap-3 flex-none">
                      
                      {/* Step 1: Initial Actions */}
                      {signStep === 'initial' && (
@@ -720,19 +825,19 @@ export default function VerifikasiSuratPage() {
                                     placeholder="Catatan (opsional)..."
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
-                                    className="bg-white text-xs h-9"
+                                    className="bg-body-bg text-xs h-9 text-primary-text border-border-color placeholder:text-secondary-text"
                                 />
                             )}
                             
                             <div className="flex gap-2">
-                                <Button variant="ghost" onClick={() => setIsSheetOpen(false)} disabled={processing} className="flex-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100">
+                                <Button variant="ghost" onClick={() => setIsSheetOpen(false)} disabled={processing} className="flex-1 text-secondary-text hover:text-primary-text hover:bg-body-bg">
                                     Tutup
                                 </Button>
 
                                 {/* Operator Actions */}
                                 {role === 'operator' && (
                                     (selectedSurat.status === SuratFlowStatus.DRAFT || selectedSurat.status === SuratFlowStatus.REJECTED_SEKDES) && (
-                                        <Button onClick={() => handleAction('submit')} disabled={processing} className="flex-[2] bg-blue-600 hover:bg-blue-700 h-9 text-xs">
+                                        <Button onClick={() => handleAction('submit')} disabled={processing} className="flex-[2] bg-info-text hover:bg-info-text/90 h-9 text-xs">
                                             <Send className="w-3.5 h-3.5 mr-2" />
                                             Ajukan
                                         </Button>
@@ -742,10 +847,10 @@ export default function VerifikasiSuratPage() {
                                 {/* Sekdes Actions */}
                                 {role === 'sekdes' && (
                                     <>
-                                        <Button variant="outline" onClick={() => handleAction('reject')} disabled={processing} className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-9 text-xs">
+                                        <Button variant="outline" onClick={() => handleAction('reject')} disabled={processing} className="flex-1 border-error-border text-error-text hover:bg-error-bg h-9 text-xs">
                                             Tolak
                                         </Button>
-                                        <Button onClick={() => handleAction('approve')} disabled={processing} className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs">
+                                        <Button onClick={() => handleAction('approve')} disabled={processing} className="flex-[2] bg-success-text hover:bg-success-text/90 text-white h-9 text-xs">
                                             <CheckCircle2 className="w-3.5 h-3.5 mr-2" />
                                             Verifikasi
                                         </Button>
@@ -755,10 +860,10 @@ export default function VerifikasiSuratPage() {
                                 {/* Kades Actions */}
                                 {role === 'kades' && (
                                     <>
-                                        <Button variant="outline" onClick={() => handleAction('reject')} disabled={processing} className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-9 text-xs">
+                                        <Button variant="outline" onClick={() => handleAction('reject')} disabled={processing} className="flex-1 border-error-border text-error-text hover:bg-error-bg h-9 text-xs">
                                             Tolak
                                         </Button>
-                                        <Button onClick={() => handleAction('sign')} disabled={processing} className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white h-9 text-xs whitespace-nowrap">
+                                        <Button onClick={() => handleAction('sign')} disabled={processing} className="flex-[2] bg-info-text hover:bg-info-text/90 text-white h-9 text-xs whitespace-nowrap">
                                             <PenTool className="w-3.5 h-3.5 mr-2" />
                                             Tanda Tangan
                                         </Button>
@@ -772,22 +877,22 @@ export default function VerifikasiSuratPage() {
                      {signStep === 'selecting' && (
                         <div className="flex flex-col gap-3">
                             <div className="text-center">
-                                <h4 className="text-sm font-semibold text-zinc-800">Pilih Metode Tanda Tangan</h4>
-                                <p className="text-xs text-zinc-500">Silakan pilih metode tanda tangan yang diinginkan</p>
+                                <h4 className="text-sm font-semibold text-primary-text">Pilih Metode Tanda Tangan</h4>
+                                <p className="text-xs text-secondary-text">Silakan pilih metode tanda tangan yang diinginkan</p>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <Button 
                                     onClick={() => executeSign('electronic')} 
                                     disabled={processing}
                                     variant="outline"
-                                    className="h-auto py-3 flex flex-col items-center gap-2 border-zinc-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+                                    className="h-auto py-3 flex flex-col items-center gap-2 border-border-color hover:bg-info-bg hover:border-info-border hover:text-info-text"
                                 >
-                                    <div className="p-2 bg-blue-100 rounded-full text-blue-600">
+                                    <div className="p-2 bg-info-border rounded-full text-info-text">
                                         <PenTool className="w-4 h-4" />
                                     </div>
                                     <div className="text-center">
                                         <span className="block text-xs font-semibold">Elektronik (TTE)</span>
-                                        <span className="block text-[10px] text-zinc-400 font-normal">Menggunakan QR Code BSrE</span>
+                                        <span className="block text-[10px] text-secondary-text font-normal">Menggunakan QR Code BSrE</span>
                                     </div>
                                 </Button>
 
@@ -795,18 +900,18 @@ export default function VerifikasiSuratPage() {
                                     onClick={() => executeSign('manual')} 
                                     disabled={processing}
                                     variant="outline"
-                                    className="h-auto py-3 flex flex-col items-center gap-2 border-zinc-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700"
+                                    className="h-auto py-3 flex flex-col items-center gap-2 border-border-color hover:bg-warning-bg hover:border-warning-border hover:text-warning-text"
                                 >
-                                    <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+                                    <div className="p-2 bg-warning-border rounded-full text-warning-text">
                                         <User className="w-4 h-4" />
                                     </div>
                                     <div className="text-center">
                                         <span className="block text-xs font-semibold">Manual (Basah)</span>
-                                        <span className="block text-[10px] text-zinc-400 font-normal">Tanda tangan basah / cap</span>
+                                        <span className="block text-xs text-secondary-text font-normal">Tanda tangan basah / cap</span>
                                     </div>
                                 </Button>
                             </div>
-                            <Button variant="ghost" onClick={() => setSignStep('initial')} className="text-zinc-500 h-8 text-xs">
+                            <Button variant="ghost" onClick={() => setSignStep('initial')} className="text-secondary-text h-8 text-xs hover:text-primary-text hover:bg-secondary-text/10">
                                 Batal
                             </Button>
                         </div>
@@ -816,21 +921,21 @@ export default function VerifikasiSuratPage() {
                      {signStep === 'signed' && (
                         <div className="flex flex-col gap-3">
                              {signMode === 'electronic' && (
-                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
-                                    <h5 className="text-xs font-semibold text-blue-700 mb-1">SOP</h5>
-                                    <p className="text-[10px] text-blue-600 leading-relaxed text-justify">
+                                <div className="p-3 bg-info-bg border border-info-border rounded-md">
+                                    <h5 className="text-xs font-semibold text-info-text mb-1">SOP</h5>
+                                    <p className="text-[10px] text-info-text leading-relaxed text-justify">
                                         "QR Code pada dokumen berfungsi sebagai sarana verifikasi status dan keaslian dokumen melaui Sistem Informasi Desa. Pengesahan dokumen dilakukan melalui Tanda Tangan Elektronik Tersertifikasi BSrE, dan dokumen yang dapat diunduh publik adalah dokumen hasil pengesahan tersebut."
                                     </p>
                                 </div>
                              )}
 
-                             <div className="p-3 bg-green-50 border border-green-100 rounded-lg flex items-start gap-3">
-                                <div className="p-1.5 bg-green-100 rounded-full text-green-600 mt-0.5">
+                             <div className="p-3 bg-success-bg border border-success-border rounded-lg flex items-start gap-3">
+                                <div className="p-1.5 bg-success-border rounded-full text-success-text mt-0.5">
                                     <CheckCircle2 className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-semibold text-green-800">Surat Berhasil Ditandatangani!</h4>
-                                    <p className="text-[10px] text-green-600 mt-0.5">
+                                    <h4 className="text-xs font-semibold text-success-text">Surat Berhasil Ditandatangani!</h4>
+                                    <p className="text-xs text-success-text mt-0.5">
                                         {signMode === 'electronic' 
                                             ? "QR Code telah digenerate. Silakan unduh dokumen." 
                                             : "Dokumen telah ditandai manual. Silakan unduh untuk ditandatangani basah, lalu scan dan upload kembali."}
@@ -839,7 +944,7 @@ export default function VerifikasiSuratPage() {
                              </div>
 
                              <div className="grid grid-cols-2 gap-2">
-                                <Button onClick={handleDownloadPdf} className="h-9 text-xs bg-zinc-800 hover:bg-zinc-900 text-white gap-2">
+                                <Button onClick={handleDownloadPdf} className="h-9 text-xs bg-primary-text hover:bg-primary-text/90 text-body-bg gap-2">
                                     <Download className="w-3.5 h-3.5" />
                                     Download
                                 </Button>
@@ -852,16 +957,17 @@ export default function VerifikasiSuratPage() {
                                         accept=".pdf"
                                         onChange={handleUploadDocument}
                                     />
-                                    <label htmlFor="upload-signed-doc">
-                                        <div className="flex items-center justify-center gap-2 h-9 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-medium cursor-pointer transition-colors shadow-sm w-full">
-                                            <Upload className="w-3.5 h-3.5" />
-                                            Upload
-                                        </div>
-                                    </label>
+                                    <Button
+                                        onClick={() => document.getElementById('upload-signed-doc')?.click()}
+                                        className="w-full bg-accent hover:opacity-90 text-white gap-2"
+                                    >
+                                        <Upload className="w-3.5 h-3.5" />
+                                        Upload
+                                    </Button>
                                 </div>
                              </div>
 
-                             <Button variant="ghost" onClick={() => setIsSheetOpen(false)} className="text-zinc-500 h-8 text-xs">
+                             <Button variant="ghost" onClick={() => setIsSheetOpen(false)} className="text-secondary-text h-8 text-xs hover:text-primary-text hover:bg-secondary-text/10">
                                 Tutup
                              </Button>
                         </div>

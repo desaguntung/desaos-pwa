@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
+  LayoutDashboard,
   Newspaper,
   Users,
   Landmark,
@@ -16,6 +17,7 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { AppRole, PermissionResource } from "@/config/permissions";
 import { useRbac } from "@/useRbac";
@@ -34,6 +36,12 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    href: "/dashboard",
+    resource: "dashboard",
+  },
   {
     icon: Home,
     label: "Info Desa",
@@ -267,19 +275,24 @@ export default function Sidebar() {
     .filter(Boolean) as MenuItem[];
 
   return (
-    <aside className="h-full bg-sidebar-bg flex flex-col border-r border-gray-200">
-      <div className="p-4 flex items-center gap-3 border-b border-border-color h-16 flex-shrink-0">
+    <aside className="h-full bg-sidebar-bg flex flex-col border-r border-border-color w-64">
+      <div className="p-4 flex items-center gap-3 border-b border-border-color h-16 flex-shrink-0 bg-sidebar-bg">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary-text rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-sidebar-bg font-bold text-sm">D</span>
+          <div className="w-8 h-8 bg-card-bg border border-border-color rounded-lg flex items-center justify-center shadow-sm">
+            <span className="text-primary-text font-bold text-sm">D</span>
           </div>
           <h1 className="text-sm font-semibold tracking-tight text-primary-text">DesaOS Admin</h1>
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 hover:[&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1 sidebar-scroll">
         {visibleMenuItems.map((item, index) => {
-          const isActive = item.href ? pathname === item.href || pathname?.startsWith(item.href + '/') : false;
+          // Fix Active Logic: Dashboard is active on '/' or '/dashboard'
+          const isDashboard = item.href === '/dashboard';
+          const isActive = isDashboard 
+            ? (pathname === '/' || pathname === '/dashboard')
+            : (item.href ? pathname === item.href || pathname?.startsWith(item.href + '/') : false);
+            
           const isSubActive = item.subMenu?.some(sub => pathname === sub.href || pathname?.startsWith(sub.href));
           const isOpen = openSubMenu === index;
 
@@ -289,23 +302,23 @@ export default function Sidebar() {
                 <button
                   onClick={() => handleMenuClick(index)}
                   className={cn(
-                    "flex items-center justify-between w-full text-sm font-medium px-3 py-2 mx-2 rounded-md transition-all group",
-                    isOpen || isSubActive 
-                      ? "bg-gray-100 text-gray-900 font-semibold" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                    "flex items-center justify-between w-full text-[13px] font-medium px-3 py-1.5 mx-0 rounded-md transition-all group",
+                    isSubActive 
+                      ? "bg-card-bg border border-border-color text-primary-text" 
+                      : "text-secondary-text hover:text-primary-text hover:bg-hover-bg"
                   )}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2.5">
                     <item.icon className={cn(
-                      "w-4 h-4 mr-3 transition-colors",
-                      isOpen || isSubActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900"
+                      "w-4 h-4 transition-colors stroke-[1.5]",
+                      isSubActive ? "text-primary-text" : "text-secondary-text group-hover:text-primary-text"
                     )} />
                     <span>{item.label}</span>
                   </div>
                   <ChevronDown
                     className={cn(
-                      "w-3.5 h-3.5 transition-transform duration-200",
-                      isOpen ? "rotate-180 text-gray-900" : "text-gray-400 group-hover:text-gray-900"
+                      "w-3.5 h-3.5 transition-transform duration-200 stroke-[1.5]",
+                      isOpen ? "rotate-180 text-primary-text" : "text-secondary-text group-hover:text-primary-text"
                     )}
                   />
                 </button>
@@ -313,58 +326,70 @@ export default function Sidebar() {
                 <Link
                   href={item.href ?? "#"}
                   className={cn(
-                    "flex items-center justify-between w-full text-sm font-medium px-3 py-2 mx-2 rounded-md transition-all group",
+                    "flex items-center justify-between w-full text-[13px] font-medium px-3 py-1.5 mx-0 rounded-md transition-all group",
                     isActive 
-                      ? "bg-gray-100 text-gray-900 font-semibold" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                      ? "bg-card-bg border border-border-color text-primary-text" 
+                      : "text-secondary-text hover:text-primary-text hover:bg-hover-bg"
                   )}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2.5">
                     <item.icon className={cn(
-                      "w-4 h-4 mr-3 transition-colors",
-                      isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900"
+                      "w-4 h-4 transition-colors stroke-[1.5]",
+                      isActive ? "text-primary-text" : "text-secondary-text group-hover:text-primary-text"
                     )} />
                     <span>{item.label}</span>
                   </div>
                 </Link>
               )}
 
-              {item.subMenu && item.subMenu.length > 0 && isOpen && (
-                <div className="ml-4 pl-3 border-l border-gray-200 space-y-0.5 my-1">
-                  {item.subMenu.map((sub, subIdx) => {
-                     const isChildActive = pathname === sub.href;
-                     return (
-                      <Link
-                        key={subIdx}
-                        href={sub.href}
-                        className={cn(
-                          "block px-3 py-2 mx-2 text-sm rounded-md transition-colors",
-                          isChildActive
-                            ? "bg-gray-100 text-gray-900 font-medium"
-                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-                        )}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
+              {item.subMenu && item.subMenu.length > 0 && (
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="ml-4 pl-3 border-l border-border-color space-y-0.5 my-1">
+                        {item.subMenu.map((sub, subIdx) => {
+                          const isChildActive = pathname === sub.href;
+                          return (
+                            <Link
+                              key={subIdx}
+                              href={sub.href}
+                              className={cn(
+                                "block px-3 py-1.5 text-[13px] rounded-md transition-colors",
+                                isChildActive
+                                  ? "text-primary-text font-medium bg-hover-bg"
+                                  : "text-secondary-text font-normal hover:text-primary-text hover:bg-hover-bg"
+                              )}
+                            >
+                              {sub.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-100 bg-sidebar-bg mt-auto">
-        <div className="flex items-center gap-3 px-2 py-2 mb-1 rounded-md hover:bg-gray-100 transition-colors cursor-pointer">
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 text-gray-500">
-            <Users className="w-4 h-4" />
+      <div className="p-4 border-t border-border-color bg-sidebar-bg mt-auto">
+        <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1 rounded-md hover:bg-hover-bg transition-colors cursor-pointer">
+          <div className="w-8 h-8 bg-card-bg rounded-full flex items-center justify-center overflow-hidden border border-border-color text-secondary-text">
+            <Users className="w-4 h-4 stroke-[1.5]" />
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-[13px] font-medium text-primary-text truncate">
               {loadingRole ? "Memuat..." : userName ?? "Pengguna"}
             </p>
-            <p className="text-xs text-gray-500 truncate capitalize">
+            <p className="text-xs text-secondary-text truncate capitalize">
               {loadingRole
                 ? "..."
                 : currentRole === "super_admin"
@@ -376,10 +401,12 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="flex items-center w-full text-gray-500 text-sm font-medium hover:text-red-600 px-2 py-2 rounded-md hover:bg-red-50 transition-all"
+          className="flex items-center w-full text-secondary-text text-[13px] font-medium hover:text-error-text px-2 py-1.5 rounded-md hover:bg-error-bg transition-all"
         >
-          <LogOut className="w-3.5 h-3.5 mr-2.5" />
-          <span>Sign out</span>
+          <div className="flex items-center gap-2.5 w-full">
+             <LogOut className="w-4 h-4 stroke-[1.5]" />
+             <span>Sign out</span>
+          </div>
         </button>
       </div>
     </aside>

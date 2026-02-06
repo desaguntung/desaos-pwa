@@ -46,8 +46,8 @@ export default function PortalNewsCard({
 
   // Apple Style Constants
   const hoverTextClass = "group-hover:text-[#06c] transition-colors duration-300";
-  const titleClass = "text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight font-semibold";
-  const metaClass = "text-[#86868b] text-xs font-medium";
+  const titleClass = "text-primary-text dark:text-zinc-100 tracking-tight font-semibold";
+  const metaClass = "text-secondary-text text-xs font-medium";
 
   // Hero Main: Large, Overlay Text
   if (variant === "hero-main") {
@@ -182,7 +182,10 @@ export default function PortalNewsCard({
 
   // Default Vertical
   return (
-    <Link href={item.href} className={cn("group flex flex-col h-full", className)}>
+    <Link 
+      href={`/berita/${item.slug}`}
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-card-bg dark:bg-zinc-900 border border-border-color/30 dark:border-zinc-800 shadow-sm transition-all duration-300 hover:shadow-md h-full"
+    >
       <div className={cn("relative mb-4 w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-zinc-800 shadow-sm", imageHeight)}>
         <img 
           src={item.imageSrc} 

@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Info, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Info, Plus, Trash2, Users, UserPlus } from "lucide-react";
 import { AppRole } from "@/config/permissions";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { createAdminOrStaffUser, deleteUserById } from "@/app/actions/users";
+import { FormLayout } from "@/components/layout/FormLayout";
+import { FormSidebarNav } from "@/components/layout/FormSidebarNav";
+import { InputField, SelectField, SectionTitle } from "@/components/ui/FormFields";
+import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { toast } from "sonner";
 
 type ProfileRow = {
   id: string;
@@ -34,18 +46,52 @@ export default function PengaturanPenggunaPage() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<AppRole>("staff");
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [currentRole, setCurrentRole] = useState<AppRole | null>(null);
   const [users, setUsers] = useState<UserWithProfile[]>([]);
 
+  // Scroll Spy
+  const [activeSection, setActiveSection] = useState("tambah-user");
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+
+  const sections = [
+    { id: "tambah-user", label: "Tambah Pengguna", icon: UserPlus },
+    ...(currentRole === "super_admin" ? [{ id: "daftar-user", label: "Daftar Pengguna", icon: Users }] : []),
+  ];
+
+  const scrollToSection = (id: string) => {
+    const element = sectionRefs.current[id];
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      setActiveSection(id);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 150;
+      for (const section of sections) {
+        const element = sectionRefs.current[section.id];
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section.id);
+          }
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sections]);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoadingUsers(true);
-        setErrorMessage(null);
 
         const { data: authData } = await supabase.auth.getUser();
         const authUser = authData.user;
@@ -102,7 +148,7 @@ export default function PengaturanPenggunaPage() {
 
         setUsers(merged);
       } catch (error) {
-        setErrorMessage("Gagal memuat data pengguna.");
+        toast.error("Gagal memuat data pengguna.");
       } finally {
         setLoadingUsers(false);
       }
@@ -114,8 +160,6 @@ export default function PengaturanPenggunaPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      setErrorMessage(null);
-      setSuccessMessage(null);
       setSubmitting(true);
 
       const created = await createAdminOrStaffUser({
@@ -125,9 +169,7 @@ export default function PengaturanPenggunaPage() {
         role,
       });
 
-      setSuccessMessage(
-        `User ${created.full_name} (${created.email}) dengan role ${created.role} berhasil dibuat. Silakan login di halaman Login.`
-      );
+      toast.success(`User ${created.full_name} (${created.email}) berhasil dibuat.`);
 
       setEmail("");
       setPassword("");
@@ -150,7 +192,7 @@ export default function PengaturanPenggunaPage() {
         typeof anyError?.message === "string" && anyError.message.trim().length > 0
           ? anyError.message
           : "Gagal membuat user baru.";
-      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +200,6 @@ export default function PengaturanPenggunaPage() {
 
   const handleChangeRole = async (userId: string, nextRole: AppRole) => {
     try {
-      setErrorMessage(null);
       const { error } = await supabase
         .from("profiles")
         .update({ role: nextRole })
@@ -176,8 +217,9 @@ export default function PengaturanPenggunaPage() {
             : user
         )
       );
+      toast.success("Role pengguna berhasil diperbarui.");
     } catch (error) {
-      setErrorMessage("Gagal mengubah role pengguna.");
+      toast.error("Gagal mengubah role pengguna.");
     }
   };
 
@@ -189,147 +231,135 @@ export default function PengaturanPenggunaPage() {
       return;
     }
     try {
-      setErrorMessage(null);
       await deleteUserById(userId);
       setUsers((prev) => prev.filter((user) => user.id !== userId));
+      toast.success("Pengguna berhasil dihapus.");
     } catch (error) {
-      setErrorMessage("Gagal menghapus pengguna.");
+      toast.error("Gagal menghapus pengguna.");
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
-      <header className="sticky top-0 bg-body-bg/80 backdrop-blur-md border-b border-zinc-200 z-10">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <h2 className="text-sm font-medium text-primary-text">Pengaturan Pengguna</h2>
-            <div className="h-4 w-px bg-zinc-200" />
-            <div className="flex items-center gap-1 text-xs text-secondary-text">
-              <span>Pengaturan</span>
-              <span className="text-zinc-200">/</span>
-              <span className="text-primary-text font-medium">Pengguna & Role</span>
+    <FormLayout
+      title="Pengaturan Pengguna"
+      subtitle="Kelola pengguna dan hak akses aplikasi."
+      sidebar={
+        <FormSidebarNav
+          sections={sections}
+          activeSection={activeSection}
+          onSectionClick={scrollToSection}
+        />
+      }
+    >
+      <div className="space-y-8 pb-24">
+        {/* Section 1: Tambah Pengguna */}
+        <div
+          id="tambah-user"
+          ref={(el) => { sectionRefs.current["tambah-user"] = el; }}
+          className="bg-card-bg rounded-xl shadow-sm border border-border-color p-6 md:p-8 scroll-mt-24"
+        >
+          <SectionTitle
+            title="Tambah Pengguna Baru"
+            description="Buat akun admin atau staff baru."
+            icon={UserPlus}
+          />
+          
+          <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3 items-start mb-6">
+            <Info className="w-4 h-4 text-amber-600 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-amber-900">Informasi</p>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                Gunakan form ini untuk membuat akun admin atau staff pertama tanpa harus masuk
+                ke dashboard Supabase. Setelah akun admin dibuat dan berhasil login, Anda bisa
+                mengelola pengguna dari tabel di bawah.
+              </p>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="p-6 max-w-5xl mx-auto w-full space-y-6 pb-12">
-        <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3 items-start">
-          <Info className="w-4 h-4 text-amber-600 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-amber-900">Pengaturan Awal Pengguna</p>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              Gunakan halaman ini untuk membuat akun admin atau staff pertama tanpa harus masuk
-              ke dashboard Supabase. Setelah akun admin dibuat dan berhasil login, Anda bisa
-              mengelola pengguna dari halaman ini atau halaman manajemen user.
-            </p>
-          </div>
-        </div>
-
-        {errorMessage && (
-          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-            {errorMessage}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-3 py-2">
-            {successMessage}
-          </div>
-        )}
-
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-zinc-200 rounded-xl p-5 space-y-4"
-        >
-          <p className="text-[11px] font-bold text-secondary-text uppercase tracking-widest">
-            Tambah Pengguna Baru
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-secondary-text">Nama Lengkap</label>
-              <input
-                type="text"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                label="Nama Lengkap"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
                 placeholder="Mis. Super Admin"
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-secondary-text">Email</label>
-              <input
+              <InputField
+                label="Email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
                 placeholder="superadmin@desa.id"
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-secondary-text">Password</label>
-              <input
+              <InputField
+                label="Password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
                 placeholder="Minimal 6 karakter"
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-secondary-text">Role</label>
-              <select
+              <SelectField
+                label="Role"
                 value={role}
-                onChange={(e) => setRole(e.target.value as AppRole)}
-                className="w-full bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
-              >
-                <option value="super_admin">Super Admin</option>
-                <option value="staff">Staff</option>
-                <option value="user">User</option>
-              </select>
+                onValueChange={(val) => setRole(val as AppRole)}
+                options={[
+                  { value: "super_admin", label: "Super Admin" },
+                  { value: "staff", label: "Staff" },
+                  { value: "user", label: "User" },
+                ]}
+              />
             </div>
-          </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center gap-1.5 text-xs bg-primary-text text-white rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{submitting ? "Menyimpan..." : "Simpan Pengguna"}</span>
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end pt-2">
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-auto bg-primary-text text-card-bg hover:bg-primary-text/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {submitting ? "Menyimpan..." : "Simpan Pengguna"}
+              </Button>
+            </div>
+          </form>
+        </div>
 
+        {/* Section 2: Daftar Pengguna (Only for Super Admin) */}
         {currentRole === "super_admin" && (
-          <div className="space-y-4">
-            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
+          <div
+            id="daftar-user"
+            ref={(el) => { sectionRefs.current["daftar-user"] = el; }}
+            className="bg-card-bg rounded-xl shadow-sm border border-border-color p-6 md:p-8 scroll-mt-24"
+          >
+            <SectionTitle
+              title="Manajemen Pengguna"
+              description="Daftar semua pengguna yang terdaftar dalam sistem."
+              icon={Users}
+            />
+
+            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start mb-6">
               <Info className="w-4 h-4 text-blue-600 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-blue-900">
-                  Manajemen Pengguna dan Role
+                  Hak Akses Super Admin
                 </p>
-                <p className="text-[11px] text-blue-800 leading-relaxed">
-                  Sebagai{" "}
-                  <span className="font-semibold">super_admin</span> Anda dapat melihat daftar
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  Sebagai <span className="font-semibold">super_admin</span>, Anda dapat melihat daftar
                   semua pengguna, mengubah role, dan menghapus pengguna.
                 </p>
               </div>
             </div>
 
             {loadingUsers ? (
-              <p className="text-xs text-secondary-text">Memuat data pengguna...</p>
+              <p className="text-xs text-secondary-text text-center py-8">Memuat data pengguna...</p>
             ) : (
-              <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+              <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-zinc-50 border-b border-zinc-200">
+                      <tr className="bg-body-bg border-b border-border-color">
                         <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
                           Email
                         </th>
@@ -342,16 +372,16 @@ export default function PengaturanPenggunaPage() {
                         <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
                           Dibuat
                         </th>
-                        <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right">
+                        <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right">
                           Aksi
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-200 text-sm">
+                    <tbody className="divide-y divide-border-color text-sm">
                       {users.map((user) => (
                         <tr
                           key={user.id}
-                          className="hover:bg-zinc-50 transition-colors"
+                          className="hover:bg-body-bg transition-colors"
                         >
                           <td className="px-4 py-3 text-xs text-primary-text">
                             {user.email}
@@ -360,17 +390,19 @@ export default function PengaturanPenggunaPage() {
                             {(user.full_name || "").toUpperCase()}
                           </td>
                           <td className="px-4 py-3 text-xs">
-                            <select
+                            <Select
                               value={user.role}
-                              onChange={(e) =>
-                                handleChangeRole(user.id, e.target.value as AppRole)
-                              }
-                              className="bg-white border border-zinc-200 rounded-md px-2 py-1 text-[11px]"
+                              onValueChange={(val) => handleChangeRole(user.id, val as AppRole)}
                             >
-                              <option value="super_admin">Super Admin</option>
-                              <option value="staff">Staff</option>
-                              <option value="user">User</option>
-                            </select>
+                              <SelectTrigger className="h-7 text-[11px] w-[130px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </td>
                           <td className="px-4 py-3 text-[11px] text-secondary-text">
                             {new Date(user.created_at).toLocaleString()}
@@ -379,7 +411,7 @@ export default function PengaturanPenggunaPage() {
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(user.id, user.email)}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] text-rose-600 border border-zinc-200 rounded-md bg-white"
+                              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-rose-600 border border-border-color rounded-md bg-card-bg hover:bg-rose-50 hover:border-rose-200 transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                               <span>Hapus</span>
@@ -395,7 +427,7 @@ export default function PengaturanPenggunaPage() {
           </div>
         )}
       </div>
-    </div>
+    </FormLayout>
   );
 }
 

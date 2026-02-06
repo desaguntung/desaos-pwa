@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
-  Search, 
+  MagnifyingGlass as Search, 
   MoreHorizontal,
+  ChevronDown
+} from "geist-icons";
+import {
   Pencil,
   Trash2,
   FileText,
-  ChevronLeft,
-  ChevronRight
 } from "lucide-react";
 import { getSuratMasuk, deleteSuratMasuk, SuratMasuk } from "@/lib/services/surat";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -23,6 +24,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/ui/Pagination";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
+import { DataTable, Column, MobileConfig } from "@/components/ui/DataTable";
 
 export default function SuratMasukPage() {
   const router = useRouter();
@@ -30,9 +35,12 @@ export default function SuratMasukPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
+  // Filter States
+  const [filterYear, setFilterYear] = useState("Semua");
+  
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     fetchSurat();
@@ -71,186 +79,238 @@ export default function SuratMasukPage() {
   };
 
   const filteredSurat = useMemo(() => {
-    return suratList.filter((s) => 
-      s.nomor_surat.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.pengirim.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.isi_singkat.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [suratList, searchTerm]);
+    let data = suratList;
+
+    // Filter Year
+    if (filterYear !== "Semua") {
+      data = data.filter((s) => new Date(s.tanggal_penerimaan).getFullYear().toString() === filterYear);
+    }
+
+    // Filter Search
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      data = data.filter((s) => 
+        s.nomor_surat.toLowerCase().includes(term) ||
+        s.pengirim.toLowerCase().includes(term) ||
+        s.isi_singkat.toLowerCase().includes(term)
+      );
+    }
+
+    return data;
+  }, [suratList, searchTerm, filterYear]);
+
+  // Extract Years for Filter
+  const availableYears = useMemo(() => {
+    const years = new Set(suratList.map(s => new Date(s.tanggal_penerimaan).getFullYear().toString()));
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [suratList]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredSurat.length / rowsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredSurat.length / rowsPerPage));
   const paginatedSurat = filteredSurat.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
+  const columns: Column<SuratMasuk>[] = useMemo(() => [
+    {
+      header: "Tanggal Terima",
+      accessorKey: "tanggal_penerimaan",
+      cell: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-primary-text">
+            {formatDate(row.tanggal_penerimaan)}
+          </span>
+          <span className="text-xs text-secondary-text">
+            Tgl Surat: {formatDate(row.tanggal_surat)}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "Nomor Surat",
+      accessorKey: "nomor_surat",
+      cell: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-mono text-primary-text font-medium">
+            {row.nomor_surat}
+          </span>
+          <span className="text-xs text-secondary-text">
+            Kode: {row.kode_surat}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "Pengirim",
+      accessorKey: "pengirim",
+      cell: (row) => (
+        <span className="text-sm font-medium text-primary-text capitalize block">
+          {row.pengirim}
+        </span>
+      )
+    },
+    {
+      header: "Isi Singkat",
+      accessorKey: "isi_singkat",
+      cell: (row) => (
+        <p className="text-sm text-secondary-text line-clamp-2 max-w-xs capitalize">
+          {row.isi_singkat.toLowerCase()}
+        </p>
+      )
+    },
+    {
+      header: "Aksi",
+      accessorKey: "id",
+      className: "text-right",
+      cell: (row) => (
+         <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-secondary-text hover:text-primary-text hover:bg-body-bg rounded-md"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => handleDisposisi(row.id!)} className="cursor-pointer">
+                <FileText className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                Disposisi
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEdit(row.id!)} className="cursor-pointer">
+                <Pencil className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                Edit Data
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleDelete(row.id!)}
+                className="text-error-text focus:text-error-text focus:bg-error-bg/10 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Hapus Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+      )
+    }
+  ], []);
+
+  const mobileConfig: MobileConfig<SuratMasuk> = {
+    titleKey: "nomor_surat",
+    subtitleKey: "pengirim",
+    statusKey: (row) => formatDate(row.tanggal_penerimaan),
+    action: (row) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-secondary-text hover:text-primary-text hover:bg-body-bg rounded-md"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => handleDisposisi(row.id!)} className="cursor-pointer">
+                <FileText className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                Disposisi
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEdit(row.id!)} className="cursor-pointer">
+                <Pencil className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                Edit Data
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleDelete(row.id!)}
+                className="text-error-text focus:text-error-text focus:bg-error-bg/10 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Hapus Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+    )
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50">
+    <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Surat Masuk" 
         subtitle="Layanan Surat / Surat Masuk"
-        actions={
-          <Link
-            href="/surat/masuk/tambah"
-            className="flex items-center gap-1.5 text-xs bg-slate-900 text-white rounded-md px-3 py-2 hover:bg-slate-800 transition-colors font-medium shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Surat</span>
-          </Link>
-        }
-        className="mb-6"
       />
 
-      <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
-        {/* Main Card */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden p-6">
-          
-          {/* Search Bar */}
-          <div className="mb-6">
-             <div className="relative w-full md:w-96 group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-transparent rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-gray-200 transition-all text-sm"
-                  placeholder="Cari Nomor Surat, Pengirim..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+      <Card className="p-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Search */}
+            <div className="w-full md:w-auto flex-1 relative max-w-sm">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-text pointer-events-none">
+                <Search className="w-4 h-4" />
               </div>
-          </div>
-
-          {/* Table */}
-          <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-center w-12 border-b border-gray-200">No</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Tanggal Terima</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Nomor Surat</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Pengirim</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Isi Singkat</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-center w-10 border-b border-gray-200">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
-                      Loading data...
-                    </td>
-                  </tr>
-                ) : filteredSurat.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
-                      Belum ada data surat masuk
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedSurat.map((surat, index) => (
-                    <tr key={surat.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-4 text-sm text-gray-500 text-center w-12 align-middle">
-                        {(currentPage - 1) * rowsPerPage + index + 1}
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium text-gray-900">
-                            {formatDate(surat.tanggal_penerimaan)}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Tgl Surat: {formatDate(surat.tanggal_surat)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium text-gray-900">
-                            {surat.nomor_surat}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Kode: {surat.kode_surat}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        <span className="text-sm font-medium text-gray-900 capitalize block">
-                          {surat.pengirim}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        <p className="text-sm text-gray-600 line-clamp-2 max-w-xs">
-                          {surat.isi_singkat}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4 align-middle text-center">
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[160px]">
-                              <DropdownMenuItem onClick={() => handleDisposisi(surat.id)} className="cursor-pointer">
-                                <FileText className="w-3.5 h-3.5 mr-2 text-slate-500" />
-                                Disposisi
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(surat.id)} className="cursor-pointer">
-                                <Pencil className="w-3.5 h-3.5 mr-2 text-slate-500" />
-                                Edit Data
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleDelete(surat.id)}
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 mr-2" />
-                                Hapus Data
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-           <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-              <span className="text-sm text-gray-500">
-                  Menampilkan {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, filteredSurat.length)} dari {filteredSurat.length} data
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
+              <Input
+                type="text"
+                className="pl-9"
+                placeholder="Cari Nomor Surat, Pengirim..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
-        </div>
-      </div>
+
+            {/* Actions: Filter & Add */}
+            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+               {/* Filter Year */}
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={`h-9 px-3 text-xs font-medium justify-between ${filterYear !== "Semua" ? "bg-body-bg text-primary-text" : "text-secondary-text"}`}
+                  >
+                    <span>Tahun: {filterYear}</span>
+                    <ChevronDown className="ml-2 h-3.5 w-3.5 text-secondary-text" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuItem onClick={() => setFilterYear("Semua")}>
+                    Semua
+                  </DropdownMenuItem>
+                  {availableYears.map(year => (
+                    <DropdownMenuItem key={year} onClick={() => setFilterYear(year)}>
+                      {year}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Link
+                href="/surat/masuk/tambah"
+              >
+                <Button className="gap-1.5 text-xs h-9">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden md:inline">Tambah</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+      </Card>
+
+      <DataTable 
+          columns={columns} 
+          data={paginatedSurat} 
+          loading={loading}
+          mobileConfig={mobileConfig}
+      />
+
+      <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredSurat.length}
+          itemsPerPage={rowsPerPage}
+          onItemsPerPageChange={setRowsPerPage}
+          sticky={true}
+      />
     </div>
   );
 }

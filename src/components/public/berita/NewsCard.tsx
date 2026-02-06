@@ -47,7 +47,7 @@ export default function NewsCard({ article, index = 0 }: NewsCardProps) {
       </Link>
 
       <div className="flex flex-col flex-grow p-5">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+        <div className="flex items-center gap-2 text-xs text-secondary-text dark:text-zinc-400 mb-3">
           <Calendar className="w-3.5 h-3.5" />
           <time dateTime={article.published_at}>
             {format(new Date(article.published_at), "d MMMM yyyy", { locale: id })}
@@ -55,12 +55,12 @@ export default function NewsCard({ article, index = 0 }: NewsCardProps) {
         </div>
 
         <Link href={`/berita/${article.slug}`} className="group-hover:text-blue-600 transition-colors">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2 line-clamp-2 leading-snug">
+          <h3 className="text-lg font-bold text-primary-text dark:text-zinc-100 mb-2 line-clamp-2 leading-snug">
             {article.title}
           </h3>
         </Link>
 
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3 mb-4 flex-grow">
+        <p className="text-sm text-secondary-text dark:text-zinc-400 line-clamp-3 mb-4 flex-grow">
           {article.excerpt}
         </p>
 

@@ -1,58 +1,154 @@
-import React, { useState, useEffect } from "react";
-import { AlertCircle, ChevronRight } from "lucide-react";
+import React from "react";
+import { cn } from "@/lib/utils";
+import { Input } from "./Input";
+import { Textarea } from "./Textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
+import { CalendarIcon, Clock } from "lucide-react";
 
-export const SectionTitle = ({ title, icon: Icon }: { title: string; icon: any }) => (
-  <div className="flex items-center gap-2 pb-2 mb-6 border-b border-border-color">
-    <Icon className="w-4 h-4 text-secondary-text" />
-    <h3 className="text-sm font-medium text-primary-text">{title}</h3>
-  </div>
-);
+interface BaseFieldProps {
+  label?: string;
+  required?: boolean;
+  error?: string;
+  className?: string;
+  description?: string;
+}
 
-export const InputField = ({ label, required, className, ...props }: any) => (
-  <div className="space-y-1">
-    <label className="block text-xs font-medium text-secondary-text uppercase tracking-wide">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <input
-      className={`flex h-9 w-full rounded-md border border-border-color bg-card-bg px-3 py-1 text-sm text-primary-text shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 ${className || ""}`}
-      {...props}
-    />
-  </div>
-);
+interface InputFieldProps extends BaseFieldProps, React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const SelectField = ({ label, required, options, className, placeholder = "Pilih...", ...props }: any) => (
-  <div className="space-y-1">
-    <label className="block text-xs font-medium text-secondary-text uppercase tracking-wide">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <div className="relative">
-      <select
-        className={`flex h-9 w-full appearance-none items-center justify-between rounded-md border border-border-color bg-card-bg px-3 py-2 text-sm text-primary-text shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 ${className || ""}`}
-        defaultValue=""
+export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
+  ({ label, required, error, className, description, ...props }, ref) => (
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-xs font-medium text-primary-text">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+      <Input
+        ref={ref}
+        className={cn(error && "border-red-500 focus-visible:ring-red-500", className)}
         {...props}
-      >
-        <option value="" disabled className="bg-card-bg text-secondary-text">
-          {placeholder}
-        </option>
-        {options.map((opt: any) => (
-          <option key={opt.value} value={opt.value} className="bg-card-bg text-primary-text">
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronRight className="absolute right-3 top-2.5 h-4 w-4 rotate-90 opacity-50 pointer-events-none text-primary-text" />
+      />
+      {description && <p className="text-xs text-secondary-text">{description}</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
+  )
+);
+InputField.displayName = "InputField";
+
+interface TextAreaFieldProps extends BaseFieldProps, React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
+export const TextAreaField = React.forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
+  ({ label, required, error, className, description, ...props }, ref) => (
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-xs font-medium text-primary-text">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+      <Textarea
+        ref={ref}
+        className={cn(error && "border-red-500 focus-visible:ring-red-500", className)}
+        {...props}
+      />
+      {description && <p className="text-xs text-secondary-text">{description}</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  )
+);
+TextAreaField.displayName = "TextAreaField";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectFieldProps extends BaseFieldProps {
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onChange?: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+export const SelectField = ({
+  label,
+  required,
+  error,
+  className,
+  description,
+  value,
+  onValueChange,
+  onChange,
+  options,
+  placeholder = "Pilih...",
+  disabled,
+}: SelectFieldProps) => (
+  <div className="space-y-1.5">
+    {label && (
+      <label className="block text-xs font-medium text-primary-text">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <Select value={value} onValueChange={onChange || onValueChange || (() => {})}>
+      <SelectTrigger disabled={disabled} className={cn(error && "border-red-500 focus:ring-red-500", className)}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+    {description && <p className="text-xs text-secondary-text">{description}</p>}
+    {error && <p className="text-xs text-red-500">{error}</p>}
   </div>
 );
 
-export const TextAreaField = ({ label, required, className, ...props }: any) => (
-  <div className="space-y-1">
-    <label className="block text-xs font-medium text-secondary-text uppercase tracking-wide">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <textarea
-      className={`flex min-h-[60px] w-full rounded-md border border-border-color bg-card-bg px-3 py-2 text-sm text-primary-text shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 ${className || ""}`}
-      {...props}
-    />
+export const DatePickerField = React.forwardRef<HTMLInputElement, InputFieldProps>(
+  ({ label, required, error, className, description, ...props }, ref) => (
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-xs font-medium text-primary-text">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+      <div className="relative">
+        <Input
+          type="date"
+          ref={ref}
+          className={cn(
+            "pl-10 text-left uppercase [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer",
+            !props.value && "text-secondary-text",
+            "[&::-webkit-calendar-picker-indicator]:dark:filter [&::-webkit-calendar-picker-indicator]:dark:invert",
+            error && "border-red-500 focus-visible:ring-red-500",
+            className
+          )}
+          {...props}
+        />
+        <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-secondary-text pointer-events-none" />
+      </div>
+      {description && <p className="text-xs text-secondary-text">{description}</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  )
+);
+DatePickerField.displayName = "DatePickerField";
+
+export const SectionTitle = ({ title, icon: Icon, description }: { title: string; icon?: any; description?: string }) => (
+  <div className="pb-4 mb-6 border-b border-border-color">
+    <div className="flex items-center gap-2 mb-1">
+      {Icon && <Icon className="w-4 h-4 text-accent" />}
+      <h3 className="text-lg font-semibold text-primary-text">{title}</h3>
+    </div>
+    {description && <p className="text-sm text-secondary-text">{description}</p>}
   </div>
 );

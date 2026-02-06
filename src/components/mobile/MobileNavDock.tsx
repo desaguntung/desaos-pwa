@@ -25,6 +25,7 @@ import {
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { getStatistics, StatsData } from "@/app/actions/statistics";
 import StatisticsView from "@/components/public/statistik/StatisticsView";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 // Helper to generate generic guide if specific one missing
 const getGuide = (title: string, type: string) => {
@@ -653,12 +654,29 @@ export default function MobileNavDock() {
                           {/* Stats Content */}
                           <div className="flex-1 overflow-y-auto bg-[#F2F2F7] p-5 pb-24">
                              {loadingStats ? (
-                               <div className="flex flex-col items-center justify-center h-64 gap-4">
-                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-full border-4 border-slate-200"></div>
-                                    <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin absolute inset-0"></div>
+                               <div className="space-y-4">
+                                 {/* Summary Card Skeleton */}
+                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+                                   <div className="flex items-center gap-3">
+                                     <Skeleton className="w-10 h-10 rounded-full" />
+                                     <div className="space-y-2 flex-1">
+                                       <Skeleton className="h-4 w-1/3" />
+                                       <Skeleton className="h-3 w-1/2" />
+                                     </div>
+                                   </div>
+                                   <Skeleton className="h-24 w-full rounded-xl" />
                                  </div>
-                                 <p className="text-sm text-slate-500 font-medium animate-pulse">Memuat data statistik...</p>
+                                 
+                                 {/* Grid Skeletons */}
+                                 <div className="grid grid-cols-2 gap-3">
+                                   {[1, 2, 3, 4].map((i) => (
+                                     <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
+                                       <Skeleton className="w-8 h-8 rounded-lg" />
+                                       <Skeleton className="h-6 w-16" />
+                                       <Skeleton className="h-3 w-full" />
+                                     </div>
+                                   ))}
+                                 </div>
                                </div>
                              ) : statsData ? (
                                 <StatisticsView 

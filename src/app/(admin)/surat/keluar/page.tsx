@@ -7,23 +7,22 @@ import {
   Plus, 
   Search,
   Filter,
-  Mail
-} from "lucide-react";
-import { 
-  MagnifyingGlass,
   MoreHorizontal,
-  GridSquare as LayoutGrid,
-  ListUnordered as ListIcon,
-  ChevronDown,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  ChartActivity as Activity
-} from "geist-icons";
+  FileText,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Upload,
+  Eye,
+  Download,
+  Edit,
+  Send,
+  Printer,
+  ChevronDown
+} from "lucide-react";
 import { getLogSurat, LogSurat, updateLogSuratStatus } from "@/lib/services/surat";
-import SuratKeluarTableRow from "@/components/SuratKeluarTableRow";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { toast } from "sonner";
 import { UploadSignedFileModal } from "@/components/UploadSignedFileModal";
@@ -31,29 +30,46 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from "@/components/ui/DropdownMenu";
+import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataTable, Column } from "@/components/ui/DataTable";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+
+type SuratKeluar = LogSurat & { 
+  surat_formats?: { nama: string };
+  penduduk?: { nama: string; nik: string };
+};
 
 export default function SuratKeluarPage() {
   const router = useRouter();
-  const [suratList, setSuratList] = useState<(LogSurat & { 
-    surat_formats?: { nama: string };
-    penduduk?: { nama: string; nik: string };
-  })[]>([]);
+  const [suratList, setSuratList] = useState<SuratKeluar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"Semua" | "Konsep" | "Verifikasi" | "Perbaikan" | "Tanda Tangan" | "Selesai">("Semua");
-  const [openFilterCategory, setOpenFilterCategory] = useState<string | null>(null);
+  const STATUS_OPTIONS = ["Semua", "Konsep", "Verifikasi", "Perbaikan", "Tanda Tangan", "Selesai"] as const;
+  type StatusOption = typeof STATUS_OPTIONS[number];
+  const [statusFilter, setStatusFilter] = useState<StatusOption>("Semua");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   
   // Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedSuratId, setSelectedSuratId] = useState<number | null>(null);
+
+  // Delete State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [suratToDelete, setSuratToDelete] = useState<SuratKeluar | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchSurat();
@@ -73,17 +89,27 @@ export default function SuratKeluarPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Apakah Anda yakin ingin menghapus arsip surat ini?")) {
-      try {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.from("log_surat").delete().eq("id", id);
-        setSuratList((prev) => prev.filter((s) => s.id !== id));
-        toast.success("Surat berhasil dihapus");
-      } catch (error: any) {
-        console.error("Error deleting surat:", error);
-        toast.error(`Gagal menghapus surat: ${error.message}`);
-      }
+  const confirmDelete = (surat: SuratKeluar) => {
+    setSuratToDelete(surat);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!suratToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      await supabase.from("log_surat").delete().eq("id", suratToDelete.id);
+      setSuratList((prev) => prev.filter((s) => s.id !== suratToDelete.id));
+      toast.success("Surat berhasil dihapus");
+      setDeleteDialogOpen(false);
+      setSuratToDelete(null);
+    } catch (error: any) {
+      console.error("Error deleting surat:", error);
+      toast.error(`Gagal menghapus surat: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -111,6 +137,36 @@ export default function SuratKeluarPage() {
     fetchSurat();
     setIsUploadModalOpen(false);
     setSelectedSuratId(null);
+  };
+
+  const handleDownload = async (surat: SuratKeluar) => {
+    if (!surat.signed_file_path) {
+      handleCetak(surat.id!); 
+      return;
+    }
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      toast.info("Sedang mendownload dokumen...");
+      
+      const { data, error } = await supabase.storage
+        .from('surat-documents')
+        .download(surat.signed_file_path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Surat-${surat.no_surat?.replace(/\//g, '-') || surat.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error("Error downloading file:", error);
+      toast.error("Gagal mendownload file: " + error.message);
+    }
   };
 
   const filteredSurat = useMemo(() => {
@@ -145,203 +201,319 @@ export default function SuratKeluarPage() {
   }, [suratList, searchTerm, statusFilter]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredSurat.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredSurat.length / rowsPerPage));
   const paginatedSurat = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredSurat.slice(startIndex, startIndex + pageSize);
-  }, [filteredSurat, currentPage, pageSize]);
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    return filteredSurat.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredSurat, currentPage, rowsPerPage]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  const FilterList = () => (
-    <div className="w-full text-sm text-primary-text">
-      {/* Group 1: Filter by */}
-      <div className="py-1">
-        <div className="px-3 py-2">
-          <span className="text-[11px] text-secondary-text font-medium">Filter by</span>
-        </div>
-        
-        {/* Status */}
-        <div className="px-1">
-          <button 
-            className="flex w-full items-center px-3 py-2 rounded-md hover:bg-zinc-50 transition-colors text-left dark:hover:bg-zinc-800"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilterCategory(prev => prev === 'status' ? null : 'status'); }}
-          >
-            <Activity className="mr-3 h-3.5 w-3.5 text-secondary-text" />
-            <span className="flex-1 text-primary-text">Status</span>
-            {statusFilter !== "Semua" && <span className="text-[10px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{statusFilter}</span>}
-          </button>
-          {openFilterCategory === 'status' && (
-            <div className="pl-9 pr-2 py-1 space-y-1">
-              {["Semua", "Konsep", "Verifikasi", "Perbaikan", "Tanda Tangan", "Selesai"].map(val => (
-                <button key={val} onClick={() => { setStatusFilter(val as any); setCurrentPage(1); }} className="flex w-full items-center text-xs py-1.5 px-2 hover:bg-zinc-50 rounded text-secondary-text dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
-                  <span className="flex-1 text-left">{val}</span>
-                  {statusFilter === val && <Check className="h-3 w-3 text-primary-text" />}
-                </button>
-              ))}
+  const columns = useMemo<Column<SuratKeluar>[]>(() => [
+    {
+      header: "Nomor & Tanggal",
+      accessorKey: "no_surat",
+      cell: (surat) => {
+        const formatDate = (dateString?: string) => {
+          if (!dateString) return "-";
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return "-";
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}-${month}-${year}`;
+        };
+
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-mono text-primary-text font-medium">
+              {surat.no_surat || "Belum ada nomor"}
+            </span>
+            <span className="text-xs text-secondary-text flex items-center gap-1">
+               <FileText className="w-3 h-3" />
+               {formatDate(surat.tanggal)}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Jenis Surat",
+      accessorKey: "nama_surat",
+      cell: (surat) => (
+        <span className="text-sm text-primary-text font-medium">
+          {surat.surat_formats?.nama || surat.nama_surat || "Surat Keterangan"}
+        </span>
+      )
+    },
+    {
+      header: "Tujuan",
+      accessorKey: "penduduk.nama",
+      cell: (surat) => {
+        if (surat.nama_non_warga) {
+          return (
+            <div>
+              <div className="font-medium text-primary-text text-sm uppercase">{surat.nama_non_warga}</div>
+              <div className="text-xs text-secondary-text">Non-Warga</div>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+          );
+        }
+        if (surat.penduduk) {
+          return (
+            <div>
+              <div className="font-medium text-primary-text text-sm uppercase">{surat.penduduk.nama}</div>
+              <div className="text-xs text-secondary-text font-mono">NIK: {surat.penduduk.nik}</div>
+            </div>
+          );
+        }
+        return "-";
+      }
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: (surat) => {
+        const status = surat.status;
+        switch (status) {
+          case 0: return <Badge variant="outline">Konsep</Badge>;
+          case 1: return <Badge variant="info">Verifikasi Sekdes</Badge>;
+          case 2: return <Badge variant="error">Perbaikan</Badge>;
+          case 3: return <Badge variant="warning">Tanda Tangan Kades</Badge>;
+          case 4: return <Badge variant="success">Selesai</Badge>;
+          default: return <Badge variant="outline">Unknown</Badge>;
+        }
+      }
+    },
+    {
+      header: "Aksi",
+      accessorKey: "actions",
+      cell: (surat) => {
+        return (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon-sm"
+                  variant="ghost-secondary"
+                  className="rounded-md"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Aksi Surat</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Status-based Actions */}
+                {surat.status === 0 && (
+                  <DropdownMenuItem onClick={() => handleStatusChange(surat.id!, 1)}>
+                    <Send className="w-3.5 h-3.5 mr-2 text-info-text" />
+                    Ajukan Verifikasi
+                  </DropdownMenuItem>
+                )}
+
+                {surat.status === 1 && (
+                  <>
+                    <DropdownMenuItem onClick={() => handleStatusChange(surat.id!, 3)}>
+                      <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+                      Verifikasi & Lanjut
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(surat.id!, 2)}>
+                      <XCircle className="w-3.5 h-3.5 mr-2 text-amber-600" />
+                      Perlu Perbaikan
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {surat.status === 2 && (
+                   <DropdownMenuItem onClick={() => handleStatusChange(surat.id!, 1)}>
+                    <Send className="w-3.5 h-3.5 mr-2 text-info-text" />
+                    Ajukan Ulang
+                  </DropdownMenuItem>
+                )}
+
+                {surat.status === 3 && (
+                  <>
+                    <DropdownMenuItem onClick={() => handleUploadClick(surat.id!)}>
+                      <Upload className="w-3.5 h-3.5 mr-2 text-primary-text" />
+                      Upload TTD
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => handleStatusChange(surat.id!, 2)}>
+                      <XCircle className="w-3.5 h-3.5 mr-2 text-amber-600" />
+                      Tolak & Perbaikan
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {surat.status === 4 && (
+                   <DropdownMenuItem onClick={() => handleDownload(surat)}>
+                    <Download className="w-3.5 h-3.5 mr-2 text-primary-text" />
+                    Download File
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+                
+                {/* Common Actions */}
+                <DropdownMenuItem onClick={() => handleCetak(surat.id!)}>
+                  <Eye className="w-3.5 h-3.5 mr-2" />
+                  Lihat Detail
+                </DropdownMenuItem>
+                
+                {surat.status < 3 && (
+                   <DropdownMenuItem onClick={() => handleCetak(surat.id!)}>
+                    <Edit className="w-3.5 h-3.5 mr-2" />
+                    Edit Data
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem onClick={() => handleCetak(surat.id!)}>
+                  <Printer className="w-3.5 h-3.5 mr-2" />
+                  Cetak
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={() => handleDelete(surat.id!)}
+                  className="text-error-text focus:text-error-text focus:bg-error-bg/10"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      }
+    }
+  ], [suratList]); // Re-create columns if list changes to ensure closure captures latest state if needed, though mostly relying on args
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50">
+    <div className="space-y-6 p-6 md:p-8 pb-24">
       <PageHeader 
         title="Layanan Surat" 
         subtitle="Kelola arsip surat keluar dan status verifikasi."
-        className="mb-6"
       />
 
-      <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
-        {/* Main Card */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden p-6">
-          
-          {/* Toolbar & Filter */}
-          <div className="flex flex-row items-center justify-between gap-3 mb-6">
-            {/* Search Bar (Left) */}
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input 
-                type="text" 
-                className="block w-full pl-10 pr-3 py-2 border border-transparent rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-gray-200 transition-all text-sm"
-                placeholder="Cari Nomor Surat, Tujuan..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-2">
-              {/* Filter Button */}
-              <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                      <button 
-                        type="button"
-                        className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors relative"
-                      >
-                          <Filter className="w-4 h-4 text-gray-500" />
-                          {statusFilter !== "Semua" && (
-                            <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-slate-900 ring-1 ring-white" />
-                          )}
-                      </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="w-[200px] p-0 border border-gray-200 shadow-xl rounded-xl bg-white list-none z-50"
-                    sideOffset={8}
-                  >
-                      <FilterList />
-                  </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Add Button */}
-              <Link
-                href="/surat/cetak"
-                className="flex items-center gap-1.5 text-xs bg-slate-900 text-white rounded-md px-3 py-2 hover:bg-slate-800 transition-colors font-medium shadow-sm"
-              >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden md:inline">Buat Surat Baru</span>
-              </Link>
-            </div>
+      {/* Toolbar */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Search */}
+          <div className="w-full md:w-auto flex-1 max-w-sm">
+            <Input
+              startIcon={<Search className="w-4 h-4" />}
+              placeholder="Cari Nomor Surat, Tujuan..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
+          {/* Actions */}
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="gap-2 shrink-0 text-secondary-text"
+                >
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  <span className="hidden sm:inline text-xs font-medium">{statusFilter}</span>
+                  {statusFilter !== "Semua" && (
+                     <div className="ml-2 w-1.5 h-1.5 rounded-full bg-accent" />
+                  )}
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Filter Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {STATUS_OPTIONS.map(val => (
+                  <DropdownMenuItem key={val} onClick={() => { setStatusFilter(val); setCurrentPage(1); }}>
+                    {val}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Table Container */}
-          <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-center w-12 border-b border-gray-200">No</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Nomor & Tanggal</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Jenis Surat</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Tujuan</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Status</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-center w-10 border-b border-gray-200">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500 text-sm">
-                      Memuat data...
-                    </td>
-                  </tr>
-                ) : paginatedSurat.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="h-64 text-center align-middle">
-                      <div className="flex flex-col items-center justify-center py-12">
-                         <Mail className="w-12 h-12 text-gray-300 mb-4" />
-                         <p className="text-gray-500 font-medium text-base">
-                           {searchTerm ? "Tidak ada surat yang cocok" : "Belum ada data surat keluar"}
-                         </p>
-                         <p className="text-sm text-gray-400 mt-1">
-                           Silahkan buat surat baru melalui tombol di atas.
-                         </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedSurat.map((surat, index) => (
-                    <SuratKeluarTableRow
-                      key={surat.id}
-                      surat={surat}
-                      rowNumber={(currentPage - 1) * pageSize + index + 1}
-                      onCetak={handleCetak}
-                      onDelete={handleDelete}
-                      onStatusChange={handleStatusChange}
-                      onUpload={handleUploadClick}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Pagination Controls */}
-          <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-            <span className="text-sm text-gray-500">
-                Menampilkan {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredSurat.length)} dari {filteredSurat.length} data
-            </span>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 h-8 px-3 text-gray-500"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 h-8 px-3 text-gray-500"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </div>
+            <Link href="/surat/cetak">
+              <Button className="gap-1.5 h-9">
+                <Plus className="w-4 h-4" />
+                <span className="hidden md:inline">Buat Surat</span>
+              </Button>
+            </Link>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <UploadSignedFileModal 
+      {error && (
+        <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 text-sm rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Table */}
+      <DataTable
+        columns={columns}
+        data={paginatedSurat}
+        emptyMessage={
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="bg-body-bg p-4 rounded-full mb-4">
+              <FileText className="w-8 h-8 text-secondary-text/50" />
+            </div>
+            <h3 className="text-lg font-medium text-primary-text">Belum ada surat keluar</h3>
+            <p className="text-sm text-secondary-text max-w-sm mt-1 mb-4">
+              Buat surat baru untuk memulai pencatatan arsip surat keluar.
+            </p>
+            <Link href="/surat/cetak">
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Buat Surat Baru
+              </Button>
+            </Link>
+          </div>
+        }
+        isLoading={loading}
+      />
+      
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredSurat.length}
+        itemsPerPage={rowsPerPage}
+        onItemsPerPageChange={setRowsPerPage}
+        sticky={true}
+      />
+
+      <UploadSignedFileModal  
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         suratId={selectedSuratId}
         onSuccess={handleUploadSuccess}
+      />
+
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Hapus Surat Keluar?"
+        description={
+          <span>
+            Apakah Anda yakin ingin menghapus surat nomor <span className="font-medium text-primary-text">{suratToDelete?.no_surat || "Tanpa Nomor"}</span>?
+            Tindakan ini tidak dapat dibatalkan.
+          </span>
+        }
+        confirmLabel="Hapus Surat"
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        variant="destructive"
       />
     </div>
   );

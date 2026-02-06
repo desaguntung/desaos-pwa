@@ -17,7 +17,7 @@ export default function MinimalCategoryFilter({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-black/80 backdrop-blur-md sticky top-0 z-30">
+    <div className="w-full border-b border-border-color dark:border-zinc-800 bg-card-bg/80 dark:bg-black/80 backdrop-blur-md sticky top-0 z-30">
       <div 
         ref={scrollContainerRef}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto scrollbar-hide py-4"
@@ -32,14 +32,14 @@ export default function MinimalCategoryFilter({
                 className={cn(
                   "group relative text-sm font-medium transition-colors duration-300",
                   isActive
-                    ? "text-zinc-900 dark:text-white"
-                    : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                    ? "text-primary-text dark:text-white"
+                    : "text-secondary-text hover:text-primary-text dark:text-zinc-400 dark:hover:text-zinc-200"
                 )}
               >
                 {category}
                 <span 
                   className={cn(
-                    "absolute -bottom-4 left-0 w-full h-0.5 bg-black dark:bg-white transition-all duration-300",
+                    "absolute -bottom-4 left-0 w-full h-0.5 bg-primary-text dark:bg-white transition-all duration-300",
                     isActive ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0 group-hover:scale-x-50 group-hover:opacity-50"
                   )} 
                 />

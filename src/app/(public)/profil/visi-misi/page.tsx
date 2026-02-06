@@ -24,10 +24,10 @@ export default async function VisiMisiPage() {
         description="Arah dan tujuan pembangunan desa untuk kesejahteraan bersama."
         size="medium"
         variant="centered"
-        bgClass="bg-zinc-50"
+        bgClass="bg-body-bg"
       />
 
-      <div className="min-h-screen bg-white pb-20">
+      <div className="min-h-screen bg-card-bg pb-20">
         <div className="container mx-auto px-4 max-w-4xl -mt-10 relative z-20">
            <ProfileView data={data} category="visi-misi" />
         </div>

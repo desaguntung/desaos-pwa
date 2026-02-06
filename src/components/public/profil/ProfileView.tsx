@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ProfileData } from "@/app/actions/profile";
-import { AppleCard } from "@/components/ui/AppleCard";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { 
   History, Target, Compass, Map as MapIcon, 
   User, Users, Maximize2, Mountain, MapPin, 
@@ -21,11 +21,17 @@ interface ProfileViewProps {
 
 const SejarahView = ({ data }: { data: ProfileData }) => (
   <div className="space-y-6">
-    <AppleCard title="Sejarah Desa" subtitle={`Asal usul ${data.identitas.sebutan_desa} ${data.identitas.nama_desa}`}>
-      <div className="mt-4 prose prose-zinc prose-sm max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
-        {data.identitas.sejarah || "Data sejarah desa belum tersedia."}
-      </div>
-    </AppleCard>
+    <Card>
+      <CardHeader>
+        <CardTitle>Sejarah Desa</CardTitle>
+        <CardDescription>Asal usul {data.identitas.sebutan_desa} {data.identitas.nama_desa}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="prose prose-zinc prose-sm max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
+          {data.identitas.sejarah || "Data sejarah desa belum tersedia."}
+        </div>
+      </CardContent>
+    </Card>
   </div>
 );
 
@@ -182,16 +188,22 @@ const GeografisView = ({ data }: { data: ProfileData }) => {
           </div>
        </div>
 
-       <AppleCard title="Batas Wilayah" subtitle="Perbatasan administratif desa">
-          <div className="mt-4 space-y-3">
-             {boundaries.map((b, i) => (
-               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-sm font-medium text-slate-500">{b.label}</span>
-                  <span className="text-sm font-bold text-slate-900">{b.value || "-"}</span>
-               </div>
-             ))}
-          </div>
-       </AppleCard>
+       <Card>
+          <CardHeader>
+             <CardTitle>Batas Wilayah</CardTitle>
+             <CardDescription>Perbatasan administratif desa</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <div className="space-y-3">
+                {boundaries.map((b, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                     <span className="text-sm font-medium text-slate-500">{b.label}</span>
+                     <span className="text-sm font-bold text-slate-900">{b.value || "-"}</span>
+                  </div>
+                ))}
+             </div>
+          </CardContent>
+       </Card>
 
        {(data.identitas.lat || data.identitas.lng) && (
           <div className="bg-blue-600 text-white rounded-2xl p-6 relative overflow-hidden">
@@ -266,45 +278,51 @@ const PetaView = ({ data }: { data: ProfileData }) => {
 
 const KontakView = ({ data }: { data: ProfileData }) => (
   <div className="space-y-6">
-     <AppleCard title="Kantor Desa" subtitle="Pusat pelayanan masyarakat">
-        <div className="mt-4 space-y-4">
-           <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                 <MapPin size={20} />
+     <Card>
+        <CardHeader>
+           <CardTitle>Kantor Desa</CardTitle>
+           <CardDescription>Pusat pelayanan masyarakat</CardDescription>
+        </CardHeader>
+        <CardContent>
+           <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                 <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <MapPin size={20} />
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-slate-900 mb-1">Alamat Kantor</p>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {data.identitas.alamat_kantor || `Kantor Desa ${data.identitas.nama_desa}`}
+                    </p>
+                 </div>
               </div>
-              <div>
-                 <p className="text-sm font-bold text-slate-900 mb-1">Alamat Kantor</p>
-                 <p className="text-sm text-slate-600 leading-relaxed">
-                   {data.identitas.alamat_kantor || `Kantor Desa ${data.identitas.nama_desa}`}
-                 </p>
+              
+              <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Phone size={20} />
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-slate-900 mb-1">Telepon / WhatsApp</p>
+                    <p className="text-sm text-slate-600">
+                      {data.identitas.telepon_desa || "-"}
+                    </p>
+                 </div>
               </div>
-           </div>
-           
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                 <Phone size={20} />
-              </div>
-              <div>
-                 <p className="text-sm font-bold text-slate-900 mb-1">Telepon / WhatsApp</p>
-                 <p className="text-sm text-slate-600">
-                   {data.identitas.telepon_desa || "-"}
-                 </p>
-              </div>
-           </div>
 
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                 <Mail size={20} />
-              </div>
-              <div>
-                 <p className="text-sm font-bold text-slate-900 mb-1">Email Resmi</p>
-                 <p className="text-sm text-slate-600">
-                   {data.identitas.email_desa || "-"}
-                 </p>
+              <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Mail size={20} />
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-slate-900 mb-1">Email Resmi</p>
+                    <p className="text-sm text-slate-600">
+                      {data.identitas.email_desa || "-"}
+                    </p>
+                 </div>
               </div>
            </div>
-        </div>
-     </AppleCard>
+        </CardContent>
+     </Card>
 
      <div className="bg-slate-900 text-white rounded-[32px] p-8 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
@@ -361,7 +379,7 @@ const PrestasiView = ({ data }: { data: ProfileData }) => {
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: i * 0.1 }}
          >
-           <AppleCard className="h-full flex flex-col hover:-translate-y-1 transition-transform duration-300" noPadding>
+           <Card className="h-full flex flex-col hover:-translate-y-1 transition-transform duration-300 overflow-hidden">
              <div className="relative h-48 w-full bg-slate-100 border-b border-slate-100">
                {item.foto_url ? (
                  <img 
@@ -383,7 +401,7 @@ const PrestasiView = ({ data }: { data: ProfileData }) => {
                )}
              </div>
              
-             <div className="p-6 flex-1 flex flex-col">
+             <CardContent className="p-6 flex-1 flex flex-col">
                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
                  <Calendar className="w-3.5 h-3.5" />
                  <span>{formatDate(item.tanggal)}</span>
@@ -396,8 +414,8 @@ const PrestasiView = ({ data }: { data: ProfileData }) => {
                <p className="text-slate-600 text-sm leading-relaxed line-clamp-4 mb-4 flex-1">
                  {item.deskripsi}
                </p>
-             </div>
-           </AppleCard>
+             </CardContent>
+           </Card>
          </motion.div>
        ))}
     </div>

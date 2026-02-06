@@ -26,13 +26,13 @@ export default function CategoryFilter({
               "relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 focus:outline-none",
               isActive
                 ? "text-white shadow-md"
-                : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800"
+                : "bg-card-bg dark:bg-zinc-900 text-secondary-text dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-border-color dark:border-zinc-800"
             )}
           >
             {isActive && (
               <motion.div
                 layoutId="activeCategory"
-                className="absolute inset-0 bg-zinc-900 dark:bg-white rounded-full"
+                className="absolute inset-0 bg-primary-text dark:bg-white rounded-full"
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}

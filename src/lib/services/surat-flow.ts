@@ -33,6 +33,8 @@ export interface SuratTask extends Record<string, any> {
   keterangan?: string;
   surat_formats?: {
     nama: string;
+    kode_surat?: string;
+    template?: any;
   };
   penduduk?: {
     nama: string;

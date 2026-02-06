@@ -4,12 +4,16 @@ import { useState, useMemo, useEffect } from "react";
 import { Users, Search, Loader2 } from "lucide-react";
 import { Resident } from "@/lib/services/penduduk";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
+import { InputField } from "@/components/ui/FormFields";
+import { Button } from "@/components/ui/Button";
 
 interface ResidentPickerModalProps {
   open: boolean;
   residents?: Resident[];
   onClose: () => void;
   onSelect: (resident: Resident) => void;
+  onlyUnassigned?: boolean; // Filters for no_kk
+  onlyUnassignedHousehold?: boolean; // Filters for no rumah_tangga_id
 }
 
 export default function ResidentPickerModal({
@@ -17,24 +21,41 @@ export default function ResidentPickerModal({
   residents = [],
   onClose,
   onSelect,
+  onlyUnassigned = false,
+  onlyUnassignedHousehold = false,
 }: ResidentPickerModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [localResidents, setLocalResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Determine if we should use server-side fetching (when no residents prop provided)
-  const isServerSide = residents.length === 0;
-
-  // Initial fetch when modal opens in server-side mode
+  // Reset search and fetch initial data when modal opens
   useEffect(() => {
-    if (open && isServerSide) {
+    if (open) {
+      setSearchTerm("");
+      setLocalResidents([]);
       fetchResidents("");
     }
-  }, [open, isServerSide]);
+  }, [open]);
+
+  // Determine if we should use server-side fetching (when no residents prop provided)
+  const isServerSide = residents.length === 0;
 
   // Debounced search for server-side mode
   useEffect(() => {
     if (!isServerSide || !open) return;
+
+    // Skip if search term is empty (handled by initial fetch)
+    // unless we want to clear results when user clears input manually
+    if (!searchTerm.trim() && localResidents.length > 0) {
+        // Optional: decide if clearing input should re-fetch all (or unassigned)
+        // For now, let's allow re-fetching default list if user clears input
+        const timer = setTimeout(() => {
+            fetchResidents("");
+        }, 500);
+        return () => clearTimeout(timer);
+    }
+    
+    if (!searchTerm.trim()) return;
 
     const timer = setTimeout(() => {
       fetchResidents(searchTerm);
@@ -44,6 +65,8 @@ export default function ResidentPickerModal({
   }, [searchTerm, open, isServerSide]);
 
   const fetchResidents = async (term: string) => {
+    // if (!term.trim()) return; // Removed restriction to allow initial fetch
+    
     try {
       setLoading(true);
       const supabase = createSupabaseBrowserClient();
@@ -53,7 +76,16 @@ export default function ResidentPickerModal({
         .limit(50)
         .order("nama", { ascending: true });
 
-      if (term) {
+      if (onlyUnassigned) {
+        // Filter for NULL or empty string
+        query = query.or('no_kk.is.null,no_kk.eq.""');
+      }
+
+      if (onlyUnassignedHousehold) {
+        query = query.is('rumah_tangga_id', null);
+      }
+
+      if (term.trim()) {
         query = query.or(`nama.ilike.%${term}%,nik.ilike.%${term}%`);
       }
 
@@ -106,137 +138,127 @@ export default function ResidentPickerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-zinc-900/20 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col border border-zinc-200 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-card-bg rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col border border-border-color animate-in zoom-in-95 duration-200 overflow-hidden">
         
         {/* Header */}
-        <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between bg-white dark:bg-zinc-900 dark:border-zinc-800">
+        <div className="px-5 py-4 border-b border-border-color flex items-center justify-between bg-card-bg">
           <div>
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-sm font-semibold text-primary-text">
               Pilih Penduduk
             </h3>
-            <p className="text-[11px] text-zinc-500 mt-0.5 dark:text-zinc-400">
-              Cari dan pilih penduduk dari database desa.
-            </p>
+            <p className="text-xs text-secondary-text mt-0.5">
+            Cari dan pilih penduduk dari database desa.
+          </p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="text-xs px-3 py-1.5 rounded-md bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors font-medium dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+            className="text-xs font-medium text-secondary-text hover:text-primary-text"
           >
             Tutup (Esc)
-          </button>
+          </Button>
         </div>
 
         {/* Search Bar */}
-        <div className="px-5 py-3 border-b border-zinc-100 bg-zinc-50/30 dark:bg-zinc-900 dark:border-zinc-800">
+        <div className="px-5 py-3 border-b border-border-color bg-body-bg">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-            <input
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <Search className="w-4 h-4 text-secondary-text" />
+            </div>
+            <InputField
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Ketik Nama atau NIK..."
-              className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-400 transition-all placeholder:text-zinc-400 dark:bg-zinc-950 dark:border-zinc-800 dark:text-white dark:focus:border-zinc-600 dark:placeholder:text-zinc-600"
+              className="pl-10 bg-card-bg border-border-color focus:ring-primary-text/20"
               autoFocus
             />
             {loading && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 animate-spin dark:text-zinc-500" />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
+                <Loader2 className="w-4 h-4 text-secondary-text animate-spin" />
+              </div>
             )}
           </div>
         </div>
 
         {/* Content Table */}
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-zinc-900">
+        <div className="flex-1 overflow-y-auto bg-card-bg">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-zinc-50 border-b border-zinc-100 sticky top-0 z-10 backdrop-blur-sm bg-zinc-50/90 dark:bg-zinc-900/90 dark:border-zinc-800">
+            <thead className="bg-body-bg border-b border-border-color sticky top-0 z-10 backdrop-blur-sm bg-body-bg/90">
               <tr>
-                <th className="px-5 py-3 font-medium text-[11px] text-zinc-500 uppercase tracking-wider w-32 dark:text-zinc-400">
+                <th className="px-5 py-3 font-medium text-xs text-secondary-text uppercase tracking-wider w-32">
                   NIK
                 </th>
-                <th className="px-5 py-3 font-medium text-[11px] text-zinc-500 uppercase tracking-wider dark:text-zinc-400">
+                <th className="px-5 py-3 font-medium text-xs text-secondary-text uppercase tracking-wider w-32">
+                  No. KK
+                </th>
+                <th className="px-5 py-3 font-medium text-xs text-secondary-text uppercase tracking-wider">
                   Nama Lengkap
                 </th>
-                <th className="px-5 py-3 font-medium text-[11px] text-zinc-500 uppercase tracking-wider w-24 dark:text-zinc-400">
+                <th className="px-5 py-3 font-medium text-xs text-secondary-text uppercase tracking-wider w-24">
                   Umur
                 </th>
-                <th className="px-5 py-3 font-medium text-[11px] text-zinc-500 uppercase tracking-wider dark:text-zinc-400">
+                <th className="px-5 py-3 font-medium text-[11px] text-secondary-text uppercase tracking-wider">
                   Alamat
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-              {filteredResidents.map((resident) => {
-                const umur = calculateAge(resident.tanggal_lahir);
-                const alamat =
-                  resident.alamat_saat_ini ||
-                  resident.alamat_rt ||
-                  resident.dusun ||
-                  "-";
-                
-                return (
-                  <tr
-                    key={resident.nik}
-                    className="hover:bg-zinc-50/80 cursor-pointer transition-colors group dark:hover:bg-zinc-800/50"
-                    onClick={() => onSelect(resident)}
-                  >
-                    <td className="px-5 py-3 text-xs font-medium text-zinc-500 font-mono group-hover:text-zinc-900 transition-colors dark:text-zinc-400 dark:group-hover:text-zinc-200">
-                      {resident.nik}
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">{resident.nama}</span>
-                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
-                           {resident.tempat_lahir}, {resident.tanggal_lahir}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-xs text-zinc-500 dark:text-zinc-400">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            {umur} Th
-                        </span>
-                    </td>
-                    <td className="px-5 py-3 text-xs text-zinc-500 truncate max-w-[150px] dark:text-zinc-400" title={alamat}>
-                        {alamat}
-                    </td>
-                  </tr>
-                );
-              })}
-              
-              {filteredResidents.length === 0 && !loading && (
+            <tbody className="divide-y divide-border-color">
+              {filteredResidents.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-12 text-center"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center dark:bg-zinc-800">
-                            <Search className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
-                        </div>
-                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-200">Tidak ditemukan</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Coba kata kunci lain atau tambah data baru.</p>
-                    </div>
+                  <td colSpan={5} className="px-5 py-12 text-center text-sm text-secondary-text">
+                    {loading ? "Memuat data..." : (searchTerm ? "Tidak ada data penduduk yang cocok." : "Tidak ada data penduduk tersedia.")}
                   </td>
                 </tr>
-              )}
-
-              {loading && filteredResidents.length === 0 && (
-                 <tr>
-                    <td colSpan={4} className="px-5 py-12 text-center">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                            <Loader2 className="w-6 h-6 animate-spin text-zinc-300 dark:text-zinc-600" />
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">Sedang mencari data...</p>
+              ) : (
+                filteredResidents.map((resident) => {
+                  const umur = calculateAge(resident.tanggal_lahir);
+                  const alamat =
+                    resident.alamat_saat_ini ||
+                    resident.alamat_rt ||
+                    resident.dusun ||
+                    "-";
+                  
+                  return (
+                    <tr
+                      key={resident.nik}
+                      className="hover:bg-body-bg cursor-pointer transition-colors group"
+                      onClick={() => onSelect(resident)}
+                    >
+                      <td className="px-5 py-3 text-xs font-medium text-secondary-text font-mono group-hover:text-primary-text transition-colors">
+                        {resident.nik}
+                      </td>
+                      <td className="px-5 py-3 text-xs font-medium text-secondary-text font-mono group-hover:text-primary-text transition-colors">
+                        {resident.no_kk || "-"}
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium text-primary-text">{resident.nama}</span>
+                          <span className="text-[10px] text-secondary-text">
+                             {resident.tempat_lahir}, {resident.tanggal_lahir}
+                          </span>
                         </div>
-                    </td>
-                 </tr>
+                      </td>
+                      <td className="px-5 py-3 text-xs text-secondary-text">
+                        {umur} Th
+                      </td>
+                      <td className="px-5 py-3 text-xs text-secondary-text truncate max-w-[200px]">
+                        {alamat}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-zinc-100 bg-zinc-50/50 flex justify-between items-center text-[10px] text-zinc-400 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500">
-          <span>Menampilkan {filteredResidents.length} hasil</span>
-          <span>Tekan <kbd className="font-sans px-1 py-0.5 bg-white border border-zinc-200 rounded text-xs text-zinc-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">Esc</kbd> untuk menutup</span>
+        
+        {/* Footer info */}
+        <div className="px-5 py-2 border-t border-border-color bg-body-bg text-[10px] text-secondary-text flex justify-between">
+            <span>Menampilkan maksimal 50 data</span>
+            <span>Tekan Esc untuk menutup</span>
         </div>
       </div>
     </div>

@@ -449,21 +449,21 @@ export const TextSettings = () => {
 
         <div className="grid grid-cols-2 gap-2">
            {/* Font Size */}
-           <div className="space-y-1">
-            <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Size</label>
+          <div className="space-y-1">
+            <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Size</label>
             <div className="flex items-center border border-zinc-200 rounded-md bg-white overflow-hidden">
-               <input
+              <input
                 type="number"
                 value={props.fontSize || 12}
                 onChange={(e) => handlePropChange("fontSize", e.target.value)}
                 className="w-full px-2 py-1.5 text-xs outline-none"
               />
-              <span className="text-[10px] text-zinc-400 pr-2">px</span>
+              <span className="text-xs text-zinc-400 pr-2">px</span>
             </div>
           </div>
           {/* Line Height */}
           <div className="space-y-1">
-            <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Line Height</label>
+            <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Line Height</label>
             <input
               type="number"
               step="0.1"
@@ -476,8 +476,8 @@ export const TextSettings = () => {
 
         {/* Font Weight & Color */}
         <div className="grid grid-cols-2 gap-2">
-           <div className="space-y-1">
-            <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Weight</label>
+          <div className="space-y-1">
+            <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Weight</label>
             <select
               value={props.fontWeight || "normal"}
               onChange={(e) => handlePropChange("fontWeight", e.target.value)}
@@ -491,44 +491,44 @@ export const TextSettings = () => {
             </select>
           </div>
           <div className="space-y-1">
-             <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Color</label>
-             <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={props.color || "#000000"}
-                  onChange={(e) => handlePropChange("color", e.target.value)}
-                  className="w-8 h-8 rounded border border-zinc-200 cursor-pointer p-0.5 bg-white"
-                />
-                <input 
-                  type="text" 
-                  value={props.color || "#000000"}
-                  onChange={(e) => handlePropChange("color", e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md uppercase"
-                />
-             </div>
+            <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={props.color || "#000000"}
+                onChange={(e) => handlePropChange("color", e.target.value)}
+                className="w-8 h-8 rounded border border-zinc-200 cursor-pointer p-0.5 bg-white"
+              />
+              <input 
+                type="text" 
+                value={props.color || "#000000"}
+                onChange={(e) => handlePropChange("color", e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md uppercase"
+              />
+            </div>
           </div>
         </div>
 
         {/* Opacity */}
         <div className="space-y-1 mt-2">
-           <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Opacity</label>
-           <div className="flex items-center gap-2">
-              <input 
-                type="range" 
-                min="0" 
-                max="1" 
-                step="0.1" 
-                value={props.opacity || 1} 
-                onChange={(e) => handlePropChange("opacity", e.target.value)}
-                className="w-full"
-              />
-              <span className="text-xs w-8 text-right">{Math.round((props.opacity || 1) * 100)}%</span>
-           </div>
+          <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Opacity</label>
+          <div className="flex items-center gap-2">
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.1" 
+              value={props.opacity || 1} 
+              onChange={(e) => handlePropChange("opacity", e.target.value)}
+              className="w-full"
+            />
+            <span className="text-xs w-8 text-right">{Math.round((props.opacity || 1) * 100)}%</span>
+          </div>
         </div>
 
         {/* Alignment */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Alignment</label>
+          <label className="text-xs uppercase text-zinc-400 font-semibold tracking-wider">Alignment</label>
           <div className="flex bg-zinc-100 rounded-md p-1 gap-1">
             {[
               { value: "left", icon: AlignLeft },

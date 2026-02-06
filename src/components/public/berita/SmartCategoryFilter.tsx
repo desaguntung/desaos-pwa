@@ -57,11 +57,11 @@ export default function SmartCategoryFilter({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-12 bg-gradient-to-r from-white via-white/80 to-transparent dark:from-zinc-950 dark:via-zinc-950/80 pl-2"
+            className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-12 bg-gradient-to-r from-body-bg via-body-bg/80 to-transparent dark:from-zinc-950 dark:via-zinc-950/80 pl-2"
           >
             <button
               onClick={() => scroll("left")}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm text-zinc-600 dark:text-zinc-300 hover:scale-105 transition-all active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-card-bg/80 dark:bg-zinc-800/80 backdrop-blur-md border border-border-color/50 dark:border-zinc-700/50 shadow-sm text-secondary-text dark:text-zinc-300 hover:scale-105 transition-all active:scale-95"
               aria-label="Scroll left"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -77,11 +77,11 @@ export default function SmartCategoryFilter({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-12 bg-gradient-to-l from-white via-white/80 to-transparent dark:from-zinc-950 dark:via-zinc-950/80 pr-2"
+            className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-12 bg-gradient-to-l from-body-bg via-body-bg/80 to-transparent dark:from-zinc-950 dark:via-zinc-950/80 pr-2"
           >
             <button
               onClick={() => scroll("right")}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm text-zinc-600 dark:text-zinc-300 hover:scale-105 transition-all active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-card-bg/80 dark:bg-zinc-800/80 backdrop-blur-md border border-border-color/50 dark:border-zinc-700/50 shadow-sm text-secondary-text dark:text-zinc-300 hover:scale-105 transition-all active:scale-95"
               aria-label="Scroll right"
             >
               <ChevronRight className="h-4 w-4" />
@@ -113,13 +113,13 @@ export default function SmartCategoryFilter({
                 "relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 select-none flex-shrink-0",
                 isActive
                   ? "text-white dark:text-zinc-900 shadow-md"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                  : "text-secondary-text dark:text-zinc-400 hover:text-primary-text dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800/50"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeCategoryPill"
-                  className="absolute inset-0 bg-zinc-900 dark:bg-white rounded-full"
+                  className="absolute inset-0 bg-primary-text dark:bg-white rounded-full"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}

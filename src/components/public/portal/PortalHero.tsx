@@ -41,7 +41,7 @@ export default function PortalHero({ items }: PortalHeroProps) {
             ))}
             {/* Fallback if less than 3 items total */}
              {subStories.length < 2 && (
-                <div className="flex-1 bg-[#f5f5f7] dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-[#86868b]">
+                <div className="flex-1 bg-body-bg dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-secondary-text">
                     <span className="text-sm font-medium">Coming Soon</span>
                 </div>
             )}

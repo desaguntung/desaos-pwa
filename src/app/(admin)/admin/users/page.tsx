@@ -7,6 +7,7 @@ import { AppRole } from "@/config/permissions";
 import { createAdminOrStaffUser, deleteUserById } from "@/app/actions/users";
 import { Info, Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { InputField, SelectField } from "@/components/ui/FormFields";
 
 type ProfileRow = {
   id: string;
@@ -207,7 +208,7 @@ export default function AdminUsersPage() {
             type="button"
             onClick={handleSubmitNewUser}
             disabled={isAdding}
-            className="flex items-center gap-1.5 text-xs bg-primary-text text-white rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium"
+            className="flex items-center gap-1.5 text-xs bg-primary-text text-body-bg rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{isAdding ? "Menyimpan..." : "Tambah Admin Baru"}</span>
@@ -216,11 +217,11 @@ export default function AdminUsersPage() {
       />
 
       <div className="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full space-y-6 pb-12">
-        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
-          <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+        <div className="bg-info-bg/50 border border-info-border rounded-lg p-4 flex gap-3 items-start">
+          <Info className="w-4 h-4 text-info-text mt-0.5" />
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-blue-900">Kontrol Hak Akses Admin</p>
-            <p className="text-[11px] text-blue-800 leading-relaxed">
+            <p className="text-xs font-semibold text-info-text">Kontrol Hak Akses Admin</p>
+            <p className="text-xs text-info-text leading-relaxed">
               Hanya role <span className="font-semibold">super_admin</span> yang dapat mengelola user dan mengatur peran
               (role) di sistem ini.
             </p>
@@ -229,51 +230,49 @@ export default function AdminUsersPage() {
 
         <form
           onSubmit={handleSubmitNewUser}
-          className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3"
+          className="bg-card-bg border border-border-color rounded-xl p-4 space-y-3"
         >
           <p className="text-[11px] font-bold text-secondary-text uppercase tracking-widest">
             Tambah Admin/Staff Baru
           </p>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input
+            <InputField
               type="email"
               required
               placeholder="Email"
               value={newUserEmail}
               onChange={(e) => setNewUserEmail(e.target.value)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
             />
-            <input
+            <InputField
               type="password"
               required
               placeholder="Password"
               value={newUserPassword}
               onChange={(e) => setNewUserPassword(e.target.value)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
             />
-            <input
+            <InputField
               type="text"
               required
               placeholder="Nama Lengkap"
               value={newUserFullName}
               onChange={(e) => setNewUserFullName(e.target.value)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
             />
-            <select
+            <SelectField
+              options={[
+                { value: "super_admin", label: "Super Admin" },
+                { value: "staff", label: "Staff" },
+                { value: "user", label: "User" },
+              ]}
               value={newUserRole}
-              onChange={(e) => setNewUserRole(e.target.value as AppRole)}
-              className="bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs"
-            >
-              <option value="super_admin">Super Admin</option>
-              <option value="staff">Staff</option>
-              <option value="user">User</option>
-            </select>
+              onValueChange={(val) => setNewUserRole(val as AppRole)}
+              placeholder="Pilih Role"
+            />
           </div>
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={isAdding}
-              className="px-3 py-1.5 text-xs bg-primary-text text-white rounded-md border border-zinc-200 font-medium"
+              className="px-3 py-1.5 text-xs bg-primary-text text-body-bg rounded-md border border-border-color font-medium hover:opacity-90 transition-opacity"
             >
               {isAdding ? "Menyimpan..." : "Simpan"}
             </button>
@@ -281,36 +280,36 @@ export default function AdminUsersPage() {
         </form>
 
         {errorMessage && (
-          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+          <div className="text-xs text-error-text bg-error-bg border border-error-border rounded-md px-3 py-2">
             {errorMessage}
           </div>
         )}
 
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+        <div className="bg-card-bg border border-gray-100 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200">
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
+                <tr className="bg-body-bg border-b border-gray-100">
+                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 border-b border-gray-100">
                     Email
                   </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
+                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 border-b border-gray-100">
                     Nama
                   </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
+                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 border-b border-gray-100">
                     Role
                   </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3">
+                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 border-b border-gray-100">
                     Dibuat
                   </th>
-                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right">
+                  <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right border-b border-gray-100">
                     Aksi
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 text-sm">
+              <tbody className="text-sm">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-zinc-50 transition-colors">
+                  <tr key={user.id} className="hover:bg-hover-bg transition-colors border-b border-border-color">
                     <td className="px-4 py-3 text-xs text-primary-text">
                       {user.email}
                     </td>
@@ -323,7 +322,7 @@ export default function AdminUsersPage() {
                         onChange={(e) =>
                           handleChangeRole(user.id, e.target.value as AppRole)
                         }
-                        className="bg-white border border-zinc-200 rounded-md px-2 py-1 text-[11px]"
+                        className="bg-card-bg border border-border-color rounded-md px-2 py-1 text-xs text-primary-text"
                       >
                         <option value="super_admin">Super Admin</option>
                         <option value="staff">Staff</option>
@@ -337,7 +336,7 @@ export default function AdminUsersPage() {
                       <button
                         type="button"
                         onClick={() => handleDeleteUser(user.id, user.email)}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] text-rose-600 border border-zinc-200 rounded-md bg-white"
+                        className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-error-text border border-border-color rounded-md bg-card-bg hover:bg-error-bg hover:border-error-border transition-colors"
                       >
                         <Trash2 className="w-3 h-3" />
                         <span>Hapus</span>

@@ -194,7 +194,7 @@ export const DataRowSettings = () => {
               onChange={(e) => setProp((props: any) => (props.labelWidth = e.target.value))}
               className="w-full accent-blue-600"
             />
-            <div className="text-[10px] text-right text-gray-400">{labelWidth}px</div>
+            <div className="text-xs text-right text-gray-400">{labelWidth}px</div>
           </div>
 
           <div className="space-y-1">

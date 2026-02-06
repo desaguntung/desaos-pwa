@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { updateResident, getResidentByNIK, Resident } from "@/lib/services/penduduk";
-import ResidentForm from "../../../../components/ResidentForm";
+import ResidentForm from "@/components/ResidentForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -58,9 +58,11 @@ export default function EditPendudukPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-body-bg">
-        <PageHeader title="Edit Penduduk" showBackButton backButtonHref="/penduduk" />
-        <div className="flex-1 flex items-center justify-center text-zinc-500">Loading data...</div>
+      <div className="flex flex-col h-full bg-body-bg items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-secondary-text text-sm animate-pulse">Memuat data penduduk...</p>
+        </div>
       </div>
     );
   }
@@ -73,7 +75,7 @@ export default function EditPendudukPage() {
           <div className="text-red-500 font-medium">{error || "Data tidak ditemukan"}</div>
           <Link
             href="/penduduk"
-            className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-card-bg bg-primary-text rounded-lg hover:opacity-90 transition-colors"
           >
             Kembali ke Data Penduduk
           </Link>
@@ -83,40 +85,14 @@ export default function EditPendudukPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-body-bg">
-      <PageHeader
-        title="Edit Penduduk"
-        subtitle={`Edit data penduduk: ${resident.nama || nik}`}
-        showBackButton={true}
-        backButtonHref="/penduduk"
-        actions={
-          <div className="flex items-center gap-2">
-            <Link
-              href="/penduduk"
-              className="text-xs text-secondary-text hover:text-primary-text transition-colors"
-            >
-              Batal
-            </Link>
-            <Button
-              type="submit"
-              form="resident-form"
-              disabled={isSubmitting}
-              className="bg-zinc-900 text-white hover:bg-zinc-800 h-8 text-xs px-3"
-            >
-              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
-            </Button>
-          </div>
-        }
-      />
-      <div className="flex-1 overflow-hidden">
-        <ResidentForm
-          initialData={resident}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          mode="edit"
-          hideActions={true}
-        />
-      </div>
-    </div>
+    <ResidentForm
+      mode="edit"
+      initialData={resident}
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      title="Edit Penduduk"
+      subtitle="Perbarui data penduduk yang sudah ada di sistem."
+      backButtonHref="/penduduk"
+    />
   );
 }

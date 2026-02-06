@@ -72,7 +72,7 @@ export default function NewsPageClient({ initialArticles, initialCount, categori
   };
 
   return (
-    <div className="bg-white dark:bg-black min-h-screen">
+    <div className="bg-body-bg dark:bg-zinc-950 min-h-screen">
       <MinimalCategoryFilter
         categories={categories}
         activeCategory={category}
@@ -105,7 +105,7 @@ export default function NewsPageClient({ initialArticles, initialCount, categori
             
             {!loading && articles.length === 0 && (
                 <div className="text-center py-24">
-                    <p className="text-zinc-500">Tidak ada berita ditemukan.</p>
+                    <p className="text-secondary-text">Tidak ada berita ditemukan.</p>
                 </div>
             )}
           </>

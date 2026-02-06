@@ -9,7 +9,7 @@ import {
   Briefcase, Heart, Activity, TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { AppleCard } from "@/components/ui/AppleCard";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 
 // --- Types ---
 
@@ -75,7 +75,7 @@ const THEME = {
 // --- Components ---
 
 const MetricCard = ({ label, value, trend, trendLabel, color = "blue", delay }: any) => (
-  <AppleCard className="min-h-[160px] justify-between" delay={delay}>
+  <Card className="min-h-[160px] flex flex-col justify-between p-6 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex justify-between items-start">
       <p className="text-[#86868b] font-medium text-sm uppercase tracking-wider">{label}</p>
       <div className={cn("w-8 h-8 rounded-full flex items-center justify-center bg-opacity-10", `bg-${color}-500`)}>
@@ -92,7 +92,7 @@ const MetricCard = ({ label, value, trend, trendLabel, color = "blue", delay }: 
         </div>
       )}
     </div>
-  </AppleCard>
+  </Card>
 );
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -130,69 +130,81 @@ const GeneralView = ({ data }: { data: StatsData }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Gender Chart */}
-        <AppleCard className="md:col-span-1 min-h-[400px]" title="Komposisi Gender" subtitle="Perbandingan Laki-laki & Perempuan" delay={0.5}>
-          <div className="flex-1 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.genderStats}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                  cornerRadius={8}
-                >
-                  <Cell fill="#0071e3" />
-                  <Cell fill="#ff2d55" />
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <div className="text-center">
-                 <p className="text-3xl font-bold text-[#1d1d1f]">{data.totalPopulation.toLocaleString('id-ID')}</p>
-                 <p className="text-sm text-[#86868b] font-medium uppercase tracking-wide">Total Jiwa</p>
+        <Card className="md:col-span-1 min-h-[400px]">
+          <CardHeader>
+            <CardTitle>Komposisi Gender</CardTitle>
+            <CardDescription>Perbandingan Laki-laki & Perempuan</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[320px]">
+            <div className="flex-1 relative h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.genderStats}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                    cornerRadius={8}
+                  >
+                    <Cell fill="#0071e3" />
+                    <Cell fill="#ff2d55" />
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="text-center">
+                   <p className="text-3xl font-bold text-[#1d1d1f]">{data.totalPopulation.toLocaleString('id-ID')}</p>
+                   <p className="text-sm text-[#86868b] font-medium uppercase tracking-wide">Total Jiwa</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex justify-center gap-8 mt-4">
-             {data.genderStats.map((g, i) => (
-               <div key={i} className="flex items-center gap-2">
-                 <div className={cn("w-3 h-3 rounded-full", i === 0 ? "bg-[#0071e3]" : "bg-[#ff2d55]")} />
-                 <span className="text-sm font-medium text-[#1d1d1f]">{g.name}</span>
-                 <span className="text-sm text-[#86868b]">({((g.value/data.totalPopulation)*100).toFixed(1)}%)</span>
-               </div>
-             ))}
-          </div>
-        </AppleCard>
+            <div className="flex justify-center gap-8 mt-4">
+               {data.genderStats.map((g, i) => (
+                 <div key={i} className="flex items-center gap-2">
+                   <div className={cn("w-3 h-3 rounded-full", i === 0 ? "bg-[#0071e3]" : "bg-[#ff2d55]")} />
+                   <span className="text-sm font-medium text-[#1d1d1f]">{g.name}</span>
+                   <span className="text-sm text-[#86868b]">({((g.value/data.totalPopulation)*100).toFixed(1)}%)</span>
+                 </div>
+               ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Age Pyramid */}
-        <AppleCard className="md:col-span-2 min-h-[400px]" title="Piramida Penduduk" subtitle="Distribusi penduduk berdasarkan kelompok umur" delay={0.6}>
-           <div className="flex-1 w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.ageStats} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} barGap={2}>
-                <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} />
-                <Tooltip cursor={{ fill: '#f5f5f7', radius: 8 }} content={<CustomTooltip />} />
-                <Bar dataKey="male" name="Laki-laki" fill="#0071e3" radius={[4, 4, 0, 0]} stackId="a" />
-                <Bar dataKey="female" name="Perempuan" fill="#ff2d55" radius={[4, 4, 0, 0]} stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-           </div>
-           <div className="flex justify-center gap-6 mt-6">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#0071e3]"></span>
-                <span className="text-sm text-[#86868b]">Laki-laki</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#ff2d55]"></span>
-                <span className="text-sm text-[#86868b]">Perempuan</span>
-              </div>
-           </div>
-        </AppleCard>
+        <Card className="md:col-span-2 min-h-[400px]">
+           <CardHeader>
+              <CardTitle>Piramida Penduduk</CardTitle>
+              <CardDescription>Distribusi penduduk berdasarkan kelompok umur</CardDescription>
+           </CardHeader>
+           <CardContent className="h-[320px]">
+             <div className="flex-1 w-full h-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.ageStats} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} barGap={2}>
+                  <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: '#f5f5f7', radius: 8 }} content={<CustomTooltip />} />
+                  <Bar dataKey="male" name="Laki-laki" fill="#0071e3" radius={[4, 4, 0, 0]} stackId="a" />
+                  <Bar dataKey="female" name="Perempuan" fill="#ff2d55" radius={[4, 4, 0, 0]} stackId="a" />
+                </BarChart>
+              </ResponsiveContainer>
+             </div>
+             <div className="flex justify-center gap-6 mt-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#0071e3]"></span>
+                  <span className="text-sm text-[#86868b]">Laki-laki</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#ff2d55]"></span>
+                  <span className="text-sm text-[#86868b]">Perempuan</span>
+                </div>
+             </div>
+           </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -209,8 +221,13 @@ const EducationView = ({ data }: { data: StatsData }) => {
           <MetricCard label="Buta Huruf" value="< 1%" trendLabel="Estimasi" color="green" />
        </div>
 
-       <AppleCard title="Jenjang Pendidikan" subtitle="Distribusi tingkat pendidikan terakhir">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-6">
+       <Card>
+          <CardHeader>
+            <CardTitle>Jenjang Pendidikan</CardTitle>
+            <CardDescription>Distribusi tingkat pendidikan terakhir</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
              <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -250,7 +267,8 @@ const EducationView = ({ data }: { data: StatsData }) => {
                 ))}
              </div>
           </div>
-       </AppleCard>
+        </CardContent>
+       </Card>
     </div>
   );
 };
@@ -263,8 +281,13 @@ const JobView = ({ data }: { data: StatsData }) => (
        <MetricCard label="Tingkat Pengangguran" value={`${(((data.jobStats.find(j => j.name.includes("TIDAK"))?.value || 0) / data.totalPopulation)*100).toFixed(1)}%`} trendLabel="Belum/Tidak Bekerja" color="gray" />
     </div>
 
-    <AppleCard title="Sebaran Profesi" subtitle="Ragam mata pencaharian penduduk">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+    <Card>
+      <CardHeader>
+        <CardTitle>Sebaran Profesi</CardTitle>
+        <CardDescription>Ragam mata pencaharian penduduk</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.jobStats.map((job, i) => (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -287,17 +310,23 @@ const JobView = ({ data }: { data: StatsData }) => (
             </div>
           </motion.div>
         ))}
-      </div>
-    </AppleCard>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 );
 
 const ReligionView = ({ data }: { data: StatsData }) => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div className="lg:col-span-2">
-       <AppleCard title="Demografi Agama" subtitle="Komposisi pemeluk agama" className="h-full">
-          <div className="h-[400px] mt-6">
-            <ResponsiveContainer width="100%" height="100%">
+       <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Demografi Agama</CardTitle>
+            <CardDescription>Komposisi pemeluk agama</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.religionStats} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -310,13 +339,14 @@ const ReligionView = ({ data }: { data: StatsData }) => (
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="value" stroke="#0071e3" fillOpacity={1} fill="url(#colorValue)" strokeWidth={3} />
               </AreaChart>
-            </ResponsiveContainer>
-          </div>
-       </AppleCard>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+       </Card>
     </div>
     <div className="lg:col-span-1 space-y-4">
       {data.religionStats.map((item, i) => (
-        <AppleCard key={i} className="flex-row items-center justify-between p-6" delay={i * 0.1}>
+        <Card key={i} className="flex flex-row items-center justify-between p-6 shadow-sm hover:shadow-md transition-shadow">
            <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f]">
                  <span className="font-bold text-lg">{item.name[0]}</span>
@@ -327,7 +357,7 @@ const ReligionView = ({ data }: { data: StatsData }) => (
               </div>
            </div>
            <span className="text-xl font-bold text-[#1d1d1f]">{item.value.toLocaleString('id-ID')}</span>
-        </AppleCard>
+        </Card>
       ))}
     </div>
   </div>
@@ -335,8 +365,13 @@ const ReligionView = ({ data }: { data: StatsData }) => (
 
 const MaritalView = ({ data }: { data: StatsData }) => (
   <div className="grid grid-cols-1 gap-8">
-     <AppleCard title="Status Perkawinan" subtitle="Gambaran status sipil penduduk" className="min-h-[500px]">
-       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+     <Card className="min-h-[500px]">
+       <CardHeader>
+         <CardTitle>Status Perkawinan</CardTitle>
+         <CardDescription>Gambaran status sipil penduduk</CardDescription>
+       </CardHeader>
+       <CardContent>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
          {data.maritalStats.map((item, i) => (
            <motion.div 
              key={i}
@@ -357,7 +392,8 @@ const MaritalView = ({ data }: { data: StatsData }) => (
            </motion.div>
          ))}
        </div>
-     </AppleCard>
+       </CardContent>
+     </Card>
   </div>
 );
 
@@ -365,8 +401,13 @@ const AssistanceView = ({ data }: { data: StatsData }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
     <div className="space-y-8">
       <MetricCard label="Penerima Bantuan" value={data.assistanceStats[0]?.value.toLocaleString('id-ID')} trend={`${Math.min(100, (data.assistanceStats[0]?.value/data.totalFamilies)*100).toFixed(1)}%`} trendLabel="dari total KK" color="green" />
-      <AppleCard title="Distribusi Bantuan" subtitle="Proporsi penerima manfaat">
-        <div className="flex flex-col gap-6 mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribusi Bantuan</CardTitle>
+          <CardDescription>Proporsi penerima manfaat</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-6">
            {data.assistanceStats.map((item, i) => (
              <div key={i} className="p-4 rounded-2xl bg-[#f5f5f7] flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -377,10 +418,11 @@ const AssistanceView = ({ data }: { data: StatsData }) => (
              </div>
            ))}
         </div>
-      </AppleCard>
+        </CardContent>
+      </Card>
     </div>
     
-    <AppleCard className="flex items-center justify-center bg-[#1d1d1f] text-white">
+    <Card className="flex items-center justify-center bg-[#1d1d1f] text-white p-6">
       <div className="relative w-full max-w-[300px] aspect-square">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -408,7 +450,7 @@ const AssistanceView = ({ data }: { data: StatsData }) => (
           <span className="text-zinc-400 mt-2 font-medium">Cakupan Bantuan</span>
         </div>
       </div>
-    </AppleCard>
+    </Card>
   </div>
 );
 
@@ -417,9 +459,14 @@ const GenericStatsView = ({ data, title, subtitle }: { data: { name: string; val
 
   return (
     <div className="grid grid-cols-1 gap-8">
-      <AppleCard title={title} subtitle={subtitle || `Total Data: ${total.toLocaleString('id-ID')}`}>
-         <div className="mt-6">
-            <div className="h-[400px] w-full">
+      <Card>
+         <CardHeader>
+           <CardTitle>{title}</CardTitle>
+           <CardDescription>{subtitle || `Total Data: ${total.toLocaleString('id-ID')}`}</CardDescription>
+         </CardHeader>
+         <CardContent>
+           <div>
+              <div className="h-[400px] w-full">
                <ResponsiveContainer width="100%" height="100%">
                  <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                    <XAxis type="number" hide />
@@ -446,7 +493,8 @@ const GenericStatsView = ({ data, title, subtitle }: { data: { name: string; val
                </div>
             ))}
          </div>
-      </AppleCard>
+       </CardContent>
+      </Card>
     </div>
   )
 }

@@ -79,11 +79,11 @@ export default function ViewSuratPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-zinc-500">Loading...</div>;
+    return <div className="flex items-center justify-center h-screen text-secondary-text">Loading...</div>;
   }
 
   if (!data || !data.surat_formats) {
-    return <div className="flex items-center justify-center h-screen text-red-500">Data tidak ditemukan atau format surat hilang.</div>;
+    return <div className="flex items-center justify-center h-screen text-error-text">Data tidak ditemukan atau format surat hilang.</div>;
   }
 
   return (

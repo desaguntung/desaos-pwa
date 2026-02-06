@@ -1,3 +1,6 @@
+/* eslint-disable */
+"use client";
+
 import { cn } from "@/lib/utils";
 
 function Skeleton({
@@ -7,8 +10,7 @@ function Skeleton({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-md bg-zinc-200/60 dark:bg-zinc-800/60",
-        "before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent",
+        "skeleton-shimmer rounded-md",
         className
       )}
       {...props}

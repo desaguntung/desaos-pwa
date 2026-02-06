@@ -1,448 +1,254 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Plus, Search, Filter, MoreHorizontal, Trophy, Calendar, MapPin, Image as ImageIcon, Loader2, Save, Trash2, Edit } from "lucide-react";
+import Link from "next/link";
+import { Plus, Search, MoreHorizontal, Calendar, Edit2, Trash2, Download } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/DropdownMenu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/Sheet";
-import { Label } from "@/components/ui/Label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
-import { DataTable } from "@/components/ui/DataTable";
-import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { toast } from "sonner";
-import Image from "next/image";
-
-// Helper to format date
-const formatDate = (dateString: string) => {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+import { Card } from "@/components/ui/Card";
+import { DataTable, Column, MobileConfig } from "@/components/ui/DataTable";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { formatDate } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
+import { deletePrestasiFormAction } from "./actions";
+type Prestasi = {
+  id: string;
+  judul: string;
+  tingkat?: string | null;
+  tanggal: Date | string | null;
+  deskripsi?: string | null;
+  foto_url?: string | null;
 };
 
-const TINGKAT_OPTIONS = [
-  "Desa",
-  "Kecamatan",
-  "Kabupaten",
-  "Provinsi",
-  "Nasional",
-  "Internasional",
-];
+export default async function PrestasiDesaPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[]>;
+}) {
+  const pick = (v: string | string[] | undefined, fallback: string) =>
+    Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback);
+  const q = pick(searchParams?.q, "").trim();
+  const page = Math.max(1, parseInt(pick(searchParams?.page, "1"), 10) || 1);
+  const pageSize = Math.max(1, parseInt(pick(searchParams?.pageSize, "10"), 10) || 10);
+  const where =
+    q.length > 0
+      ? {
+          OR: [
+            { judul: { contains: q, mode: "insensitive" as const } },
+            { tingkat: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+  const [currentData, totalItems] = await Promise.all([
+    prisma.prestasi_desa.findMany({
+      where,
+      orderBy: { tanggal: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.prestasi_desa.count({ where }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
-export default function PrestasiDesaPage() {
-  const supabase = createSupabaseBrowserClient();
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // Sheet State
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState<string | null>(null);
-  
-  // Form State
-  const [judul, setJudul] = useState("");
-  const [deskripsi, setDeskripsi] = useState("");
-  const [tanggal, setTanggal] = useState("");
-  const [tingkat, setTingkat] = useState("");
-  const [fotoUrl, setFotoUrl] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Upload State
-  const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-    const { data: result, error } = await supabase
-      .from("prestasi_desa")
-      .select("*")
-      .order("tanggal", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      toast.error("Gagal memuat data prestasi");
-    } else {
-      setData(result || []);
-    }
-    setLoading(false);
-  };
-
-  const resetForm = () => {
-    setJudul("");
-    setDeskripsi("");
-    setTanggal(new Date().toISOString().split('T')[0]);
-    setTingkat("");
-    setFotoUrl("");
-    setIsEditing(false);
-    setCurrentId(null);
-  };
-
-  const handleAddNew = () => {
-    resetForm();
-    setIsSheetOpen(true);
-  };
-
-  const handleEdit = (row: any) => {
-    setJudul(row.judul);
-    setDeskripsi(row.deskripsi || "");
-    setTanggal(row.tanggal);
-    setTingkat(row.tingkat || "");
-    setFotoUrl(row.foto_url || "");
-    setCurrentId(row.id);
-    setIsEditing(true);
-    setIsSheetOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus prestasi ini?")) return;
-
-    const { error } = await supabase.from("prestasi_desa").delete().eq("id", id);
-    if (error) {
-      toast.error("Gagal menghapus: " + error.message);
-    } else {
-      toast.success("Prestasi berhasil dihapus");
-      fetchData();
-    }
-  };
-
-  const handleSave = async () => {
-    if (!judul) {
-      toast.error("Judul wajib diisi");
-      return;
-    }
-    if (!tanggal) {
-      toast.error("Tanggal wajib diisi");
-      return;
-    }
-
-    setIsSaving(true);
-    const payload = {
-      judul,
-      deskripsi,
-      tanggal,
-      tingkat,
-      foto_url: fotoUrl,
-      updated_at: new Date().toISOString(),
-    };
-
-    let error;
-    if (isEditing && currentId) {
-      const res = await supabase
-        .from("prestasi_desa")
-        .update(payload)
-        .eq("id", currentId);
-      error = res.error;
-    } else {
-      const res = await supabase.from("prestasi_desa").insert(payload);
-      error = res.error;
-    }
-
-    setIsSaving(false);
-    if (error) {
-      toast.error("Gagal menyimpan: " + error.message);
-    } else {
-      toast.success(isEditing ? "Perubahan disimpan" : "Prestasi baru ditambahkan");
-      setIsSheetOpen(false);
-      fetchData();
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `prestasi/${fileName}`;
-
-    setUploading(true);
-    // Assume 'public' bucket exists and has public access
-    const { error: uploadError } = await supabase.storage
-      .from('public')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      toast.error("Gagal upload gambar: " + uploadError.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('public')
-      .getPublicUrl(filePath);
-
-    setFotoUrl(publicUrl);
-    setUploading(false);
-    toast.success("Gambar berhasil diupload");
-  };
-
-  const filteredData = data.filter(item => 
-    item.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.tingkat && item.tingkat.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const columns = [
+  const columns: Column<Prestasi>[] = [
+    {
+      header: "No",
+      accessorKey: "id",
+      className: "text-center w-12",
+      cell: () => <span>-</span>,
+    },
     {
       header: "Prestasi",
       accessorKey: "judul",
-      cell: (row: any) => (
+      cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0 overflow-hidden border border-zinc-200">
-            {row.foto_url ? (
-              <img src={row.foto_url} alt={row.judul} className="w-full h-full object-cover" />
-            ) : (
-              <Trophy className="w-5 h-5 text-zinc-400" />
-            )}
+          <div className="flex-shrink-0">
+            <Avatar src={row.foto_url} alt={row.judul} fallback={row.judul} size="md" shape="rounded" className="bg-body-bg" />
           </div>
           <div>
-            <div className="font-medium text-zinc-900">{row.judul}</div>
-            <div className="text-xs text-zinc-500 line-clamp-1">{row.deskripsi}</div>
+            <div className="font-medium text-primary-text">{row.judul}</div>
+            <div className="text-xs text-secondary-text line-clamp-1 max-w-[200px]">{row.deskripsi || "-"}</div>
           </div>
         </div>
-      )
+      ),
     },
     {
       header: "Tingkat",
       accessorKey: "tingkat",
-      cell: (row: any) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-          {row.tingkat || "-"}
-        </span>
-      )
+      className: "text-center",
+      cell: (row) => (
+        <Badge variant="info" className="uppercase text-[10px] tracking-wider font-semibold">
+          {row.tingkat || "Nasional"}
+        </Badge>
+      ),
     },
     {
       header: "Tanggal",
       accessorKey: "tanggal",
-      cell: (row: any) => (
-        <div className="flex items-center gap-2 text-zinc-600">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{formatDate(row.tanggal)}</span>
+      cell: (row) => (
+        <div className="flex items-center gap-1.5 text-secondary-text">
+          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="text-sm">{formatDate(row.tanggal)}</span>
         </div>
-      )
+      ),
     },
     {
       header: "Aksi",
       accessorKey: "id",
-      className: "w-[100px]",
-      cell: (row: any) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleEdit(row)}>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDelete(row.id)} className="text-red-600 focus:text-red-600">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    }
+      className: "text-center w-16",
+      cell: (row) => (
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-secondary-text">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem asChild>
+                <Link href={`/prestasi-desa/edit/${row.id}`} className="flex items-center w-full">
+                  <Edit2 className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+                  Edit Data
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <form action={deletePrestasiFormAction}>
+                <input type="hidden" name="id" value={row.id as string} />
+                <button type="submit" className="w-full text-left px-2 py-1 text-error-text hover:bg-error-bg rounded flex items-center">
+                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                  Hapus Data
+                </button>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
   ];
 
-  return (
-    <div className="flex h-full flex-col bg-white">
-      <PageHeader 
-        title="Prestasi Desa" 
-        subtitle="Manajemen data penghargaan dan prestasi desa"
-        actions={
-          <Button onClick={handleAddNew} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Tambah Prestasi
+  const mobileConfig: MobileConfig<Prestasi> = {
+    titleKey: "judul",
+    subtitleKey: (row) => <span>{row.tingkat || "Nasional"}</span>,
+    statusKey: (row) => (
+      <div className="flex items-center gap-1 text-xs text-secondary-text">
+        <Calendar className="w-3 h-3" />
+        <span>{formatDate(row.tanggal)}</span>
+      </div>
+    ),
+    action: (row) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="text-secondary-text">
+            <MoreHorizontal className="w-4 h-4" />
           </Button>
-        }
-      />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem asChild>
+            <Link href={`/prestasi-desa/edit/${row.id}`} className="flex items-center w-full">
+              <Edit2 className="w-3.5 h-3.5 mr-2 text-secondary-text" />
+              Edit Data
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <form action={deletePrestasiFormAction}>
+            <input type="hidden" name="id" value={row.id as string} />
+            <button type="submit" className="w-full text-left px-2 py-1 text-error-text hover:bg-error-bg rounded flex items-center">
+              <Trash2 className="w-3.5 h-3.5 mr-2" />
+              Hapus Data
+            </button>
+          </form>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
 
-      <div className="flex-1 overflow-y-auto bg-zinc-50/30 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
-              <Input
-                placeholder="Cari prestasi..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+  return (
+    <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
+      <PageHeader title="Prestasi Desa" subtitle="Manajemen data penghargaan dan prestasi desa" />
+
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 w-full md:w-auto flex-1">
+            <div className="relative flex-1 max-w-sm">
+              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-secondary-text" />
+              </div>
+              <form className="flex" method="GET">
+                <Input
+                  name="q"
+                  defaultValue={q}
+                  type="text"
+                  className="pl-9 bg-card-bg border-border-color text-primary-text flex-1"
+                  placeholder="Cari prestasi..."
+                />
+                <Button type="submit" variant="outline" className="ml-2">Cari</Button>
+              </form>
             </div>
           </div>
 
-          {/* Table */}
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            <Button variant="outline" size="icon" title="Export Data">
+              <Download className="w-3.5 h-3.5 text-secondary-text" />
+            </Button>
+            <Link href="/prestasi-desa/tambah">
+              <Button className="whitespace-nowrap">
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Tambah Prestasi
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
+
+      {currentData.length === 0 && (
+        <Card className="p-6 text-center">
+          Belum ada data
+        </Card>
+      )}
+
+      <DataTable columns={columns} data={currentData as any} mobileConfig={mobileConfig} loading={false} />
+
+      <div className="sticky bottom-8 z-20 rounded-xl border border-border-color bg-card-bg">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 w-full px-4 md:px-6">
+          <span className="whitespace-nowrap pagination-summary">
+            Menampilkan {Math.min((page - 1) * pageSize + 1, totalItems)}-{Math.min(page * pageSize, totalItems)} dari {totalItems} data
+          </span>
+          <div className="flex items-center space-x-2">
+            <Link href={`/prestasi-desa?page=1&pageSize=${pageSize}${q ? `&q=${encodeURIComponent(q)}` : ""}`}>
+              <Button variant="outline" size="icon" className="h-8 w-8 p-0" aria-label="First page" disabled={page === 1}>
+                «
+              </Button>
+            </Link>
+            <Link href={`/prestasi-desa?page=${Math.max(1, page - 1)}&pageSize=${pageSize}${q ? `&q=${encodeURIComponent(q)}` : ""}`}>
+              <Button variant="outline" size="icon" className="h-8 w-8 p-0" aria-label="Previous page" disabled={page === 1}>
+                ‹
+              </Button>
+            </Link>
+            <div className="flex items-center gap-1">
+              {[...Array(Math.min(5, totalPages)).keys()].map((i) => {
+                const computed = Math.min(Math.max(1, page - 2), Math.max(1, totalPages - 4)) + i;
+                return (
+                  <Link key={computed} href={`/prestasi-desa?page=${computed}&pageSize=${pageSize}${q ? `&q=${encodeURIComponent(q)}` : ""}`}>
+                    <Button variant={page === computed ? "primary" : "outline"} size="icon" className="h-8 w-8 p-0">
+                      {computed}
+                    </Button>
+                  </Link>
+                );
+              })}
             </div>
-          ) : (
-            <DataTable 
-              columns={columns} 
-              data={filteredData} 
-              keyField="id"
-              mobileConfig={{
-                titleKey: "judul",
-                subtitleKey: "tingkat",
-                statusKey: (row) => formatDate(row.tanggal),
-                imageKey: "foto_url"
-              }}
-            />
-          )}
+            <Link href={`/prestasi-desa?page=${Math.min(totalPages, page + 1)}&pageSize=${pageSize}${q ? `&q=${encodeURIComponent(q)}` : ""}`}>
+              <Button variant="outline" size="icon" className="h-8 w-8 p-0" aria-label="Next page" disabled={page === totalPages}>
+                ›
+              </Button>
+            </Link>
+            <Link href={`/prestasi-desa?page=${totalPages}&pageSize=${pageSize}${q ? `&q=${encodeURIComponent(q)}` : ""}`}>
+              <Button variant="outline" size="icon" className="h-8 w-8 p-0" aria-label="Last page" disabled={page === totalPages}>
+                »
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Form Sheet */}
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{isEditing ? "Edit Prestasi" : "Tambah Prestasi Baru"}</SheetTitle>
-            <SheetDescription>
-              Isi formulir berikut untuk {isEditing ? "memperbarui" : "menambahkan"} data prestasi desa.
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="space-y-6 py-6">
-            <div className="space-y-2">
-              <Label>Judul Prestasi</Label>
-              <Input 
-                value={judul} 
-                onChange={(e) => setJudul(e.target.value)} 
-                placeholder="Contoh: Juara 1 Lomba Desa Tingkat Provinsi"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tanggal</Label>
-                <Input 
-                  type="date" 
-                  value={tanggal} 
-                  onChange={(e) => setTanggal(e.target.value)} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Tingkat</Label>
-                <Select value={tingkat} onValueChange={setTingkat}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Tingkat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TINGKAT_OPTIONS.map((opt) => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Foto Dokumentasi</Label>
-              <div className="space-y-3">
-                {fotoUrl && (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100">
-                    <img src={fotoUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <button 
-                      onClick={() => setFotoUrl("")}
-                      className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  <Input 
-                    value={fotoUrl} 
-                    onChange={(e) => setFotoUrl(e.target.value)} 
-                    placeholder="https://..."
-                    className="flex-1"
-                  />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="upload-foto"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="shrink-0"
-                      onClick={() => document.getElementById('upload-foto')?.click()}
-                      disabled={uploading}
-                    >
-                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-zinc-500">
-                  Paste URL gambar atau upload dari perangkat (Max 2MB).
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Deskripsi</Label>
-              <textarea 
-                className="flex min-h-[100px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
-                value={deskripsi} 
-                onChange={(e) => setDeskripsi(e.target.value)} 
-                placeholder="Deskripsi singkat tentang pencapaian..."
-              />
-            </div>
-          </div>
-
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setIsSheetOpen(false)}>Batal</Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Simpan
-                </>
-              )}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

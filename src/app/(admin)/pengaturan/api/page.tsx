@@ -52,7 +52,7 @@ export default function ApiSettingsPage() {
         title="Pengaturan API & Integrasi"
         subtitle="Kelola kunci API untuk fitur AI dan integrasi pihak ketiga. Data disimpan lokal di browser Anda."
         actions={
-          <Button onClick={handleSave} className="bg-zinc-900 hover:bg-zinc-800 text-white h-9 text-xs px-3">
+          <Button onClick={handleSave} className="bg-primary-text hover:opacity-90 text-card-bg h-9 text-xs px-3">
             <Save className="w-3.5 h-3.5 mr-2" />
             Simpan Pengaturan
           </Button>
@@ -79,11 +79,11 @@ export default function ApiSettingsPage() {
           </div>
 
           {/* Groq API */}
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
+          <div className="bg-card-bg rounded-xl border border-border-color shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900">Groq Cloud API</h3>
-                <p className="text-xs text-zinc-500">Digunakan untuk fitur generate artikel cepat.</p>
+                <h3 className="text-sm font-semibold text-primary-text">Groq Cloud API</h3>
+                <p className="text-xs text-secondary-text">Digunakan untuk fitur generate artikel cepat.</p>
               </div>
               <a 
                 href="https://console.groq.com/keys" 
@@ -105,7 +105,7 @@ export default function ApiSettingsPage() {
               <button
                 type="button"
                 onClick={() => toggleVisibility("groq")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-text hover:text-primary-text"
               >
                 {showKey["groq"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -113,11 +113,11 @@ export default function ApiSettingsPage() {
           </div>
 
           {/* Gemini API */}
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
+          <div className="bg-card-bg rounded-xl border border-border-color shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900">Google Gemini API</h3>
-                <p className="text-xs text-zinc-500">Alternatif untuk analisis konten mendalam.</p>
+                <h3 className="text-sm font-semibold text-primary-text">Google Gemini API</h3>
+                <p className="text-xs text-secondary-text">Alternatif untuk analisis konten mendalam.</p>
               </div>
               <a 
                 href="https://aistudio.google.com/app/apikey" 
@@ -139,7 +139,7 @@ export default function ApiSettingsPage() {
               <button
                 type="button"
                 onClick={() => toggleVisibility("gemini")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-text hover:text-primary-text"
               >
                 {showKey["gemini"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -147,11 +147,11 @@ export default function ApiSettingsPage() {
           </div>
 
            {/* OpenAI API */}
-           <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
+           <div className="bg-card-bg rounded-xl border border-border-color shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900">OpenAI API</h3>
-                <p className="text-xs text-zinc-500">Standar industri untuk GPT-4.</p>
+                <h3 className="text-sm font-semibold text-primary-text">OpenAI API</h3>
+                <p className="text-xs text-secondary-text">Standar industri untuk GPT-4.</p>
               </div>
               <a 
                 href="https://platform.openai.com/api-keys" 
@@ -173,7 +173,7 @@ export default function ApiSettingsPage() {
               <button
                 type="button"
                 onClick={() => toggleVisibility("openai")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-text hover:text-primary-text"
               >
                 {showKey["openai"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>

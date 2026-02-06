@@ -237,19 +237,19 @@ const SectionContainer = ({
   <div 
     id={id} 
     ref={sectionRef} 
-    className="scroll-mt-6 bg-zinc-50 border border-zinc-200 rounded-lg p-4 md:p-6 mb-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800"
+    className="scroll-mt-6 bg-card-bg border border-border-color rounded-lg p-4 md:p-6 mb-6 shadow-sm"
   >
-    <div className="mb-4 md:mb-6 border-b border-zinc-200 pb-4 flex justify-between items-center dark:border-zinc-800">
+    <div className="mb-4 md:mb-6 border-b border-border-color pb-4 flex justify-between items-center">
       <div>
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
-          {description && <p className="text-sm text-zinc-500 mt-1 dark:text-zinc-400">{description}</p>}
+          <h3 className="text-lg font-semibold text-primary-text">{title}</h3>
+          {description && <p className="text-sm text-secondary-text mt-1">{description}</p>}
       </div>
     </div>
     {children}
   </div>
 );
 
-const COLORS = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#6366f1', '#06b6d4', '#f43f5e'];
+const COLORS = ['var(--info-text)', '--error-text', '--success-text', '--warning-text', '--secondary-text', '--primary-text', '--info-text', '--error-text'];
 
 function StatContent({ 
     category, 
@@ -427,7 +427,7 @@ function StatContent({
 
             <div className="overflow-x-auto rounded-xl border border-border-color shadow-sm bg-card-bg">
                 <table className="w-full text-xs text-left">
-                    <thead className="bg-zinc-50/50 dark:bg-zinc-800/50 text-secondary-text font-medium border-b border-border-color">
+                    <thead className="bg-body-bg/50 text-secondary-text font-medium border-b border-border-color">
                         <tr>
                             <th className="px-2 py-2 md:px-4 md:py-3 w-8 md:w-12 font-normal">No</th>
                             <th className="px-2 py-2 md:px-4 md:py-3 font-normal">Kategori</th>
@@ -444,7 +444,7 @@ function StatContent({
                     </thead>
                     <tbody className="divide-y divide-border-color">
                         {data.map((row, idx) => (
-                            <tr key={row.key} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50 transition-colors">
+                            <tr key={row.key} className="hover:bg-body-bg/80 transition-colors">
                                 <td className="px-2 py-2 md:px-4 md:py-2.5 text-secondary-text text-[10px] md:text-xs">{idx + 1}</td>
                                 <td className="px-2 py-2 md:px-4 md:py-2.5 text-primary-text text-[10px] md:text-xs">{row.label}</td>
                                 <td 
@@ -452,7 +452,7 @@ function StatContent({
                                     onClick={() => handleRowClick(row.key, row.label, "L")}
                                 >
                                     <div className="flex flex-col items-end md:flex-row md:items-center md:justify-end md:gap-3">
-                                        <span className="text-blue-500 group-hover:text-blue-600 dark:text-blue-400 dark:group-hover:text-blue-300 transition-colors font-medium">{row.male}</span>
+                                        <span className="text-info-text transition-colors font-medium">{row.male}</span>
                                         <span className="text-[9px] md:text-[10px] text-secondary-text md:w-10 text-right">({row.malePercent.toFixed(1)}%)</span>
                                     </div>
                                 </td>
@@ -461,7 +461,7 @@ function StatContent({
                                     onClick={() => handleRowClick(row.key, row.label, "P")}
                                 >
                                     <div className="flex flex-col items-end md:flex-row md:items-center md:justify-end md:gap-3">
-                                        <span className="text-pink-500 group-hover:text-pink-600 dark:text-pink-400 dark:group-hover:text-pink-300 transition-colors font-medium">{row.female}</span>
+                                        <span className="text-error-text group-hover:text-error-text transition-colors font-medium">{row.female}</span>
                                         <span className="text-[9px] md:text-[10px] text-secondary-text md:w-10 text-right">({row.femalePercent.toFixed(1)}%)</span>
                                     </div>
                                 </td>
@@ -471,7 +471,7 @@ function StatContent({
                                 >
                                     <div className="flex flex-col items-end md:flex-row md:items-center md:justify-end md:gap-3">
                                         <span className="text-primary-text font-medium group-hover:text-primary-text transition-colors">{row.total}</span>
-                                        <span className="text-[9px] md:text-[10px] text-zinc-400 dark:text-zinc-500 md:w-10 text-right">({row.totalPercent.toFixed(1)}%)</span>
+                                        <span className="text-[9px] md:text-[10px] text-secondary-text md:w-10 text-right">({row.totalPercent.toFixed(1)}%)</span>
                                     </div>
                                 </td>
                             </tr>
@@ -481,11 +481,11 @@ function StatContent({
             </div>
 
             <Sheet open={!!selectedDetail} onOpenChange={(open) => !open && setSelectedDetail(null)}>
-                <SheetContent className="w-full sm:max-w-xl flex flex-col h-full p-0 gap-0 border-l border-border-color shadow-2xl bg-card-bg dark:bg-zinc-900">
+                <SheetContent className="w-full sm:max-w-xl flex flex-col h-full p-0 gap-0 border-l border-border-color shadow-2xl bg-card-bg">
                     <SheetHeader className="px-4 py-4 md:p-6 border-b border-border-color bg-card-bg sticky top-0 z-10 space-y-4">
                         {/* Mobile Navigation Bar */}
                         <div className="flex items-center gap-2 md:hidden mb-1">
-                            <SheetClose className="flex items-center gap-2 text-secondary-text hover:text-primary-text transition-colors px-2 py-1.5 -ml-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-border-color">
+                            <SheetClose className="flex items-center gap-2 text-secondary-text hover:text-primary-text transition-colors px-2 py-1.5 -ml-2 rounded-md hover:bg-secondary-text/10 focus:outline-none focus:ring-2 focus:ring-border-color">
                                 <ArrowLeft className="w-5 h-5" />
                                 <span className="font-medium text-sm">Kembali</span>
                             </SheetClose>
@@ -519,12 +519,12 @@ function StatContent({
                                 const isMale = normalizeGender(r.jenis_kelamin) === "L";
                                 
                                 return (
-                                    <div key={r.id || i} className="group bg-card-bg border border-border-color rounded-xl p-4 hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                                    <div key={r.id || i} className="group bg-card-bg border border-border-color rounded-xl p-4 hover:shadow-md hover:border-border-color/80 transition-all duration-200">
                                         <div className="flex items-start gap-4">
                                             {/* Avatar */}
                                             <div className={cn(
-                                                "w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm",
-                                                isMale ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800" : "bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-800"
+                                                "w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm border",
+                                                isMale ? "bg-gender-male-bg text-gender-male-text border-gender-male-border" : "bg-gender-female-bg text-gender-female-text border-gender-female-border"
                                             )}>
                                                 {initials}
                                             </div>
@@ -534,7 +534,7 @@ function StatContent({
                                                 <div>
                                                     <h4 className="font-semibold text-primary-text truncate pr-2">{r.nama}</h4>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="font-mono text-xs text-secondary-text bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-border-color">
+                                                        <span className="font-mono text-xs text-secondary-text bg-secondary-text/5 px-1.5 py-0.5 rounded border border-border-color">
                                                             {r.nik}
                                                         </span>
                                                     </div>
@@ -555,19 +555,19 @@ function StatContent({
                                                 <div className="flex flex-wrap gap-2 pt-1">
                                                     <div className={cn(
                                                         "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium border",
-                                                        isMale ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800" : "bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 border-pink-100 dark:border-pink-800"
+                                                        isMale ? "bg-gender-male-bg text-gender-male-text border-gender-male-border" : "bg-gender-female-bg text-gender-female-text border-gender-female-border"
                                                     )}>
                                                         <User className="w-3 h-3" />
                                                         {isMale ? "Laki-laki" : "Perempuan"}
                                                     </div>
                                                     
-                                                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-secondary-text border border-border-color">
+                                                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium bg-secondary-text/5 text-secondary-text border border-border-color">
                                                         <Calendar className="w-3 h-3" />
                                                         {calculateAge(r.tanggal_lahir)} Tahun
                                                     </div>
 
                                                     {r.status_kawin && (
-                                                        <div className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-800">
+                                                        <div className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium bg-secondary-bg text-secondary-text border border-border-color">
                                                             {r.status_kawin}
                                                         </div>
                                                     )}
@@ -580,8 +580,8 @@ function StatContent({
                             
                             {filteredDetailResidents.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                                    <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                                        <Search className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
+                                    <div className="w-16 h-16 bg-secondary-text/5 rounded-full flex items-center justify-center mb-4">
+                                        <Search className="w-8 h-8 text-secondary-text/30" />
                                     </div>
                                     <h3 className="text-primary-text font-medium mb-1">Tidak ditemukan</h3>
                                     <p className="text-secondary-text text-sm max-w-[200px]">
@@ -674,7 +674,7 @@ export default function StatistikKependudukanPage() {
     if (loading) {
         return (
             <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-secondary-text" />
             </div>
         );
     }
@@ -706,7 +706,7 @@ export default function StatistikKependudukanPage() {
                                         <select 
                                             value={selectedDusun} 
                                             onChange={(e) => { setSelectedDusun(e.target.value); setSelectedRW("all"); setSelectedRT("all"); }}
-                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text"
                                         >
                                             <option value="all">Semua</option>
                                             {dusunOptions.map(d => <option key={d} value={d}>{d}</option>)}
@@ -717,7 +717,7 @@ export default function StatistikKependudukanPage() {
                                         <select 
                                             value={selectedRW} 
                                             onChange={(e) => { setSelectedRW(e.target.value); setSelectedRT("all"); }}
-                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text"
                                         >
                                             <option value="all">Semua</option>
                                             {rwOptions.map(rw => <option key={rw} value={rw}>{rw}</option>)}
@@ -728,7 +728,7 @@ export default function StatistikKependudukanPage() {
                                         <select 
                                             value={selectedRT} 
                                             onChange={(e) => setSelectedRT(e.target.value)}
-                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                            className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text"
                                         >
                                             <option value="all">Semua</option>
                                             {rtOptions.map(rt => <option key={rt} value={rt}>{rt}</option>)}
@@ -757,13 +757,13 @@ export default function StatistikKependudukanPage() {
                                         className={cn(
                                             "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left transition-all relative group",
                                             isActive
-                                                ? "bg-zinc-100 dark:bg-zinc-800 text-primary-text font-medium shadow-sm"
-                                                : "text-secondary-text hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-primary-text"
+                                                ? "bg-secondary-text/10 text-primary-text font-medium shadow-sm"
+                                                : "text-secondary-text hover:bg-secondary-text/5 hover:text-primary-text"
                                         )}
                                     >
                                         <div className={cn(
                                             "flex h-2 w-2 shrink-0 rounded-full transition-colors",
-                                            isActive ? "bg-primary-text" : "bg-zinc-300 dark:bg-zinc-600 group-hover:bg-zinc-400 dark:group-hover:bg-zinc-500"
+                                            isActive ? "bg-primary-text" : "bg-secondary-text/30 group-hover:bg-secondary-text/50"
                                         )} />
 
                                         <span className="text-[13px] truncate">
@@ -793,7 +793,7 @@ export default function StatistikKependudukanPage() {
                                             <select 
                                                 value={selectedDusun} 
                                                 onChange={(e) => { setSelectedDusun(e.target.value); setSelectedRW("all"); setSelectedRT("all"); }}
-                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-zinc-500 focus:border-zinc-500 block p-2 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-primary-text focus:border-primary-text block p-2"
                                             >
                                                 <option value="all">Semua Dusun</option>
                                                 {dusunOptions.map(d => <option key={d} value={d}>{d}</option>)}
@@ -804,7 +804,7 @@ export default function StatistikKependudukanPage() {
                                             <select 
                                                 value={selectedRW} 
                                                 onChange={(e) => { setSelectedRW(e.target.value); setSelectedRT("all"); }}
-                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-zinc-500 focus:border-zinc-500 block p-2 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-primary-text focus:border-primary-text block p-2"
                                             >
                                                 <option value="all">Semua RW</option>
                                                 {rwOptions.map(rw => <option key={rw} value={rw}>{rw}</option>)}
@@ -815,7 +815,7 @@ export default function StatistikKependudukanPage() {
                                             <select 
                                                 value={selectedRT} 
                                                 onChange={(e) => setSelectedRT(e.target.value)}
-                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-zinc-500 focus:border-zinc-500 block p-2 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100"
+                                                className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-md focus:ring-primary-text focus:border-primary-text block p-2"
                                             >
                                                 <option value="all">Semua RT</option>
                                                 {rtOptions.map(rt => <option key={rt} value={rt}>{rt}</option>)}
@@ -833,7 +833,7 @@ export default function StatistikKependudukanPage() {
                                         <select 
                                             value={activeSection} 
                                             onChange={(e) => scrollToSection(e.target.value)}
-                                            className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-lg focus:ring-zinc-500 focus:border-zinc-500 block p-2.5 pr-8"
+                                            className="w-full appearance-none bg-card-bg border border-border-color text-primary-text text-sm rounded-lg focus:ring-primary-text focus:border-primary-text block p-2.5 pr-8"
                                         >
                                             {STAT_CATEGORIES.map((cat) => (
                                                 <option key={cat} value={slugify(cat)}>{cat}</option>

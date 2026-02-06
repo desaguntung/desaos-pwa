@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function PengaturanSuratPage() {
   const dummyDataSurat = useMemo(() => [
@@ -79,34 +83,27 @@ export default function PengaturanSuratPage() {
   return (
     <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
       {/* Header */}
-      <header className="sticky top-0 bg-body-bg/80 backdrop-blur-md border-b border-zinc-200 z-10">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <h2 className="text-sm font-medium text-primary-text">Pengaturan Surat</h2>
-            <div className="h-4 w-px bg-zinc-200"></div>
-            <div className="flex items-center gap-1 text-xs text-secondary-text">
-              <span>Layanan Surat</span>
-              <span className="text-zinc-300">/</span>
-              <span className="text-primary-text font-medium">Pengaturan Surat</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/pengaturan-surat/tambah" className="flex items-center gap-1.5 text-xs bg-primary-text text-white rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium">
-              <Plus className="w-3.5 h-3.5"/>
+      <PageHeader
+        title="Pengaturan Surat"
+        subtitle="Layanan Surat / Pengaturan Surat"
+        actions={
+          <Link href="/surat/pengaturan/format/buat">
+            <Button size="sm" className="gap-1.5">
+              <Plus className="w-4 h-4" />
               <span>Tambah Jenis Surat</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+            </Button>
+          </Link>
+        }
+      />
 
       <div className="p-6 max-w-full mx-auto w-full space-y-6 pb-12">
         <div className="flex items-center justify-between">
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 text-xs text-secondary-text"
+            className="inline-flex items-center gap-1.5 text-xs text-secondary-text hover:text-primary-text transition-colors"
             onClick={() => setShowInfo((prev) => !prev)}
           >
-            <Info className="w-3.5 h-3.5 text-secondary-text" />
+            <Info className="w-3.5 h-3.5" />
             <span>Manajemen Format & Template Surat</span>
           </button>
           <span className="text-xs text-secondary-text">
@@ -115,7 +112,7 @@ export default function PengaturanSuratPage() {
         </div>
 
         {showInfo && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-xs text-secondary-text leading-relaxed">
+          <div className="bg-body-bg border border-border-color rounded-lg p-3 text-xs text-secondary-text leading-relaxed">
             Halaman ini digunakan untuk mengelola berbagai jenis format surat layanan publik,
             mengatur penomoran otomatis, persyaratan dokumen, hingga template dokumen siap cetak.
             Pastikan data penduduk sudah lengkap untuk sinkronisasi optimal.
@@ -145,24 +142,24 @@ export default function PengaturanSuratPage() {
                   key={status}
                   type="button"
                   onClick={() => setStatusFilter(status)}
-                  className={[
-                    "px-3 py-1.5 text-xs font-medium rounded-md border flex items-center gap-2",
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md border flex items-center gap-2 transition-colors",
                     isActive
-                      ? "bg-primary-text text-white border-primary-text"
-                      : "bg-zinc-50 text-primary-text border-zinc-200",
-                  ].join(" ")}
+                      ? "bg-primary-text text-card-bg border-primary-text"
+                      : "bg-body-bg text-primary-text border-border-color hover:bg-secondary-text/5"
+                  )}
                 >
                   <span className="flex items-center gap-1.5">
                     {icon && (() => {
                       const IconComponent = icon;
                       return (
                         <IconComponent
-                          className={[
+                          className={cn(
                             "w-3.5 h-3.5",
                             status === "Aktif"
-                              ? "text-emerald-500"
-                              : "text-yellow-500",
-                          ].join(" ")}
+                              ? "text-success-text"
+                              : "text-warning-text"
+                          )}
                         />
                       );
                     })()}
@@ -175,12 +172,12 @@ export default function PengaturanSuratPage() {
                     </span>
                   </span>
                   <span
-                    className={[
+                    className={cn(
                       "px-1.5 py-0.5 rounded-full text-xs",
                       isActive
-                        ? "bg-white/10 text-white"
-                        : "bg-gray-200 text-gray-700",
-                    ].join(" ")}
+                      ? "bg-card-bg/20 text-card-bg"
+                      : "bg-secondary-text/10 text-secondary-text"
+                    )}
                   >
                     {totalForStatus}
                   </span>
@@ -189,19 +186,18 @@ export default function PengaturanSuratPage() {
             })}
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-2.5 top-1/2 -tranzinc-y-1/2 w-3.5 h-3.5 text-secondary-text" />
-              <input
-                type="text"
+            <div className="relative flex-1 md:w-64 group">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-text group-focus-within:text-blue-500 transition-colors" />
+              <InputField
                 placeholder="Cari Nama atau Kode Surat..."
-                className="w-full bg-white border border-zinc-200 rounded-md pl-8 pr-3 py-1.5 text-xs focus:outline-hidden focus:ring-1 focus:ring-primary-text/20 transition-all"
+                className="pl-9 h-9 text-xs"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
             <button
               type="button"
-              className="p-2 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors"
+              className="p-2 bg-card-bg border border-border-color rounded-md hover:bg-secondary-text/5 transition-colors h-9 w-9 flex items-center justify-center"
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("Semua");
@@ -211,65 +207,65 @@ export default function PengaturanSuratPage() {
             </button>
             <button
               type="button"
-              className="p-2 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors"
+              className="p-2 bg-card-bg border border-border-color rounded-md hover:bg-secondary-text/5 transition-colors h-9 w-9 flex items-center justify-center"
               onClick={() =>
                 setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
               }
             >
               <ArrowUpDown
-                className={[
+                className={cn(
                   "w-3.5 h-3.5 text-secondary-text transition-transform",
-                  sortDirection === "desc" ? "rotate-180" : "",
-                ].join(" ")}
+                  sortDirection === "desc" ? "rotate-180" : ""
+                )}
               />
             </button>
           </div>
         </div>
 
         {/* Surat List Table */}
-        <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+        <div className="bg-card-bg border border-border-color rounded-lg overflow-hidden">
           <div className="overflow-x-auto relative">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200">
-                  <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[180px] sticky left-0 bg-white z-[3]">Nama Surat</th>
+                <tr className="bg-body-bg border-b border-border-color">
+                  <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[180px] sticky left-0 bg-card-bg z-[3]">Nama Surat</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[100px]">Kode/Singkatan</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[120px]">Penomoran Terakhir</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[150px]">Pejabat Penandatangan</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[80px] text-center">Template</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[80px] text-center">Aktif</th>
                   <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 min-w-[80px] text-center">Favorit</th>
-                  <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right min-w-[100px] sticky right-0 bg-white z-[3]">Aksi</th>
+                  <th className="text-xs font-bold text-secondary-text uppercase tracking-wider px-4 py-3 text-right min-w-[100px] sticky right-0 bg-card-bg z-[3]">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 text-sm">
+              <tbody className="divide-y divide-border-color text-sm">
                 {filteredSurat.map((surat, i) => (
-                  <tr key={i} className="hover:bg-zinc-50 transition-colors group">
-                    <td className="px-4 py-3 text-xs font-medium text-primary-text sticky left-0 bg-white z-[2]">{surat.name.toUpperCase()}</td>
+                  <tr key={i} className="hover:bg-secondary-text/5 transition-colors group">
+                    <td className="px-4 py-3 text-xs font-medium text-primary-text sticky left-0 bg-card-bg z-[2] group-hover:bg-body-bg transition-colors">{surat.name.toUpperCase()}</td>
                     <td className="px-4 py-3 text-xs text-secondary-text">
                       <p className="">{surat.code}</p>
-                      <p className="text-xs text-gray-500">({surat.abbr})</p>
+                      <p className="text-xs text-secondary-text/70">({surat.abbr})</p>
                     </td>
                     <td className="px-4 py-3 text-xs text-secondary-text">#{surat.lastNumber}</td>
                     <td className="px-4 py-3 text-xs text-secondary-text">{surat.signer}</td>
                     <td className="px-4 py-3 text-center">
-                      {surat.hasTemplate ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-rose-500 mx-auto" />}
+                      {surat.hasTemplate ? <CheckCircle2 className="w-4 h-4 text-success-text mx-auto" /> : <XCircle className="w-4 h-4 text-error-text mx-auto" />}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {surat.status === 'Aktif' ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-400 mx-auto" />}
+                      {surat.status === 'Aktif' ? <CheckCircle2 className="w-4 h-4 text-success-text mx-auto" /> : <XCircle className="w-4 h-4 text-secondary-text/50 mx-auto" />}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {surat.isFavorite ? <Star className="w-4 h-4 text-yellow-500 mx-auto" /> : <Star className="w-4 h-4 text-gray-300 mx-auto" />}
+                      {surat.isFavorite ? <Star className="w-4 h-4 text-warning-text mx-auto" /> : <Star className="w-4 h-4 text-secondary-text/30 mx-auto" />}
                     </td>
-                    <td className="px-4 py-3 text-right sticky right-0 bg-white z-[2]">
+                    <td className="px-4 py-3 text-right sticky right-0 bg-card-bg z-[2] group-hover:bg-body-bg transition-colors">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1.5 hover:bg-white rounded-md border border-transparent hover:border-zinc-200 text-secondary-text hover:text-blue-600 transition-all title='Detail'">
+                        <button className="p-1.5 hover:bg-card-bg rounded-md border border-transparent hover:border-border-color text-secondary-text hover:text-accent transition-all title='Detail'">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <Link href="/surat/pengaturan/format/buat" className="p-1.5 hover:bg-white rounded-md border border-transparent hover:border-zinc-200 text-secondary-text hover:text-emerald-600 transition-all title='Edit Template'">
+                        <Link href="/surat/pengaturan/format/buat" className="p-1.5 hover:bg-card-bg rounded-md border border-transparent hover:border-border-color text-secondary-text hover:text-success-text transition-all title='Edit Template'">
                           <Edit2 className="w-3.5 h-3.5" />
                         </Link>
-                        <button className="p-1.5 hover:bg-white rounded-md border border-transparent hover:border-zinc-200 text-secondary-text transition-all title='Upload Template'">
+                        <button className="p-1.5 hover:bg-card-bg rounded-md border border-transparent hover:border-border-color text-secondary-text transition-all title='Upload Template'">
                           <Upload className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -279,11 +275,11 @@ export default function PengaturanSuratPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 border-t border-zinc-200 bg-zinc-50 flex justify-between items-center">
+          <div className="px-6 py-3 border-t border-border-color bg-body-bg flex justify-between items-center">
             <p className="text-xs text-secondary-text font-medium uppercase tracking-widest">Menampilkan 1 - 4 dari 4 Jenis Surat</p>
             <div className="flex gap-2 text-xs">
                <button disabled className="px-2 py-1 text-secondary-text opacity-50">Previous</button>
-               <button className="px-2 py-1 bg-white border border-zinc-200 rounded font-medium">1</button>
+               <button className="px-2 py-1 bg-card-bg border border-border-color rounded font-medium text-primary-text">1</button>
                <button className="px-2 py-1 text-secondary-text">2</button>
                <button className="px-2 py-1 text-secondary-text">3</button>
                <button className="px-2 py-1 text-secondary-text">...</button>
@@ -295,5 +291,3 @@ export default function PengaturanSuratPage() {
     </div>
   );
 }
-
-

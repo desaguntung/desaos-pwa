@@ -104,7 +104,7 @@ function DetailRumahTanggaPageInner() {
             {canUpdate && (
               <Link
                 href={`/rumah-tangga/edit/${data.id}`}
-                className="flex items-center gap-1.5 text-xs bg-primary-text text-white rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium"
+                className="flex items-center gap-1.5 text-xs bg-primary-text text-body-bg rounded-md px-3 py-1.5 hover:opacity-90 transition-opacity font-medium"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Edit Rumah Tangga</span>
@@ -116,13 +116,13 @@ function DetailRumahTanggaPageInner() {
 
       <div className="p-6 max-w-full mx-auto w-full space-y-6 pb-12">
         {errorMessage && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-md px-3 py-2">
+          <div className="bg-error-bg border border-error-border text-error-text text-xs rounded-md px-3 py-2">
             {errorMessage}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-4 space-y-3">
+          <div className="lg:col-span-2 bg-card-bg border border-border-color rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Home className="w-4 h-4 text-secondary-text" />
               <p className="text-xs font-medium text-primary-text">
@@ -193,7 +193,7 @@ function DetailRumahTanggaPageInner() {
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3">
+          <div className="bg-card-bg border border-border-color rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2">
               <UsersIcon className="w-4 h-4 text-secondary-text" />
               <div>
@@ -220,8 +220,8 @@ function DetailRumahTanggaPageInner() {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-          <div className="border-b border-zinc-200 px-4 py-3 flex items-center gap-2">
+        <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden">
+          <div className="border-b border-border-color px-4 py-3 flex items-center gap-2">
             <UsersIcon className="w-4 h-4 text-secondary-text" />
             <div>
               <p className="text-xs font-medium text-primary-text">
@@ -235,7 +235,7 @@ function DetailRumahTanggaPageInner() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200">
+                <tr className="bg-body-bg border-b border-border-color">
                   <th className="text-[10px] font-bold text-secondary-text uppercase tracking-wider px-4 py-2 min-w-[40px] text-center">
                     No.
                   </th>
@@ -256,7 +256,7 @@ function DetailRumahTanggaPageInner() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 text-xs">
+              <tbody className="divide-y divide-border-color text-xs">
                 {anggota.length === 0 && (
                   <tr>
                     <td

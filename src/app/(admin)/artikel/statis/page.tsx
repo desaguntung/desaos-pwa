@@ -14,8 +14,8 @@ export default function ArtikelStatisPage() {
         <div className="bg-amber-100 p-4 rounded-full mb-4">
           <Construction className="w-10 h-10 text-amber-600" />
         </div>
-        <h2 className="text-lg font-semibold text-zinc-900 mb-2">Dalam Pengembangan</h2>
-        <p className="text-zinc-500 max-w-md text-sm">
+        <h2 className="text-lg font-semibold text-primary-text mb-2">Dalam Pengembangan</h2>
+        <p className="text-secondary-text max-w-md text-sm">
           Fitur ini sedang dalam pengembangan. Artikel statis akan digunakan untuk halaman profil desa, visi misi, dan informasi tetap lainnya.
         </p>
       </div>

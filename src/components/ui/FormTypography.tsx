@@ -12,7 +12,7 @@ export const FormHeader = ({ className, children, ...props }: HTMLAttributes<HTM
   return (
     <h1 
       className={cn(
-        "font-sans text-[20px] font-normal leading-[32px] text-zinc-900",
+        "font-sans text-xl font-normal leading-8 text-zinc-900",
         className
       )}
       style={{
@@ -34,7 +34,7 @@ export const FormDescription = ({ className, children, ...props }: HTMLAttribute
   return (
     <p 
       className={cn(
-        "text-[13px] text-[hsla(0,0%,40%,1)] Text--terms",
+        "text-xs text-secondary-text Text--terms",
         className
       )}
       {...props}

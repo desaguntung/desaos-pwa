@@ -1,70 +1,22 @@
 "use client";
 
 import { 
-  Save, 
   MapPin, 
   Globe, 
-  Phone, 
-  Mail, 
-  User, 
   Hash, 
-  Search,
-  Check,
   FileText
 } from 'lucide-react';
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { FormLayout } from "@/components/layout/FormLayout";
+import { FormSidebarNav } from "@/components/layout/FormSidebarNav";
+import { AsyncSearchSelect } from "@/components/ui/AsyncSearchSelect";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { InputField, TextAreaField, SectionTitle } from "@/components/ui/FormFields";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-// UI Components to match ResidentForm style
-const Label = ({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-  <label className={cn("text-[13px] font-medium text-zinc-700 mb-1.5 block", className)} {...props} />
-);
-
-const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
-  <input
-    className={cn(
-      "flex h-9 w-full rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
-      className
-    )}
-    ref={ref}
-    {...props}
-  />
-));
-Input.displayName = "Input";
-
-const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...props }, ref) => (
-  <textarea
-    className={cn(
-      "flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
-      className
-    )}
-    ref={ref}
-    {...props}
-  />
-));
-Textarea.displayName = "Textarea";
-
-const SectionContainer = ({ 
-  title, 
-  icon: Icon,
-  children 
-}: { 
-  title: string; 
-  icon?: any; 
-  children: React.ReactNode;
-}) => (
-  <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-6 mb-8 shadow-sm">
-    <div className="mb-6 border-b border-zinc-200 pb-4 flex items-center gap-2">
-      {Icon && <Icon className="w-5 h-5 text-zinc-500" />}
-      <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
-    </div>
-    {children}
-  </div>
-);
 
 type WilayahDesaRow = {
   kode_desa: string;
@@ -82,8 +34,6 @@ export default function IdentitasDesaPage() {
   const [desaOptions, setDesaOptions] = useState<WilayahDesaRow[]>([]);
   const [desaLoading, setDesaLoading] = useState(false);
   const [selectedDesa, setSelectedDesa] = useState<WilayahDesaRow | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Data State
   const [kodeDesa, setKodeDesa] = useState("");
@@ -128,17 +78,57 @@ export default function IdentitasDesaPage() {
 
   const [saving, setSaving] = useState(false);
 
+  // Scroll Spy
+  const [activeSection, setActiveSection] = useState("data-desa");
+  const sections = [
+    { id: "data-desa", title: "Data Desa", icon: Hash },
+    { id: "kontak-resmi", title: "Kontak & Website", icon: Globe },
+    { id: "data-wilayah", title: "Data Wilayah", icon: MapPin },
+    { id: "profil-desa", title: "Profil Desa", icon: FileText },
+    { id: "data-geografis", title: "Data Geografis", icon: MapPin },
+  ];
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    const container = document.getElementById("form-scroll-container");
+    if (element && container) {
+      const offset = 24;
+      const elementPosition = element.getBoundingClientRect().top;
+      const containerPosition = container.getBoundingClientRect().top;
+      const offsetPosition = elementPosition - containerPosition + container.scrollTop - offset;
+      container.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      setActiveSection(id);
+    }
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+    const container = document.getElementById("form-scroll-container");
+    if (!container) return;
+
+    const handleScroll = () => {
+      const containerTop = container.getBoundingClientRect().top;
+      
+      for (const section of sections) {
+        const element = document.getElementById(section.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const top = rect.top - containerTop;
+          const bottom = rect.bottom - containerTop;
+          
+          if (top <= 150 && bottom >= 100) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [searchContainerRef]);
+
+    container.addEventListener("scroll", handleScroll);
+    // Initial check
+    handleScroll();
+    
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [sections]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -271,7 +261,7 @@ export default function IdentitasDesaPage() {
   };
 
   useEffect(() => {
-    if (desaQuery.trim().length < 2 || !isDropdownOpen) {
+    if (desaQuery.trim().length < 2) {
       setDesaOptions([]);
       setDesaLoading(false);
       return;
@@ -297,13 +287,12 @@ export default function IdentitasDesaPage() {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [desaQuery, supabase, isDropdownOpen]);
+  }, [desaQuery, supabase]);
 
   const handleSelectDesa = (row: WilayahDesaRow) => {
     setSelectedDesa(row);
     setDesaQuery(row.nama_desa);
     setKodeDesa(row.kode_desa);
-    setIsDropdownOpen(false);
 
     const cleanedKecamatan = row.nama_kecamatan.replace(/^KECAMATAN\s+/i, "").replace(/^Kecamatan\s+/i, "");
     const cleanedKabupaten = row.nama_kabupaten.replace(/^(KABUPATEN|KOTA)\s+/i, "").replace(/^(Kabupaten|Kota)\s+/i, "");
@@ -355,308 +344,280 @@ export default function IdentitasDesaPage() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <PageHeader 
-        title="Identitas Desa" 
-        subtitle="Manajemen data identitas desa"
-        actions={(
-           <button 
-             onClick={handleSave}
-             disabled={saving}
-             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 shadow-sm"
-           >
-             {saving ? (
-               <>Menyimpan...</>
-             ) : (
-               <>
-                 <Save className="w-4 h-4"/>
-                 <span>Simpan</span>
-               </>
-             )}
-           </button>
-        )}
-      />
+    <FormLayout
+      title="Identitas Desa"
+      subtitle="Manajemen data identitas desa"
+      sidebar={
+        <FormSidebarNav
+          sections={sections}
+          activeSection={activeSection}
+          onSectionClick={scrollToSection}
+        />
+      }
+      actions={
+        <Button 
+          onClick={handleSave}
+          disabled={saving}
+          variant="primary"
+          className="min-w-[120px]"
+        >
+          {saving ? "Menyimpan..." : "Simpan"}
+        </Button>
+      }
+    >
+      <div className="space-y-8 pb-24">
+        
+        {/* A. Data Desa */}
+        <Card id="data-desa" className="rounded-xl p-6 md:p-8 scroll-mt-24">
+          <SectionTitle title="Data Desa" description="Informasi dasar identitas desa." icon={Hash} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <AsyncSearchSelect
+                label="Nama Desa"
+                placeholder="Ketik nama desa resmi..."
+                value={desaQuery}
+                onChange={(value) => {
+                  setDesaQuery(value);
+                  setSelectedDesa(null);
+                  if (!value.trim()) {
+                    setKodeDesa("");
+                    setNamaKecamatan("");
+                    setNamaKabupaten("");
+                    setNamaProvinsi("");
+                    setKodeKecamatan("");
+                    setKodeKabupaten("");
+                    setKodeProvinsi("");
+                  }
+                }}
+                options={desaOptions.map(row => ({
+                  value: row.kode_desa,
+                  label: row.nama_desa,
+                  subLabel: `${row.nama_kecamatan} - ${row.nama_kabupaten} - ${row.nama_provinsi}`,
+                  originalData: row
+                }))}
+                onSelect={(option) => handleSelectDesa(option.originalData)}
+                isLoading={desaLoading}
+                description="Cari Nama atau Kode Desa (min. 2 huruf)."
+              />
+            </div>
 
-      {/* Content Area */}
-        <div className="flex-1 overflow-y-auto bg-zinc-50/30">
-          <div className="max-w-5xl mx-auto w-full p-6 pb-20 space-y-8">
-            
-            {/* A. Data Desa */}
-            <SectionContainer title="Data Desa" icon={Hash}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Nama Desa</Label>
-                  <div className="relative" ref={searchContainerRef}>
-                    <Input
-                      type="text"
-                      placeholder="Ketik nama desa resmi..."
-                      value={desaQuery}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setDesaQuery(value);
-                        setSelectedDesa(null);
-                        setIsDropdownOpen(true);
-                        if (!value.trim()) {
-                          setKodeDesa("");
-                          setNamaKecamatan("");
-                          setNamaKabupaten("");
-                          setNamaProvinsi("");
-                          setKodeKecamatan("");
-                          setKodeKabupaten("");
-                          setKodeProvinsi("");
-                        }
-                      }}
-                    />
-                    {desaLoading && (
-                      <div className="absolute inset-y-0 right-3 flex items-center text-xs text-zinc-500">
-                        Memuat...
-                      </div>
-                    )}
-                    {desaOptions.length > 0 && (
-                      <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border border-zinc-200 rounded-md shadow-lg">
-                        {desaOptions.map((row) => (
-                          <button
-                            key={row.kode_desa}
-                            type="button"
-                            className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-50 transition-colors"
-                            onClick={() => handleSelectDesa(row)}
-                          >
-                            <div className="font-medium text-zinc-900">
-                              {row.nama_desa} ({row.kode_desa})
-                            </div>
-                            <div className="text-xs text-zinc-500 mt-0.5">
-                              {row.nama_kecamatan} - {row.nama_kabupaten} - {row.nama_provinsi}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-zinc-500">
-                    Cari Nama atau Kode Desa (min. 2 huruf).
-                  </p>
-                </div>
+            <InputField
+              label="Kode Desa"
+              value={kodeDesa}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
 
-                <div className="space-y-2">
-                  <Label>Kode Desa</Label>
-                  <Input value={kodeDesa} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
+            <InputField
+              label="Kode Pos"
+              value={kodePos}
+              onChange={(e) => setKodePos(e.target.value)}
+              placeholder="Masukkan Kode Pos"
+            />
 
-                <div className="space-y-2">
-                  <Label>Kode Pos</Label>
-                  <Input 
-                    value={kodePos} 
-                    onChange={(e) => setKodePos(e.target.value)} 
-                    placeholder="Masukkan Kode Pos" 
-                  />
-                </div>
+            <div className="md:col-span-2">
+              <TextAreaField
+                label="Alamat Kantor"
+                value={alamatKantor}
+                onChange={(e) => setAlamatKantor(e.target.value)}
+                placeholder="Alamat jalan/lokasi fisik kantor desa"
+                rows={2}
+              />
+            </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Alamat Kantor</Label>
-                  <Textarea
-                    value={alamatKantor}
-                    onChange={(e) => setAlamatKantor(e.target.value)}
-                    placeholder="Alamat jalan/lokasi fisik kantor desa"
-                    rows={2}
-                  />
-                </div>
+            <InputField
+              label="Kepala Desa"
+              value=""
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
 
-                <div className="space-y-2">
-                  <Label>Kepala Desa</Label>
-                  <Input value="" disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>NIP Kepala Desa</Label>
-                  <Input value="" disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-              </div>
-            </SectionContainer>
-
-            {/* Kontak Resmi */}
-            <SectionContainer title="Kontak & Website Resmi" icon={Globe}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Email Desa</Label>
-                  <Input 
-                    type="email"
-                    value={emailDesa}
-                    onChange={(e) => setEmailDesa(e.target.value)}
-                    placeholder="contoh@desa.id"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Telepon Desa</Label>
-                  <Input 
-                    value={teleponDesa}
-                    onChange={(e) => setTeleponDesa(e.target.value)}
-                    placeholder="08x-xxxx-xxxx"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Website Desa</Label>
-                  <Input 
-                    value={websiteDesa}
-                    onChange={(e) => setWebsiteDesa(e.target.value)}
-                    placeholder="https://www.desa-nama.id"
-                  />
-                </div>
-              </div>
-            </SectionContainer>
-
-            {/* B. Data Wilayah */}
-            <SectionContainer title="Data Wilayah (Kecamatan/Kab/Prov)" icon={MapPin}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Nama Kecamatan</Label>
-                  <Input value={namaKecamatan} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kode Kecamatan</Label>
-                  <Input value={kodeKecamatan} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nama Camat</Label>
-                  <Input 
-                    value={namaKepalaCamat}
-                    onChange={(e) => setNamaKepalaCamat(e.target.value)}
-                    placeholder="Nama Lengkap Camat"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>NIP Camat</Label>
-                  <Input 
-                    value={nipKepalaCamat}
-                    onChange={(e) => setNipKepalaCamat(e.target.value)}
-                    placeholder="NIP Camat"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nama Kabupaten</Label>
-                  <Input value={namaKabupaten} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kode Kabupaten</Label>
-                  <Input value={kodeKabupaten} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nama Provinsi</Label>
-                  <Input value={namaProvinsi} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kode Provinsi</Label>
-                  <Input value={kodeProvinsi} disabled readOnly placeholder="Otomatis" className="bg-zinc-100 text-zinc-500" />
-                </div>
-              </div>
-            </SectionContainer>
-
-            <SectionContainer title="Profil Desa" icon={FileText}>
-              <div className="space-y-6">
-                <div>
-                  <Label htmlFor="sejarah">Sejarah Desa</Label>
-                  <Textarea
-                    id="sejarah"
-                    value={sejarah}
-                    onChange={(e) => setSejarah(e.target.value)}
-                    placeholder="Ceritakan sejarah desa..."
-                    className="min-h-[200px]"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="visi">Visi</Label>
-                    <Textarea
-                      id="visi"
-                      value={visi}
-                      onChange={(e) => setVisi(e.target.value)}
-                      placeholder="Visi desa..."
-                      className="min-h-[150px]"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="misi">Misi</Label>
-                    <Textarea
-                      id="misi"
-                      value={misi}
-                      onChange={(e) => setMisi(e.target.value)}
-                      placeholder="Misi desa..."
-                      className="min-h-[150px]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </SectionContainer>
-
-            <SectionContainer title="Data Geografis" icon={MapPin}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Luas Wilayah</Label>
-                  <Input 
-                    value={luasWilayah}
-                    onChange={(e) => setLuasWilayah(e.target.value)}
-                    placeholder="Contoh: 1250 Ha"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Ketinggian (mdpl)</Label>
-                  <Input 
-                    value={ketinggian}
-                    onChange={(e) => setKetinggian(e.target.value)}
-                    placeholder="Contoh: 500 mdpl"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Batas Utara</Label>
-                  <Input 
-                    value={batasUtara}
-                    onChange={(e) => setBatasUtara(e.target.value)}
-                    placeholder="Desa/Kecamatan..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Batas Selatan</Label>
-                  <Input 
-                    value={batasSelatan}
-                    onChange={(e) => setBatasSelatan(e.target.value)}
-                    placeholder="Desa/Kecamatan..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Batas Timur</Label>
-                  <Input 
-                    value={batasTimur}
-                    onChange={(e) => setBatasTimur(e.target.value)}
-                    placeholder="Desa/Kecamatan..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Batas Barat</Label>
-                  <Input 
-                    value={batasBarat}
-                    onChange={(e) => setBatasBarat(e.target.value)}
-                    placeholder="Desa/Kecamatan..."
-                  />
-                </div>
-                
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Peta Wilayah (Embed HTML / URL Gambar)</Label>
-                  <Textarea
-                    value={petaWilayah}
-                    onChange={(e) => setPetaWilayah(e.target.value)}
-                    placeholder="Paste kode embed Google Maps iframe atau URL gambar peta..."
-                    rows={3}
-                  />
-                  <p className="text-xs text-zinc-500">
-                    Disarankan menggunakan Embed Map dari Google Maps.
-                  </p>
-                </div>
-              </div>
-            </SectionContainer>
-
+            <InputField
+              label="NIP Kepala Desa"
+              value=""
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
           </div>
-        </div>
+        </Card>
+
+        {/* Kontak Resmi */}
+        <Card id="kontak-resmi" className="rounded-xl p-6 md:p-8 scroll-mt-24">
+          <SectionTitle title="Kontak & Website Resmi" description="Informasi kontak desa yang dapat dihubungi." icon={Globe} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              type="email"
+              label="Email Desa"
+              value={emailDesa}
+              onChange={(e) => setEmailDesa(e.target.value)}
+              placeholder="contoh@desa.id"
+            />
+            <InputField
+              label="Telepon Desa"
+              value={teleponDesa}
+              onChange={(e) => setTeleponDesa(e.target.value)}
+              placeholder="08x-xxxx-xxxx"
+            />
+            <div className="md:col-span-2">
+              <InputField
+                label="Website Desa"
+                value={websiteDesa}
+                onChange={(e) => setWebsiteDesa(e.target.value)}
+                placeholder="https://www.desa-nama.id"
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* B. Data Wilayah */}
+        <Card id="data-wilayah" className="rounded-xl p-6 md:p-8 scroll-mt-24">
+          <SectionTitle title="Data Wilayah" description="Informasi wilayah administratif desa." icon={MapPin} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              label="Nama Kecamatan"
+              value={namaKecamatan}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+            <InputField
+              label="Kode Kecamatan"
+              value={kodeKecamatan}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+            <InputField
+              label="Nama Camat"
+              value={namaKepalaCamat}
+              onChange={(e) => setNamaKepalaCamat(e.target.value)}
+              placeholder="Nama Lengkap Camat"
+            />
+            <InputField
+              label="NIP Camat"
+              value={nipKepalaCamat}
+              onChange={(e) => setNipKepalaCamat(e.target.value)}
+              placeholder="NIP Camat"
+            />
+            <InputField
+              label="Nama Kabupaten"
+              value={namaKabupaten}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+            <InputField
+              label="Kode Kabupaten"
+              value={kodeKabupaten}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+            <InputField
+              label="Nama Provinsi"
+              value={namaProvinsi}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+            <InputField
+              label="Kode Provinsi"
+              value={kodeProvinsi}
+              disabled
+              readOnly
+              placeholder="Otomatis"
+            />
+          </div>
+        </Card>
+
+        {/* Profil Desa */}
+        <Card id="profil-desa" className="rounded-xl p-6 md:p-8 scroll-mt-24">
+          <SectionTitle title="Profil Desa" description="Sejarah, Visi, dan Misi desa." icon={FileText} />
+          <div className="space-y-6">
+            <TextAreaField
+              label="Sejarah Desa"
+              value={sejarah}
+              onChange={(e) => setSejarah(e.target.value)}
+              placeholder="Ceritakan sejarah desa..."
+              rows={8}
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <TextAreaField
+                label="Visi"
+                value={visi}
+                onChange={(e) => setVisi(e.target.value)}
+                placeholder="Visi desa..."
+                rows={6}
+              />
+              <TextAreaField
+                label="Misi"
+                value={misi}
+                onChange={(e) => setMisi(e.target.value)}
+                placeholder="Misi desa..."
+                rows={6}
+              />
+            </div>
+          </div>
+        </Card>
+        {/* Data Geografis */}
+        <Card id="data-geografis" className="rounded-xl p-6 md:p-8 scroll-mt-24">
+          <SectionTitle title="Data Geografis" description="Informasi geografis dan batas wilayah." icon={MapPin} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              label="Luas Wilayah"
+              value={luasWilayah}
+              onChange={(e) => setLuasWilayah(e.target.value)}
+              placeholder="Contoh: 1250 Ha"
+            />
+            <InputField
+              label="Ketinggian (mdpl)"
+              value={ketinggian}
+              onChange={(e) => setKetinggian(e.target.value)}
+              placeholder="Contoh: 500 mdpl"
+            />
+            
+            <InputField
+              label="Batas Utara"
+              value={batasUtara}
+              onChange={(e) => setBatasUtara(e.target.value)}
+              placeholder="Desa/Kecamatan..."
+            />
+            <InputField
+              label="Batas Selatan"
+              value={batasSelatan}
+              onChange={(e) => setBatasSelatan(e.target.value)}
+              placeholder="Desa/Kecamatan..."
+            />
+            <InputField
+              label="Batas Timur"
+              value={batasTimur}
+              onChange={(e) => setBatasTimur(e.target.value)}
+              placeholder="Desa/Kecamatan..."
+            />
+            <InputField
+              label="Batas Barat"
+              value={batasBarat}
+              onChange={(e) => setBatasBarat(e.target.value)}
+              placeholder="Desa/Kecamatan..."
+            />
+            
+            <div className="md:col-span-2">
+              <TextAreaField
+                label="Peta Wilayah (Embed HTML / URL Gambar)"
+                value={petaWilayah}
+                onChange={(e) => setPetaWilayah(e.target.value)}
+                placeholder="Paste kode embed Google Maps iframe atau URL gambar peta..."
+                rows={3}
+                description="Disarankan menggunakan Embed Map dari Google Maps."
+              />
+            </div>
+          </div>
+        </Card>
       </div>
+    </FormLayout>
   );
 }

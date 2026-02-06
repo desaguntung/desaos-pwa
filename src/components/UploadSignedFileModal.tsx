@@ -78,7 +78,7 @@ export function UploadSignedFileModal({ isOpen, onClose, suratId, onSuccess }: U
         <div className="space-y-4 py-4">
           <div 
             className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg transition-colors cursor-pointer
-              ${dragActive ? "border-blue-500 bg-blue-50" : "border-zinc-300 hover:border-zinc-400 bg-zinc-50"}
+              ${dragActive ? "border-accent bg-accent/10" : "border-border-color hover:border-primary-text bg-card-bg"}
             `}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -87,12 +87,12 @@ export function UploadSignedFileModal({ isOpen, onClose, suratId, onSuccess }: U
             onClick={() => document.getElementById("file-upload")?.click()}
           >
             {file ? (
-              <div className="flex items-center gap-2 text-zinc-700">
-                <FileText className="w-8 h-8 text-blue-500" />
+              <div className="flex items-center gap-2 text-primary-text">
+                <FileText className="w-8 h-8 text-accent" />
                 <div className="text-sm font-medium max-w-[200px] truncate">{file.name}</div>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                  className="p-1 hover:bg-zinc-200 rounded-full"
+                  className="p-1 hover:bg-hover-bg rounded-full"
                 >
                   <X className="w-4 h-4" />
                 </button>

@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import SuratMasukForm from "@/components/SuratMasukForm";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { SuratMasuk } from "@/lib/services/surat";
-
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function EditSuratMasukPage() {
@@ -51,8 +49,8 @@ export default function EditSuratMasukPage() {
   if (!surat) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-red-500 font-medium">Data surat tidak ditemukan</div>
-        <Link href="/surat/masuk" className="text-blue-600 hover:underline text-xs">
+        <div className="text-error-text font-medium">Data surat tidak ditemukan</div>
+        <Link href="/surat/masuk" className="text-info-text hover:underline text-xs">
           Kembali ke Surat Masuk
         </Link>
       </div>
@@ -60,17 +58,12 @@ export default function EditSuratMasukPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-body-bg overflow-y-auto">
-      <PageHeader 
-        title="Edit Surat Masuk" 
-        subtitle="Perbarui data surat masuk"
-        showBackButton={true}
-        backButtonHref="/surat/masuk"
-      />
-
-      <div className="p-6 max-w-4xl mx-auto w-full pb-12">
-        <SuratMasukForm initialData={surat} isEdit={true} />
-      </div>
-    </div>
+    <SuratMasukForm 
+      initialData={surat} 
+      mode="edit" 
+      title="Edit Surat Masuk"
+      subtitle="Perbarui data surat masuk"
+      backButtonHref="/surat/masuk"
+    />
   );
 }

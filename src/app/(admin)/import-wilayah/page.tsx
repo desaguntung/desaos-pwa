@@ -263,12 +263,12 @@ export default async function ImportWilayahPage() {
           <p>Total desa terdeteksi: {totalDesa}</p>
         </div>
         {errorMessage ? (
-          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+          <div className="text-xs text-error-text bg-error-bg border border-error-border rounded-md px-3 py-2">
             <p className="font-medium mb-1">Impor wilayah gagal</p>
             <pre className="whitespace-pre-wrap break-all">{errorMessage}</pre>
           </div>
         ) : (
-          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-3 py-2">
+          <div className="text-xs text-success-text bg-success-bg border border-success-border rounded-md px-3 py-2">
             <p className="font-medium mb-1">Impor wilayah selesai</p>
             <p>{successMessage}</p>
           </div>

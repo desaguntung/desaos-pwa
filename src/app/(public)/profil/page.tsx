@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   History, Target, Users, MapPin, BarChart3, Map as MapIcon, Trophy, ChevronRight, Phone
 } from "lucide-react";
-import { AppleCard } from "@/components/ui/AppleCard";
+import { Card, CardContent } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
 const profilItems = [
@@ -49,23 +49,24 @@ export default function ProfilPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {section.items.map((item, itemIdx) => (
                 <Link key={item.label} href={item.href} className="block group">
-                  <AppleCard 
-                    className="h-full hover:scale-[1.02] transition-transform duration-300"
-                    delay={sectionIdx * 0.2 + itemIdx * 0.1}
+                  <Card 
+                    className="h-full hover:scale-[1.02] transition-transform duration-300 shadow-sm hover:shadow-md border-border-color"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                        <item.icon className="w-6 h-6" />
+                    <CardContent className="p-6 md:p-8">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                          <item.icon className="w-6 h-6" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-secondary-text group-hover:text-blue-500 transition-colors" />
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
-                    </div>
-                    <h3 className="text-xl font-bold text-[#1d1d1f] mb-2 group-hover:text-blue-600 transition-colors">
-                      {item.label}
-                    </h3>
-                    <p className="text-[#86868b] text-sm leading-relaxed font-medium">
-                      {item.desc}
-                    </p>
-                  </AppleCard>
+                      <h3 className="text-xl font-bold text-primary-text mb-2 group-hover:text-blue-600 transition-colors">
+                        {item.label}
+                      </h3>
+                      <p className="text-secondary-text text-sm leading-relaxed font-medium">
+                        {item.desc}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </Link>
               ))}
             </div>

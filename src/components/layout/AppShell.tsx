@@ -23,7 +23,7 @@ function MobileSidebar() {
     )}>
       <div 
         className={cn(
-          "fixed inset-0 bg-zinc-900/10 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
+          "fixed inset-0 bg-black/10 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
           isOpen ? "opacity-100" : "opacity-0"
         )}
         onClick={close} 
@@ -35,7 +35,7 @@ function MobileSidebar() {
         <div className="absolute top-3 right-3 z-50">
           <button 
             onClick={close}
-            className="p-1 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+            className="p-1 text-secondary-text hover:text-primary-text hover:bg-hover-bg rounded-md transition-colors"
           >
             <PanelRight className="w-5 h-5" />
           </button>
@@ -48,7 +48,7 @@ function MobileSidebar() {
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50/50">
+    <div className="flex h-screen overflow-hidden bg-body-bg">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 flex-col h-full border-r border-border-color bg-sidebar-bg flex-shrink-0">
         <Sidebar />

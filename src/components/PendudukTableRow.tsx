@@ -138,16 +138,16 @@ export default function PendudukTableRow({
     }
 
     return (
-      <td className={`px-3 py-3 whitespace-nowrap text-xs text-slate-500 border-r border-transparent last:border-r-0 ${isUppercase ? 'uppercase' : ''}`}>
+      <td className={`px-3 py-3 whitespace-nowrap text-xs text-secondary-text border-r border-transparent last:border-r-0 ${isUppercase ? 'uppercase' : ''}`}>
         {displayContent}
       </td>
     );
   };
 
   const renderLink = (url: string | undefined, label: string) => (
-    <td className="px-3 py-3 whitespace-nowrap text-xs text-slate-500 border-r border-transparent text-center">
+    <td className="px-3 py-3 whitespace-nowrap text-xs text-secondary-text border-r border-transparent text-center">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center justify-center gap-1">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center justify-center gap-1">
           <LinkIcon className="w-3 h-3" />
           {label}
         </a>
@@ -156,15 +156,15 @@ export default function PendudukTableRow({
   );
 
   return (
-    <tr className="hover:bg-slate-50 transition-colors border-b border-slate-200 group">
+    <tr className="hover:bg-gray-50/50 transition-colors border-b border-gray-100 group">
       {/* Sticky Columns */}
-      <td className="sticky left-0 bg-white group-hover:bg-slate-50 px-3 py-3 text-center font-medium text-xs text-slate-500 border-r border-transparent w-[40px]">
+      <td className="sticky left-0 bg-card-bg group-hover:bg-gray-50 px-3 py-3 text-center font-medium text-xs text-secondary-text border-r border-transparent w-[40px]">
         {rowNumber}
       </td>
-      <td className="sticky left-[40px] bg-white group-hover:bg-slate-50 px-3 py-3 font-medium text-xs text-slate-600 border-r border-transparent w-[110px]">
+      <td className="sticky left-[40px] bg-card-bg group-hover:bg-gray-50 px-3 py-3 font-medium text-xs text-primary-text border-r border-transparent w-[110px]">
         <span>{person.nik}</span>
       </td>
-      <td className="sticky left-[150px] bg-white group-hover:bg-slate-50 px-3 py-3 font-semibold text-xs text-slate-700 border-r border-transparent shadow-[4px_0_24px_-2px_rgba(0,0,0,0.02)] w-[180px] uppercase">
+      <td className="sticky left-[150px] bg-card-bg group-hover:bg-gray-50 px-3 py-3 font-semibold text-xs text-primary-text border-r border-transparent shadow-[4px_0_24px_-2px_rgba(0,0,0,0.02)] w-[180px] uppercase">
         {person.name}
       </td>
 
@@ -192,12 +192,12 @@ export default function PendudukTableRow({
         <span
           className={`px-2 py-1 rounded-full text-xs font-semibold border shadow-xs ${
             person.statusColor === "emerald"
-              ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
               : person.statusColor === "blue"
-              ? "bg-blue-50 text-blue-600 border-blue-200"
+              ? "bg-blue-50 text-blue-600 border-blue-100"
               : person.statusColor === "red"
-              ? "bg-rose-50 text-rose-600 border-rose-200"
-              : "bg-slate-50 text-slate-600 border-slate-200"
+              ? "bg-rose-50 text-rose-600 border-rose-100"
+              : "bg-gray-50 text-gray-600 border-gray-100"
           }`}
         >
           {person.statusPenduduk}
@@ -223,25 +223,25 @@ export default function PendudukTableRow({
       {renderCell(person.email)}
 
       {/* Actions Column */}
-      <td className="sticky right-0 bg-zinc-50 px-2 py-1 text-center w-[40px] text-xs">
+      <td className="sticky right-0 bg-card-bg px-2 py-1 text-center w-[40px] text-xs">
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="h-8 w-8 flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200 rounded-md transition-colors"
+            className="h-8 w-8 flex items-center justify-center text-secondary-text hover:text-primary-text hover:bg-hover-bg rounded-md transition-colors"
           >
             <MoreVertical className="h-4 w-4" />
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-zinc-200 rounded-md shadow-lg z-50 py-1 text-left">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-card-bg border border-border-color rounded-md shadow-lg z-50 py-1 text-left">
               <button
                 onClick={() => {
                   onDetail(person.nik);
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 w-full text-left transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-hover-bg w-full text-left transition-colors"
               >
-                <Eye className="h-3.5 w-3.5 text-zinc-400" />
+                <Eye className="h-3.5 w-3.5 text-secondary-text" />
                 <span>Lihat Detail</span>
               </button>
               {canEdit && (
@@ -250,9 +250,9 @@ export default function PendudukTableRow({
                     onEdit(person.nik);
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 w-full text-left transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-hover-bg w-full text-left transition-colors"
                 >
-                  <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                  <Pencil className="h-3.5 w-3.5 text-secondary-text" />
                   <span>Ubah Data</span>
                 </button>
               )}
@@ -262,9 +262,9 @@ export default function PendudukTableRow({
                     onDelete(person.nik);
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 w-full text-left transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-hover-bg w-full text-left transition-colors"
                 >
-                  <Trash2 className="h-3.5 w-3.5 text-zinc-400" />
+                  <Trash2 className="h-3.5 w-3.5 text-secondary-text" />
                   <span>Hapus Data</span>
                 </button>
               )}
@@ -273,9 +273,9 @@ export default function PendudukTableRow({
                   // Placeholder for Print
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 w-full text-left transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-hover-bg w-full text-left transition-colors"
               >
-                <Printer className="h-3.5 w-3.5 text-zinc-400" />
+                <Printer className="h-3.5 w-3.5 text-secondary-text" />
                 <span>Cetak Biodata</span>
               </button>
               <button
@@ -283,9 +283,9 @@ export default function PendudukTableRow({
                   // Placeholder for Copy
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 w-full text-left transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-hover-bg w-full text-left transition-colors"
               >
-                <Copy className="h-3.5 w-3.5 text-zinc-400" />
+                <Copy className="h-3.5 w-3.5 text-secondary-text" />
                 <span>Salin Data</span>
               </button>
             </div>

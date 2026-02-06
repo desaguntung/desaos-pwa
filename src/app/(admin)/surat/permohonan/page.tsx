@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
 import { 
   Search,
   FileText,
@@ -11,22 +10,44 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
-  ChevronLeft,
-  ChevronRight,
-  Mail
+  Mail,
+  MoreHorizontal,
+  Trash2
 } from "lucide-react";
 import { getPermohonanSurat, PermohonanSurat } from "@/lib/services/surat";
 import { formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
+import { DataTable, Column } from "@/components/ui/DataTable";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/ui/DropdownMenu";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
+import { toast } from "sonner";
+import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 
 export default function PermohonanSuratPage() {
   const [permohonanList, setPermohonanList] = useState<PermohonanSurat[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
+  // Delete State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [suratToDelete, setSuratToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     fetchPermohonan();
@@ -53,7 +74,7 @@ export default function PermohonanSuratPage() {
   }, [permohonanList, searchTerm]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredPermohonan.length / rowsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredPermohonan.length / rowsPerPage));
   const paginatedPermohonan = useMemo(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
     return filteredPermohonan.slice(startIndex, startIndex + rowsPerPage);
@@ -64,172 +85,185 @@ export default function PermohonanSuratPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const getStatusBadge = (status: number) => {
-    switch (status) {
-      case 0: // Menunggu
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-100">
-            <Clock className="w-3.5 h-3.5" />
-            Menunggu
-          </span>
-        );
-      case 1: // Disetujui
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Disetujui
-          </span>
-        );
-      case 2: // Ditolak
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
-            <XCircle className="w-3.5 h-3.5" />
-            Ditolak
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-100">
-            Unknown
-          </span>
-        );
+  const confirmDelete = (id: number) => {
+    setSuratToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!suratToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      await supabase.from("permohonan_surat").delete().eq("id", suratToDelete);
+      setPermohonanList((prev) => prev.filter((item) => item.id !== suratToDelete));
+      toast.success("Permohonan surat berhasil dihapus");
+      setDeleteDialogOpen(false);
+      setSuratToDelete(null);
+    } catch (error: any) {
+      console.error("Error deleting permohonan:", error);
+      toast.error(`Gagal menghapus permohonan: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  const columns = useMemo<Column<PermohonanSurat>[]>(() => [
+    {
+      header: "Pemohon",
+      accessorKey: "penduduk.nama",
+      cell: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-primary-text capitalize">
+            {row.penduduk?.nama?.toLowerCase() || "Tanpa Nama"}
+          </span>
+          <span className="text-xs text-secondary-text font-mono flex items-center gap-1">
+            <User className="w-3 h-3" />
+            {row.penduduk?.nik || "-"}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "Jenis Surat",
+      accessorKey: "surat_formats.nama",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-secondary-text" />
+          <span className="text-sm text-primary-text">{row.surat_formats?.nama || "Unknown"}</span>
+        </div>
+      )
+    },
+    {
+      header: "Tanggal Request",
+      accessorKey: "created_at",
+      cell: (row) => (
+        <div className="flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-secondary-text" />
+          <span className="text-sm text-secondary-text">
+            {row.created_at ? formatDate(row.created_at) : "-"}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "No. HP",
+      accessorKey: "no_hp_aktif",
+      cell: (row) => (
+         <span className="text-sm text-secondary-text font-mono">
+            {row.no_hp_aktif || "-"}
+         </span>
+      )
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: (row) => {
+        switch (row.status) {
+          case 0:
+            return <Badge variant="warning" icon={<Clock className="w-3 h-3" />}>Menunggu</Badge>;
+          case 1:
+            return <Badge variant="success" icon={<CheckCircle2 className="w-3 h-3" />}>Disetujui</Badge>;
+          case 2:
+            return <Badge variant="error" icon={<XCircle className="w-3 h-3" />}>Ditolak</Badge>;
+          default:
+            return <Badge variant="default">Unknown</Badge>;
+        }
+      }
+    },
+    {
+      header: "Aksi",
+      accessorKey: "id",
+      className: "text-center w-16",
+      cell: (row) => (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon-sm"
+                variant="ghost-secondary"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Aksi Permohonan</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => alert(`Fitur detail untuk ID ${row.id} belum tersedia`)}
+              >
+                <Eye className="w-3.5 h-3.5 mr-2" />
+                Lihat Detail
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => confirmDelete(row.id!)}
+                className="text-error-text focus:text-error-text focus:bg-error-bg/10"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Hapus
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )
+    }
+  ], []);
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50">
+    <div className="space-y-6 p-6 md:p-8 pb-24">
       <PageHeader 
         title="Permohonan Surat" 
         subtitle="Layanan Surat / Permohonan"
-        className="mb-6"
       />
 
-      <div className="flex-1 overflow-hidden p-6 md:p-8 flex flex-col">
-        {/* Card Wrapper */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden p-6">
-          
-          {/* Toolbar */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-            <div className="relative w-full md:w-96 group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-transparent rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-gray-200 transition-all text-sm"
-                placeholder="Cari Nama / NIK / Jenis Surat..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="w-full md:w-auto flex-1 max-w-sm">
+            <Input
+              startIcon={<Search className="w-4 h-4" />}
+              placeholder="Cari Nama / NIK / Jenis Surat..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-
-          {/* Table Container */}
-          <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Pemohon</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Jenis Surat</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Tanggal Request</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">No. HP</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">Status</th>
-                  <th className="px-4 py-3 font-medium text-xs text-gray-500 uppercase tracking-wider text-center w-16 border-b border-gray-200">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500 text-sm">
-                      Memuat data...
-                    </td>
-                  </tr>
-                ) : filteredPermohonan.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="h-64 text-center align-middle">
-                      <div className="flex flex-col items-center justify-center py-12">
-                         <Mail className="w-12 h-12 text-gray-300 mb-4" />
-                         <p className="text-gray-500 font-medium text-base">
-                           {searchTerm ? "Tidak ada permohonan yang cocok" : "Belum ada data permohonan"}
-                         </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedPermohonan.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-4 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium text-gray-900 capitalize">
-                            {item.penduduk?.nama?.toLowerCase() || "Tanpa Nama"}
-                          </span>
-                          <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {item.penduduk?.nik || "-"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-700">{item.surat_formats?.nama || "Unknown"}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-middle text-sm text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                          {item.created_at ? formatDate(item.created_at) : "-"}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-middle text-sm text-gray-500 font-mono">
-                        {item.no_hp_aktif}
-                      </td>
-                      <td className="px-4 py-4 align-middle">
-                        {getStatusBadge(item.status)}
-                      </td>
-                      <td className="px-4 py-4 align-middle text-center">
-                        <button 
-                          className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="Lihat Detail"
-                          onClick={() => alert(`Fitur detail untuk ID ${item.id} belum tersedia`)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-            <span className="text-sm text-gray-500">
-              Menampilkan {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, filteredPermohonan.length)} dari {filteredPermohonan.length} data
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 h-8 px-3 text-gray-500"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 h-8 px-3 text-gray-500"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-          </div>
-
         </div>
-      </div>
+      </Card>
+
+      <DataTable
+        columns={columns}
+        data={paginatedPermohonan}
+        isLoading={loading}
+        emptyMessage={
+          <div className="flex flex-col items-center justify-center py-12">
+             <Mail className="w-12 h-12 text-secondary-text/50 mb-4" />
+             <p className="text-secondary-text font-medium text-base">
+               {searchTerm ? "Tidak ada permohonan yang cocok" : "Belum ada data permohonan"}
+             </p>
+          </div>
+        }
+      />
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        itemsPerPage={rowsPerPage}
+        onItemsPerPageChange={setRowsPerPage}
+        totalItems={filteredPermohonan.length}
+        sticky={true}
+      />
+      
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Hapus Permohonan?"
+        description="Apakah Anda yakin ingin menghapus permohonan surat ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Hapus Permohonan"
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        variant="destructive"
+      />
     </div>
   );
 }

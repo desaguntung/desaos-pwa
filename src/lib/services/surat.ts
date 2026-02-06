@@ -90,6 +90,7 @@ export interface Pamong {
   pamong_tglsk?: string;
   pamong_niap?: string;
   pamong_pangkat?: string;
+  jabatan?: string;
   id_pend?: string;
   urut?: number;
   pamong_nohenti?: string;
@@ -132,6 +133,8 @@ export interface IdentitasDesa {
   sejarah?: string;
   visi?: string;
   misi?: string;
+  nama_kepala_desa?: string;
+  nip_kepala_desa?: string;
 }
 
 export interface PengaturanAplikasi {
@@ -321,6 +324,21 @@ export async function getPamong() {
     return dataLegacy as Pamong[];
   }
   return data as Pamong[];
+}
+
+export async function getPamongById(id: number) {
+  const supabase = createSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("pamong_desa")
+    .select("*")
+    .eq("pamong_id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching pamong by id:", error);
+    throw error;
+  }
+  return data as Pamong;
 }
 
 export async function createPamong(pamong: Partial<Pamong>) {

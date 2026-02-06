@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { Check, ChevronDown } from "geist-icons";
 
 interface SelectContextType {
@@ -52,7 +53,8 @@ export const Select = ({
 export const SelectTrigger = ({
   children,
   className = "",
-}: {
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
   className?: string;
 }) => {
@@ -60,11 +62,18 @@ export const SelectTrigger = ({
   return (
     <button
       type="button"
-      onClick={() => setOpen(!open)}
-      className={`flex h-9 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-[13px] font-medium tracking-[-0.01em] text-[#171717] ring-offset-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 transition-shadow dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-100 ${className}`}
+      onClick={(e) => {
+        setOpen(!open);
+        props.onClick?.(e);
+      }}
+      className={cn(
+        "flex h-9 w-full items-center justify-between rounded-md border border-border-color bg-card-bg px-3 py-2 text-sm font-medium tracking-[-0.01em] text-primary-text placeholder:text-secondary-text focus:outline-none focus:ring-1 focus:ring-gray-200 dark:focus:ring-gray-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all active:scale-[0.98]",
+        className
+      )}
+      {...props}
     >
       {children}
-      <ChevronDown className="h-4 w-4 text-zinc-500 ml-2 shrink-0 dark:text-zinc-400" />
+      <ChevronDown className="h-4 w-4 text-secondary-text ml-2 shrink-0" />
     </button>
   );
 };
@@ -74,7 +83,7 @@ export const SelectValue = ({ placeholder }: { placeholder?: string }) => {
   const showPlaceholder = !selectedLabel && !value;
   
   return (
-    <span className={`block truncate ${showPlaceholder ? "text-zinc-400 dark:text-zinc-500 font-normal" : ""}`}>
+    <span className={`block truncate ${showPlaceholder ? "text-secondary-text font-normal" : ""}`}>
       {selectedLabel || value || placeholder}
     </span>
   );
@@ -98,7 +107,7 @@ export const SelectContent = ({
 
   return (
     <div
-      className={`absolute z-50 min-w-full w-auto whitespace-nowrap overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-lg animate-in fade-in-80 zoom-in-95 mt-1 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-100 ${alignClass} ${className}`}
+      className={`absolute z-50 min-w-full w-auto whitespace-nowrap overflow-hidden rounded-md border border-border-color bg-card-bg text-primary-text animate-in fade-in-80 zoom-in-95 mt-1 ${alignClass} ${className}`}
     >
       <div className="p-1 max-h-[200px] overflow-y-auto">{children}</div>
     </div>
@@ -132,7 +141,7 @@ export const SelectItem = ({
         onValueChange(value);
         setOpen(false);
       }}
-      className={`relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-[13px] outline-none hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 text-primary-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${className}`}
+      className={`relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-hover-bg focus:bg-hover-bg text-primary-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${className}`}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
         {isSelected && <Check className="h-4 w-4" />}

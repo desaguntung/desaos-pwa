@@ -1,6 +1,7 @@
 import React from "react";
 import { User, MoreHorizontal } from "lucide-react";
 import { Button } from "./Button";
+import { Skeleton } from "./Skeleton";
 
 export interface Column<T> {
   header: string;
@@ -23,6 +24,9 @@ interface DataTableProps<T> {
   mobileConfig?: MobileConfig<T>;
   onRowClick?: (row: T) => void;
   keyField?: keyof T; // Unique ID field, defaults to 'id'
+  loading?: boolean;
+  maxHeight?: string;
+  emptyMessage?: React.ReactNode;
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -31,6 +35,9 @@ export function DataTable<T extends Record<string, any>>({
   mobileConfig,
   onRowClick,
   keyField = "id",
+  loading = false,
+  maxHeight = "calc(100vh - 420px)", // Default height adjusted to ensure pagination is visible and not touching
+  emptyMessage = "No data available.",
 }: DataTableProps<T>) {
   
   // Helper to get value from accessor
@@ -41,15 +48,18 @@ export function DataTable<T extends Record<string, any>>({
   return (
     <div className="w-full">
       {/* Desktop View (md and up) */}
-      <div className="hidden md:block bg-card-bg rounded-lg border border-border-color">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-border-color h-10">
+      <div className="hidden md:block bg-card-bg rounded-xl border border-border-color overflow-hidden">
+        <div 
+          className="overflow-auto custom-scrollbar"
+          style={{ maxHeight }}
+        >
+          <table className={`w-full text-left relative ${data.length === 0 ? "is-empty" : ""}`}>
+            <thead className="border-b border-border-color h-12 sticky top-0 z-10">
               <tr>
                 {columns.map((col, idx) => (
                   <th
                     key={idx}
-                    className={`px-4 h-10 align-middle font-medium text-xs text-secondary-text uppercase tracking-wider ${col.className || ""}`}
+                    className={`px-6 h-12 align-middle font-semibold text-xs text-secondary-text uppercase tracking-wider bg-[var(--table-header-bg)] backdrop-blur-sm ${col.className || ""}`}
                   >
                     {col.header}
                   </th>
@@ -57,13 +67,23 @@ export function DataTable<T extends Record<string, any>>({
               </tr>
             </thead>
             <tbody className="divide-y divide-border-color">
-              {data.length === 0 ? (
-                <tr>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx} className="loading-row">
+                    {columns.map((_, colIdx) => (
+                      <td key={colIdx} className="px-6 py-4">
+                        <Skeleton className="h-6 w-full rounded-md" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : data.length === 0 ? (
+                <tr className="empty-row">
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-8 text-center text-secondary-text"
+                    className="px-6 py-12 text-center text-secondary-text"
                   >
-                    No data available.
+                    {emptyMessage}
                   </td>
                 </tr>
               ) : (
@@ -71,14 +91,14 @@ export function DataTable<T extends Record<string, any>>({
                   <tr
                     key={(row[keyField as string] as string) || rowIdx}
                     onClick={() => onRowClick && onRowClick(row)}
-                    className={`bg-card-bg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors ${
+                    className={`group transition-colors ${
                       onRowClick ? "cursor-pointer" : ""
                     }`}
                   >
                     {columns.map((col, colIdx) => (
                       <td
                         key={colIdx}
-                        className={`px-4 py-2 text-primary-text whitespace-nowrap ${col.className || ""}`}
+                        className={`px-6 py-4 text-sm text-primary-text whitespace-nowrap ${col.className || ""}`}
                       >
                         {col.cell
                           ? col.cell(row)
@@ -95,9 +115,19 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Mobile View (below md) */}
       <div className="md:hidden space-y-0 divide-y divide-border-color border-t border-b border-border-color bg-card-bg">
-        {data.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="p-4 flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            </div>
+          ))
+        ) : data.length === 0 ? (
           <div className="px-4 py-8 text-center text-secondary-text text-sm">
-            No data available.
+            {emptyMessage}
           </div>
         ) : (
           data.map((row, rowIdx) => {
@@ -129,7 +159,7 @@ export function DataTable<T extends Record<string, any>>({
               <div
                 key={(row[keyField as string] as string) || rowIdx}
                 onClick={() => onRowClick && onRowClick(row)}
-                className={`flex items-center gap-3 p-4 bg-card-bg active:bg-zinc-50 dark:active:bg-zinc-800 ${
+                className={`flex items-center gap-3 p-4 bg-card-bg active:bg-[var(--hover-bg)] ${
                   onRowClick ? "cursor-pointer" : ""
                 }`}
               >
@@ -142,7 +172,7 @@ export function DataTable<T extends Record<string, any>>({
                       className="w-10 h-10 rounded-full object-cover border border-border-color"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-border-color text-zinc-400 dark:text-zinc-500">
+                    <div className="w-10 h-10 rounded-full bg-[var(--hover-bg)] flex items-center justify-center border border-border-color text-secondary-text">
                       <User className="w-5 h-5" />
                     </div>
                   )}
@@ -168,7 +198,7 @@ export function DataTable<T extends Record<string, any>>({
                   {mobileConfig?.action ? (
                     mobileConfig.action(row)
                   ) : (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 dark:text-zinc-500 hover:text-primary-text">
+                    <Button variant="ghost" size="icon" className="text-secondary-text hover:text-primary-text">
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   )}
