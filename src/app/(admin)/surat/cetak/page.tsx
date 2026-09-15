@@ -267,224 +267,224 @@ export default function CetakSuratPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-zinc-950 flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden bg-slate-50/50 dark:bg-zinc-950">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800 px-4 lg:px-6 py-3 transition-all">
-        <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          
-          {/* Breadcrumb & Title */}
-          <div className="flex items-center gap-3">
+      <header className="h-14 flex-shrink-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800 px-4 lg:px-6 flex items-center justify-between z-20">
+        
+        {/* Breadcrumb & Title */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/surat/keluar")}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+            title="Kembali ke Surat Keluar"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                Cetak Naskah Dinas
+              </h1>
+              {isFormComplete ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Siap Cetak
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
+                  Draft Konsep
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Hub */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Tab Switcher */}
+          <div className="flex lg:hidden bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-medium mr-1">
             <button
               type="button"
-              onClick={() => router.push("/surat/keluar")}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
-              title="Kembali ke Surat Keluar"
+              onClick={() => setActiveTab("preview")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all",
+                activeTab === "preview" ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-xs" : "text-slate-600 dark:text-zinc-400"
+              )}
             >
-              <ArrowLeft className="w-4 h-4" />
+              Pratinjau
             </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                  Cetak Naskah Dinas
-                </h1>
-                {isFormComplete ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Siap Cetak
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    Draft Konsep
-                  </span>
-                )}
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("form")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all",
+                activeTab === "form" ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-xs" : "text-slate-600 dark:text-zinc-400"
+              )}
+            >
+              Editor
+            </button>
           </div>
 
-          {/* Action Hub */}
-          <div className="flex items-center gap-2 self-end sm:self-center">
-            {/* Mobile Tab Switcher */}
-            <div className="flex lg:hidden bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-medium mr-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab("preview")}
-                className={cn(
-                  "px-2.5 py-1 rounded-md transition-all",
-                  activeTab === "preview" ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-xs" : "text-slate-600 dark:text-zinc-400"
-                )}
-              >
-                Pratinjau
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("form")}
-                className={cn(
-                  "px-2.5 py-1 rounded-md transition-all",
-                  activeTab === "form" ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-xs" : "text-slate-600 dark:text-zinc-400"
-                )}
-              >
-                Editor
-              </button>
-            </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            className="h-8 rounded-lg text-xs gap-1.5 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300"
+          >
+            <RotateCcw className="w-3.5 h-3.5 opacity-60" />
+            <span className="hidden md:inline">Reset</span>
+          </Button>
 
+          {isFormComplete && (
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
-              onClick={handleReset}
-              className="h-8.5 rounded-lg text-xs gap-1.5 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300"
+              onClick={() => setIsFullscreenPreview(true)}
+              className="h-8 rounded-lg text-xs gap-1.5 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200"
             >
-              <RotateCcw className="w-3.5 h-3.5 opacity-60" />
-              <span>Reset</span>
+              <Maximize2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden md:inline">Layar Penuh (Alt+V)</span>
             </Button>
+          )}
 
-            {isFormComplete && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsFullscreenPreview(true)}
-                className="h-8.5 rounded-lg text-xs gap-1.5 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200"
-              >
-                <Maximize2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span className="hidden md:inline">Layar Penuh (Alt+V)</span>
-              </Button>
-            )}
-
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              disabled={loading || !isFormComplete}
-              onClick={handleSubmit}
-              className="h-8.5 rounded-lg text-xs gap-1.5 font-semibold shadow-xs"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{loading ? "Memproses..." : "Ajukan Verifikasi"}</span>
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={loading || !isFormComplete}
+            onClick={handleSubmit}
+            className="h-8 rounded-lg text-xs gap-1.5 font-semibold shadow-xs"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>{loading ? "Memproses..." : "Ajukan Verifikasi"}</span>
+          </Button>
         </div>
       </header>
 
-      {/* Main Full-Width Cockpit Layout */}
-      <main className="flex-1 w-full px-4 lg:px-6 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          
-          {/* ========================================================================= */}
-          {/* LEFT COLUMN: Real-Time Live Document Preview (Soft Studio Frame ~50%)     */}
-          {/* ========================================================================= */}
-          <div className={cn("lg:col-span-6 xl:col-span-6 sticky top-20", activeTab === "form" ? "hidden lg:block" : "block")}>
-            <div className="bg-slate-100/90 dark:bg-zinc-900 rounded-xl border border-slate-200/90 dark:border-zinc-800 shadow-xs overflow-hidden flex flex-col h-[calc(100vh-6.5rem)]">
-              
-              {/* Studio Canvas Toolbar */}
-              <div className="px-4 py-2.5 bg-slate-100 dark:bg-zinc-850 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between text-slate-700 dark:text-zinc-200 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-zinc-100">
-                    Live Naskah Dinas (A4)
-                  </span>
-                </div>
+      {/* Main 2-Pane Split Cockpit */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full">
+        
+        {/* ========================================================================= */}
+        {/* LEFT PANE: Real-Time Live Document Preview Studio (50%)                   */}
+        {/* ========================================================================= */}
+        <div className={cn(
+          "w-full lg:w-1/2 xl:w-7/12 h-full flex flex-col border-r border-slate-200/80 dark:border-zinc-800 bg-slate-100/60 dark:bg-zinc-950/60 overflow-hidden",
+          activeTab === "form" ? "hidden lg:flex" : "flex"
+        )}>
+          {/* Studio Canvas Toolbar */}
+          <div className="h-10 flex-shrink-0 px-4 bg-slate-100/90 dark:bg-zinc-850 border-b border-slate-200/90 dark:border-zinc-800 flex items-center justify-between text-slate-700 dark:text-zinc-200">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-xs font-semibold text-slate-800 dark:text-zinc-100">
+                Live Naskah Dinas (A4)
+              </span>
+            </div>
 
-                {/* Zoom & Action Controls */}
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(Math.max(50, previewZoom - 10))}
-                    className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors"
-                    title="Zoom Out"
-                  >
-                    <ZoomOut className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-[11px] font-mono px-1.5 text-slate-600 dark:text-zinc-400 min-w-[38px] text-center">
-                    {previewZoom}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(Math.min(120, previewZoom + 10))}
-                    className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors"
-                    title="Zoom In"
-                  >
-                    <ZoomIn className="w-3.5 h-3.5" />
-                  </button>
+            {/* Zoom & Action Controls */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(Math.max(50, previewZoom - 10))}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] font-mono px-1.5 text-slate-600 dark:text-zinc-400 min-w-[38px] text-center">
+                {previewZoom}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(Math.min(120, previewZoom + 10))}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
 
-                  <div className="h-3.5 w-px bg-slate-300 dark:bg-zinc-700 mx-1"></div>
+              <div className="h-3.5 w-px bg-slate-300 dark:bg-zinc-700 mx-1"></div>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsFullscreenPreview(true)}
-                    disabled={!isFormComplete}
-                    className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors disabled:opacity-40"
-                    title="Layar Penuh"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
+              <button
+                type="button"
+                onClick={() => setIsFullscreenPreview(true)}
+                disabled={!isFormComplete}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-600 dark:text-zinc-400 hover:text-slate-900 transition-colors disabled:opacity-40"
+                title="Layar Penuh"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
 
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    disabled={!isFormComplete}
-                    className="p-1 bg-white dark:bg-zinc-800 hover:bg-slate-50 border border-slate-200 dark:border-zinc-700 rounded text-slate-700 dark:text-zinc-200 transition-colors disabled:opacity-40 shadow-xs"
-                    title="Cetak Dokumen Langsung"
-                  >
-                    <Printer className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Studio Canvas Body (Soft Background & Crisp Elevated A4 Paper) */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 flex items-start justify-center custom-scrollbar bg-slate-100/60 dark:bg-zinc-950/60">
-                {!isFormComplete ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 max-w-xs my-auto">
-                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-xs flex items-center justify-center text-slate-400 mb-3">
-                      <FileCheck2 className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                      Menunggu Pemohon & Format
-                    </p>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Pilih warga pemohon dan format naskah di sebelah kanan untuk melihat render dokumen dinas secara langsung.
-                    </p>
-                  </div>
-                ) : (
-                  <div 
-                    style={{ 
-                      transform: `scale(${previewZoom / 100})`, 
-                      transformOrigin: "top center",
-                      transition: "transform 0.15s ease-out"
-                    }}
-                    className="shrink-0 my-2 bg-transparent border-0 shadow-none"
-                  >
-                    <Editor
-                      initialJson={selectedFormat?.template}
-                      letterType={selectedFormat?.url_surat || selectedFormat?.kode_surat || selectedFormat?.nama}
-                      letterName={selectedFormat?.nama}
-                      previewData={currentPreviewData}
-                      readOnly={true}
-                      hideHeaderNavigation={true}
-                    />
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                disabled={!isFormComplete}
+                className="p-1 bg-white dark:bg-zinc-800 hover:bg-slate-50 border border-slate-200 dark:border-zinc-700 rounded text-slate-700 dark:text-zinc-200 transition-colors disabled:opacity-40 shadow-xs"
+                title="Cetak Dokumen Langsung"
+              >
+                <Printer className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* RIGHT COLUMN: Configuration & Input Form Panel (~50%)                    */}
-          {/* ========================================================================= */}
-          <div className={cn("space-y-4", activeTab === "preview" ? "hidden lg:block lg:col-span-6 xl:col-span-6" : "lg:col-span-6 xl:col-span-6")}>
+          {/* Canvas Area with independent scroll */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex items-start justify-center custom-scrollbar">
+            {!isFormComplete ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 max-w-xs my-auto">
+                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-xs flex items-center justify-center text-slate-400 mb-3">
+                  <FileCheck2 className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  Menunggu Pemohon & Format
+                </p>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Pilih warga pemohon dan format naskah di sebelah kanan untuk melihat render dokumen dinas secara langsung.
+                </p>
+              </div>
+            ) : (
+              <div 
+                style={{ 
+                  transform: `scale(${previewZoom / 100})`, 
+                  transformOrigin: "top center",
+                  transition: "transform 0.15s ease-out"
+                }}
+                className="shrink-0 my-2 bg-transparent border-0 shadow-none"
+              >
+                <Editor
+                  initialJson={selectedFormat?.template}
+                  letterType={selectedFormat?.url_surat || selectedFormat?.kode_surat || selectedFormat?.nama}
+                  letterName={selectedFormat?.nama}
+                  previewData={currentPreviewData}
+                  readOnly={true}
+                  hideHeaderNavigation={true}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* RIGHT PANE: Independent Scrollable Form Panel (50%)                       */}
+        {/* ========================================================================= */}
+        <div className={cn(
+          "w-full lg:w-1/2 xl:w-5/12 h-full flex flex-col bg-white dark:bg-zinc-900 overflow-hidden",
+          activeTab === "preview" ? "hidden lg:flex" : "flex"
+        )}>
+          {/* Scrollable Form Body */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 custom-scrollbar">
             
             {/* Card 1: Penerima Surat (Pemohon) */}
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
-              <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+            <div className="bg-slate-50/50 dark:bg-zinc-850/50 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
+              <div className="px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-5.5 h-5.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                     1
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                      Pemohon Surat
-                    </h3>
-                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                    Pemohon Surat
+                  </h3>
                 </div>
 
                 <Button
@@ -492,7 +492,7 @@ export default function CetakSuratPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsPickerOpen(true)}
-                  className="h-7.5 text-xs rounded-lg gap-1.5 border-slate-200 dark:border-zinc-800 hover:border-blue-500"
+                  className="h-7 text-xs rounded-lg gap-1.5 border-slate-200 dark:border-zinc-800 hover:border-blue-500"
                 >
                   <Search className="w-3.5 h-3.5 text-slate-500" />
                   <span>{selectedResident ? "Ganti" : "Pilih Warga (Alt+P)"}</span>
@@ -503,33 +503,33 @@ export default function CetakSuratPage() {
                 {!selectedResident ? (
                   <div 
                     onClick={() => setIsPickerOpen(true)}
-                    className="p-5 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/50 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all cursor-pointer flex flex-col items-center justify-center text-center group"
+                    className="p-5 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all cursor-pointer flex flex-col items-center justify-center text-center group"
                   >
-                    <div className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-xs border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors mb-2">
+                    <div className="w-9 h-9 rounded-full bg-slate-50 dark:bg-zinc-800 shadow-xs border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors mb-2">
                       <User className="w-4 h-4" />
                     </div>
                     <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-0.5">
                       Klik untuk memilih data warga
                     </p>
                     <p className="text-[11px] text-slate-400 dark:text-zinc-500">
-                      Tekan <kbd className="px-1 py-0.2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded text-[10px] font-mono">Alt+P</kbd> untuk cari penduduk
+                      Tekan <kbd className="px-1 py-0.2 bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded text-[10px] font-mono">Alt+P</kbd> untuk cari penduduk
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {/* Compact Identity Chip */}
-                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-200/60 dark:border-zinc-700/50">
+                    {/* Identity Banner */}
+                    <div className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-700">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider shadow-xs">
                           {selectedResident.nama.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
+                            <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                               {selectedResident.nama}
                             </span>
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 shrink-0">
-                              Terdata
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                              Terdaftar
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
@@ -553,37 +553,31 @@ export default function CetakSuratPage() {
                       </div>
                     </div>
 
-                    {/* Metadata Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                      <div className="p-2 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border border-slate-200/50 dark:border-zinc-800">
-                        <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Tempat / Tgl Lahir</span>
-                        <span className="font-medium text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
+                    {/* Metadata List */}
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-700 divide-y divide-slate-100 dark:divide-zinc-800 text-xs">
+                      <div className="p-2.5 flex items-center justify-between">
+                        <span className="text-slate-400 dark:text-zinc-500 text-[11px]">Tempat / Tgl Lahir</span>
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate max-w-[200px]">
                           {currentPreviewData.penduduk?.tempat_tanggal_lahir || "-"}
                         </span>
                       </div>
-                      <div className="p-2 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border border-slate-200/50 dark:border-zinc-800">
-                        <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Jenis Kelamin</span>
-                        <span className="font-medium text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
+                      <div className="p-2.5 flex items-center justify-between">
+                        <span className="text-slate-400 dark:text-zinc-500 text-[11px]">Jenis Kelamin</span>
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">
                           {currentPreviewData.penduduk?.jenis_kelamin || "-"}
                         </span>
                       </div>
-                      <div className="p-2 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border border-slate-200/50 dark:border-zinc-800">
-                        <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Agama</span>
-                        <span className="font-medium text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
-                          {currentPreviewData.penduduk?.agama || "-"}
+                      <div className="p-2.5 flex items-center justify-between">
+                        <span className="text-slate-400 dark:text-zinc-500 text-[11px]">Agama / Pekerjaan</span>
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate max-w-[220px]">
+                          {currentPreviewData.penduduk?.agama || "-"} • {currentPreviewData.penduduk?.pekerjaan || "-"}
                         </span>
                       </div>
-                      <div className="p-2 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border border-slate-200/50 dark:border-zinc-800">
-                        <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Pekerjaan</span>
-                        <span className="font-medium text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
-                          {currentPreviewData.penduduk?.pekerjaan || "-"}
-                        </span>
-                      </div>
-                      <div className="col-span-2 sm:col-span-4 p-2 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border border-slate-200/50 dark:border-zinc-800 flex items-start gap-2">
+                      <div className="p-2.5 flex items-start gap-2">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Alamat Terdaftar</span>
-                          <span className="font-medium text-slate-800 dark:text-zinc-200 block truncate mt-0.5">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-slate-400 dark:text-zinc-500 block text-[10px]">Alamat Domisili</span>
+                          <span className="font-semibold text-slate-800 dark:text-zinc-200 block text-[11px]">
                             {currentPreviewData.penduduk?.alamat || "-"}
                           </span>
                         </div>
@@ -595,17 +589,15 @@ export default function CetakSuratPage() {
             </div>
 
             {/* Card 2: Detail Format Naskah & Registrasi */}
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
-              <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="bg-slate-50/50 dark:bg-zinc-850/50 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
+              <div className="px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-5.5 h-5.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
                     2
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                      Format Naskah & Nomor Registrasi
-                    </h3>
-                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                    Format Naskah & Penomoran
+                  </h3>
                 </div>
 
                 <Button
@@ -613,14 +605,14 @@ export default function CetakSuratPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsFormatPickerOpen(true)}
-                  className="h-7.5 text-xs rounded-lg gap-1.5 border-slate-200 dark:border-zinc-800 hover:border-indigo-500"
+                  className="h-7 text-xs rounded-lg gap-1.5 border-slate-200 dark:border-zinc-800 hover:border-indigo-500"
                 >
                   <FileText className="w-3.5 h-3.5 text-slate-500" />
                   <span>{selectedFormat ? "Ganti Format" : "Pilih (Alt+F)"}</span>
                 </Button>
               </div>
 
-              <div className="p-4 space-y-3.5">
+              <div className="p-4 space-y-3">
                 {/* Format Trigger Input */}
                 <div 
                   onClick={() => setIsFormatPickerOpen(true)}
@@ -629,7 +621,7 @@ export default function CetakSuratPage() {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Jenis Naskah Dinas <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-800/40 group-hover:border-indigo-500 transition-colors">
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 group-hover:border-indigo-500 transition-colors">
                     <span className={cn("text-xs font-medium truncate", selectedFormat ? "text-slate-900 dark:text-zinc-100 font-semibold" : "text-slate-400 dark:text-zinc-500")}>
                       {selectedFormat ? selectedFormat.nama : "Pilih jenis format surat dari katalog (Alt+F)..."}
                     </span>
@@ -638,8 +630,8 @@ export default function CetakSuratPage() {
                 </div>
 
                 {selectedFormat && (
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
-                    <span className="px-2 py-0.5 rounded font-mono bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400 px-1">
+                    <span className="px-1.5 py-0.2 rounded font-mono bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700 text-[10px]">
                       Kode: {selectedFormat.kode_surat || "470"}
                     </span>
                     <span>•</span>
@@ -657,7 +649,7 @@ export default function CetakSuratPage() {
                     value={nomorSurat}
                     onChange={(e) => setNomorSurat(e.target.value)}
                     placeholder="Nomor surat digenerate otomatis mengikuti penomoran desa"
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
                   />
                 </div>
               </div>
@@ -665,24 +657,22 @@ export default function CetakSuratPage() {
 
             {/* Card 3: Form Isian Khusus Format (Conditional) */}
             {dynamicFields.length > 0 && (
-              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all animate-in fade-in duration-200">
-                <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+              <div className="bg-slate-50/50 dark:bg-zinc-850/50 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all animate-in fade-in duration-200">
+                <div className="px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
                       3
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                        Isian Khusus Format
-                      </h3>
-                    </div>
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                      Isian Khusus Format
+                    </h3>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
                     {dynamicFields.length} Kolom
                   </span>
                 </div>
 
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                   {dynamicFields.map((field) => (
                     <div 
                       key={field.id} 
@@ -703,12 +693,12 @@ export default function CetakSuratPage() {
                             onChange={(e) => setDynamicValues({...dynamicValues, [field.key]: e.target.value})}
                             rows={3}
                             placeholder={field.placeholder || `Masukkan ${field.label}...`}
-                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                             required={field.required}
                           />
                         </div>
                       ) : field.type === 'land_sketch' ? (
-                        <div className="w-full space-y-2 p-3 bg-slate-50/50 dark:bg-zinc-800/40 rounded-xl border border-slate-200 dark:border-zinc-700">
+                        <div className="w-full space-y-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-700">
                           <div className="flex items-center justify-between mb-1">
                             <label className="block text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
                               {field.label} {field.required && <span className="text-red-500">*</span>}
@@ -730,7 +720,7 @@ export default function CetakSuratPage() {
                             value={dynamicValues[field.key] || ""}
                             onChange={(e) => setDynamicValues({...dynamicValues, [field.key]: e.target.value})}
                             placeholder={field.placeholder || `Masukkan ${field.label}...`}
-                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             required={field.required}
                           />
                         </div>
@@ -742,17 +732,15 @@ export default function CetakSuratPage() {
             )}
 
             {/* Card 4: Penandatangan Naskah */}
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
-              <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="bg-slate-50/50 dark:bg-zinc-855/50 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
+              <div className="px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-5.5 h-5.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                     {dynamicFields.length > 0 ? "4" : "3"}
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                      Pejabat Penandatangan
-                    </h3>
-                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                    Pejabat Penandatangan
+                  </h3>
                 </div>
               </div>
 
@@ -764,7 +752,7 @@ export default function CetakSuratPage() {
                   <select
                     value={selectedPamong}
                     onChange={(e) => setSelectedPamong(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   >
                     {pamongList.map(p => (
                       <option key={p.pamong_id} value={String(p.pamong_id)}>
@@ -775,7 +763,7 @@ export default function CetakSuratPage() {
                 </div>
 
                 {selectedPamongObj && (
-                  <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/50 rounded-lg border border-slate-200/60 dark:border-zinc-700 flex items-center gap-2.5 text-xs">
+                  <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200/70 dark:border-zinc-700 flex items-center gap-2.5 text-xs">
                     <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
                       <ShieldCheck className="w-3.5 h-3.5" />
                     </div>
@@ -793,11 +781,11 @@ export default function CetakSuratPage() {
             </div>
 
             {/* Collapsible Card 5: Catatan Internal */}
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
+            <div className="bg-slate-50/50 dark:bg-zinc-850/50 rounded-xl border border-slate-200/80 dark:border-zinc-800 shadow-xs overflow-hidden transition-all">
               <button
                 type="button"
                 onClick={() => setShowNotes(!showNotes)}
-                className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-slate-50/50 dark:hover:bg-zinc-800/40 transition-colors"
+                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-zinc-850 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
@@ -809,22 +797,46 @@ export default function CetakSuratPage() {
               </button>
 
               {showNotes && (
-                <div className="p-4 pt-0 border-t border-slate-100 dark:border-zinc-800/80 animate-in fade-in duration-150">
+                <div className="p-4 pt-0 border-t border-slate-100 dark:border-zinc-800/80 animate-in fade-in duration-150 bg-white dark:bg-zinc-900">
                   <textarea
                     value={keterangan}
                     onChange={(e) => setKeterangan(e.target.value)}
                     rows={2}
                     placeholder="Contoh: Diajukan untuk syarat registrasi beasiswa anak, lampiran KTP sudah diverifikasi..."
-                    className="w-full mt-2.5 px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                    className="w-full mt-2.5 px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                   />
                 </div>
               )}
             </div>
 
-          </div>
+            {/* Bottom Form Actions */}
+            <div className="pt-2 pb-6 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="rounded-lg text-xs"
+              >
+                Reset Form
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                disabled={loading || !isFormComplete}
+                onClick={handleSubmit}
+                className="gap-1.5 rounded-lg text-xs font-semibold shadow-sm"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{loading ? "Memproses..." : "Ajukan ke Verifikasi"}</span>
+              </Button>
+            </div>
 
+          </div>
         </div>
-      </main>
+
+      </div>
 
       {/* ========================================================================= */}
       {/* FULLSCREEN PREVIEW MODAL */}
