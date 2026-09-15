@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import ConsoleSilencer from "@/components/ConsoleSilencer";
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Toaster position="top-center" richColors />
+          <ConsoleSilencer />
           {children}
         </ThemeProvider>
       </body>

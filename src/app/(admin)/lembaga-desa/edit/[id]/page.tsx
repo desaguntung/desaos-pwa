@@ -1,64 +1,55 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { LembagaForm } from "@/components/LembagaForm";
-import { getLembagaById } from "@/lib/services/lembaga";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-
-export default function EditLembagaPage() {
-  const params = useParams();
-  const router = useRouter();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const id = params.id as string;
-        if (!id) {
-          toast.error("ID lembaga tidak valid");
-          router.push("/lembaga-desa");
-          return;
-        }
-
-        const lembagaData = await getLembagaById(id);
-        if (!lembagaData) {
-          toast.error("Data lembaga tidak ditemukan");
-          router.push("/lembaga-desa");
-          return;
-        }
-
-        setData(lembagaData);
-      } catch (error: any) {
-        console.error("Error fetching lembaga:", error);
-        toast.error("Gagal memuat data lembaga");
-        router.push("/lembaga-desa");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [params.id, router]);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-text" />
-      </div>
-    );
+ import { LembagaForm } from "@/components/LembagaForm";
+ import { prisma } from "@/lib/prisma";
+ import { updateLembaga } from "../../actions";
+ 
+ export default async function EditLembagaPage({
+   params,
+ }: {
+   params: { id: string };
+ }) {
+   const id = params.id;
+  const data = await (prisma as any).lembaga_desa.findUnique({
+     where: { id },
+   });
+   if (!data) {
+     return null;
+   }
+   const initialData = {
+     id: data.id,
+     nama: data.nama,
+     singkatan: data.singkatan || "",
+     kategori: data.kategori || "",
+     alamat: data.alamat || "",
+     deskripsi: data.deskripsi || "",
+     logo_url: data.logo_url || "",
+   };
+  async function submitAction(payload: {
+    nama: string
+    singkatan?: string
+    kategori?: string
+    alamat?: string
+    deskripsi?: string
+    logo_url?: string
+  }) {
+    "use server"
+    await updateLembaga({
+      id,
+      nama: payload.nama,
+      singkatan: payload.singkatan,
+      kategori: payload.kategori,
+      alamat: payload.alamat,
+      deskripsi: payload.deskripsi,
+      logo_url: payload.logo_url,
+    })
   }
-
-  return (
-    <LembagaForm
-      mode="edit"
-      initialData={data}
-      title="Edit Lembaga"
-      subtitle="Perbarui data lembaga desa."
-      backButtonHref="/lembaga-desa"
-    />
-  );
-}
+   return (
+     <LembagaForm
+       mode="edit"
+       initialData={initialData}
+       title="Edit Lembaga"
+       subtitle="Perbarui data lembaga desa."
+       backButtonHref="/lembaga-desa"
+      submitAction={submitAction}
+     />
+   );
+ }

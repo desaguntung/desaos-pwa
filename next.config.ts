@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverSourceMaps: true,
+  },
+  productionBrowserSourceMaps: false,
+  devIndicators: {
+    buildActivity: false,
+    appIsrStatus: false,
+  },
   images: {
     remotePatterns: [
       {

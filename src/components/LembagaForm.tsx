@@ -21,6 +21,15 @@ interface LembagaFormProps {
   title?: string;
   subtitle?: string;
   backButtonHref?: string;
+  submitAction?: (payload: {
+    id?: string;
+    nama: string;
+    singkatan?: string;
+    kategori?: string;
+    alamat?: string;
+    deskripsi?: string;
+    logo_url?: string;
+  }) => Promise<void>;
 }
 
 const KATEGORI_OPTIONS = [
@@ -40,12 +49,13 @@ export function LembagaForm({
   title,
   subtitle,
   backButtonHref = "/lembaga-desa",
+  submitAction,
 }: LembagaFormProps) {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState("identitas");
+  const supabase = createSupabaseBrowserClient();
 
   const [formData, setFormData] = useState({
     nama: "",
@@ -68,8 +78,8 @@ export function LembagaForm({
   };
 
   const sections = [
-    { id: "identitas", label: "Identitas Lembaga" },
-    { id: "profil", label: "Profil & Alamat" },
+    { id: "identitas", title: "Identitas Lembaga" },
+    { id: "profil", title: "Profil & Alamat" },
   ];
 
   // Intersection Observer for Scroll Spy
@@ -133,28 +143,27 @@ export function LembagaForm({
     setIsSubmitting(true);
 
     try {
-      const payload = {
+      const payload: {
+        id?: string;
+        nama: string;
+        singkatan?: string;
+        kategori?: string;
+        alamat?: string;
+        deskripsi?: string;
+        logo_url?: string;
+      } = {
+        id: initialData?.id,
         nama: formData.nama,
         singkatan: formData.singkatan,
         kategori: formData.kategori,
         alamat: formData.alamat,
         deskripsi: formData.deskripsi,
         logo_url: formData.logo_url,
-        updated_at: new Date().toISOString(),
       };
 
-      if (mode === "create") {
-        const { error } = await supabase.from("lembaga_desa").insert(payload);
-        if (error) throw error;
-        toast.success("Lembaga berhasil ditambahkan");
-      } else {
-        const { error } = await supabase
-          .from("lembaga_desa")
-          .update(payload)
-          .eq("id", initialData.id);
-        if (error) throw error;
-        toast.success("Lembaga berhasil diperbarui");
-      }
+      if (!submitAction) throw new Error("submitAction tidak tersedia");
+      await submitAction(payload);
+      toast.success(mode === "create" ? "Lembaga berhasil ditambahkan" : "Lembaga berhasil diperbarui");
 
       router.push("/lembaga-desa");
       router.refresh();
@@ -220,7 +229,6 @@ export function LembagaForm({
             title="Identitas Lembaga"
             description="Informasi dasar mengenai lembaga desa."
             icon={Building2}
-            className="mb-6"
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -308,7 +316,6 @@ export function LembagaForm({
             title="Profil & Alamat"
             description="Detail alamat sekretariat dan deskripsi lembaga."
             icon={MapPin}
-            className="mb-6"
           />
 
           <div className="grid grid-cols-1 gap-6">
@@ -317,7 +324,6 @@ export function LembagaForm({
               placeholder="Alamat lengkap kantor/sekretariat"
               value={formData.alamat}
               onChange={(e) => handleChange("alamat", e.target.value)}
-              icon={MapPin}
             />
             <TextAreaField
               label="Deskripsi Singkat"

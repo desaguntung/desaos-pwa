@@ -1,4 +1,5 @@
-import React from "react";
+ "use client";
+ import React from "react";
 import { User, MoreHorizontal } from "lucide-react";
 import { Button } from "./Button";
 import { Skeleton } from "./Skeleton";

@@ -27,7 +27,7 @@ export default async function PrestasiDesaPage({
 }) {
   const pick = (v: string | string[] | undefined, fallback: string) =>
     Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback);
-  const q = pick(searchParams?.q, "").trim();
+  const q = pick(searchParams?.q, "").trim(); 
   const page = Math.max(1, parseInt(pick(searchParams?.page, "1"), 10) || 1);
   const pageSize = Math.max(1, parseInt(pick(searchParams?.pageSize, "10"), 10) || 10);
   const where =

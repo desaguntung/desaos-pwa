@@ -18,7 +18,7 @@ async function checkBucket() {
   
   console.log("Buckets found:", buckets.map(b => b.name));
   
-  const targetBucket = 'surat-documents';
+  const targetBucket = 'public';
   const bucketExists = buckets.some(b => b.name === targetBucket);
   
   if (bucketExists) {
@@ -36,8 +36,8 @@ async function checkBucket() {
       console.log(`Attempting to create bucket '${targetBucket}'...`);
       const { data, error: createError } = await supabase.storage.createBucket(targetBucket, {
           public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg']
+          fileSizeLimit: 10485760, // 10MB
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf']
       });
       
       if (createError) {
