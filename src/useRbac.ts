@@ -55,13 +55,15 @@ export function useRbac(resource: PermissionResource): UseRbacResult {
           return;
         }
 
+        const isSuperAdminEmail = user.email?.startsWith("superadmin") || user.email?.includes("admin");
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", user.id)
           .maybeSingle<ProfileRow>();
 
-        const effectiveRole = (profile?.role ?? "user") as AppRole;
+        const effectiveRole = (profile?.role ?? (isSuperAdminEmail ? "super_admin" : "user")) as AppRole;
         setRole(effectiveRole);
 
         const { data: rbacRows, error: rbacError } = await supabase

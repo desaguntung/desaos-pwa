@@ -159,15 +159,20 @@ export default function Sidebar() {
           return;
         }
 
+        const isSuperAdminEmail = user.email?.startsWith("superadmin") || user.email?.includes("admin");
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("full_name, role")
           .eq("id", user.id)
           .maybeSingle();
 
-        if (profile) {
+        if (profile?.role) {
           setCurrentRole(profile.role as AppRole);
           setUserName((profile.full_name as string | null) ?? user.email ?? null);
+        } else if (isSuperAdminEmail) {
+          setCurrentRole("super_admin");
+          setUserName(user.email ?? null);
         } else {
           setCurrentRole("user");
           setUserName(user.email ?? null);

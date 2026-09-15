@@ -396,6 +396,234 @@ export const STATUS_EKONOMI_OPTIONS = [
   "LAINNYA"
 ];
 
+export const GENDER_MAP: Record<number, string> = {
+  1: "LAKI-LAKI",
+  2: "PEREMPUAN",
+};
+
+export const AGAMA_MAP: Record<number, string> = {
+  1: "ISLAM",
+  2: "KRISTEN",
+  3: "KATHOLIK",
+  4: "HINDU",
+  5: "BUDHA",
+  6: "KONGHUCU",
+  7: "KEPERCAYAAN TERHADAP TUHAN YME / LAINNYA",
+};
+
+export const STATUS_KAWIN_MAP: Record<number, string> = {
+  1: "BELUM KAWIN",
+  2: "KAWIN",
+  3: "CERAI HIDUP",
+  4: "CERAI MATI",
+};
+
+export const STATUS_PENDUDUK_MAP: Record<number, string> = {
+  1: "TETAP",
+  2: "MENINGGAL",
+  3: "PINDAH",
+  4: "HILANG",
+  5: "HILANG",
+  6: "TIDAK TETAP",
+};
+
+export const HUBUNGAN_KELUARGA_MAP: Record<number, string> = {
+  1: "KEPALA KELUARGA",
+  2: "SUAMI",
+  3: "ISTRI",
+  4: "ANAK",
+  5: "MENANTU",
+  6: "CUCU",
+  7: "ORANG TUA",
+  8: "MERTUA",
+  9: "FAMILI LAIN",
+  10: "PEMBANTU",
+  11: "LAINNYA",
+};
+
+export const GOLONGAN_DARAH_MAP: Record<number, string> = {
+  1: "A",
+  2: "B",
+  3: "AB",
+  4: "O",
+  5: "A+",
+  6: "A-",
+  7: "B+",
+  8: "B-",
+  9: "AB+",
+  10: "AB-",
+  11: "O+",
+  12: "O-",
+  13: "TIDAK TAHU",
+};
+
+export const DUSUN_MAP: Record<number, string> = {
+  1: "DUSUN I",
+  2: "DUSUN II",
+  3: "DUSUN III",
+  4: "DUSUN IV",
+  5: "DUSUN V",
+  6: "DUSUN VI",
+  7: "DUSUN VII",
+  8: "DUSUN VIII",
+};
+
+export const PENDIDIKAN_KK_MAP: Record<number, string> = {
+  1: "TIDAK / BELUM SEKOLAH",
+  2: "BELUM TAMAT SD/SEDERAJAT",
+  3: "TAMAT SD / SEDERAJAT",
+  4: "SLTP/SEDERAJAT",
+  5: "SLTA / SEDERAJAT",
+  6: "DIPLOMA I / II",
+  7: "AKADEMI/ DIPLOMA III/S. MUDA",
+  8: "DIPLOMA IV/ STRATA I",
+  9: "STRATA II",
+  10: "STRATA III",
+};
+
+export const PEKERJAAN_MAP: Record<number, string> = {
+  1: "BELUM / TIDAK BEKERJA",
+  2: "MENGURUS RUMAH TANGGA",
+  3: "PELAJAR / MAHASISWA",
+  4: "PENSIUNAN",
+  5: "PEGAWAI NEGERI SIPIL (PNS)",
+  6: "TENTARA NASIONAL INDONESIA (TNI)",
+  7: "KEPOLISIAN RI (POLRI)",
+  8: "PERDAGANGAN",
+  9: "PETANI / PEKEBUN",
+  10: "PETERNAK",
+  11: "NELAYAN / PERIKANAN",
+  12: "INDUSTRI",
+  13: "KONSTRUKSI",
+  14: "TRANSPORTASI",
+  15: "KARYAWAN SWASTA",
+  16: "KARYAWAN BUMN",
+  17: "KARYAWAN BUMD",
+  18: "KARYAWAN HONORER",
+  19: "BURUH HARIAN LEPAS",
+  20: "BURUH TANI / PERKEBUNAN",
+  21: "BURUH NELAYAN / PERIKANAN",
+  22: "BURUH PETERNAKAN",
+  23: "PEMBANTU RUMAH TANGGA",
+  24: "TUKANG CUKUR",
+  25: "TUKANG LISTRIK",
+  26: "TUKANG BATU",
+  27: "TUKANG KAYU",
+  28: "TUKANG SOL SEPATU",
+  29: "TUKANG LAS / PANDAI BESI",
+  30: "TUKANG JAHIT",
+  31: "TUKANG GIGI",
+  32: "PENATA RIAS",
+  33: "PENATA BUSANA",
+  34: "PENATA RAMBUT",
+  35: "MEKANIK",
+  36: "SENIMAN",
+  37: "TABIB",
+  38: "PARAJI",
+  39: "PERANCANG BUSANA",
+  40: "PENTERJEMAH",
+  41: "IMAM MASJID",
+  42: "PENDETA",
+  43: "PASTOR",
+  44: "WARTAWAN",
+  45: "USTADZ / MUBALIGH",
+  46: "JURU MASAK",
+  47: "PROMOTOR ACARA",
+  48: "ANGGOTA DPR-RI",
+  49: "ANGGOTA DPD",
+  50: "ANGGOTA BPK",
+  51: "PRESIDEN",
+  52: "WAKIL PRESIDEN",
+  53: "ANGGOTA MAHKAMAH KONSTITUSI",
+  54: "ANGGOTA KABINET KEMENTERIAN",
+  55: "DUTA BESAR",
+  56: "GUBERNUR",
+  57: "WAKIL GUBERNUR",
+  58: "BUPATI",
+  59: "WAKIL BUPATI",
+  60: "WALIKOTA",
+  61: "WAKIL WALIKOTA",
+  62: "ANGGOTA DPRD PROVINSI",
+  63: "ANGGOTA DPRD KABUPATEN/KOTA",
+  64: "DOSEN",
+  65: "GURU",
+  66: "PILOT",
+  67: "PENGACARA",
+  68: "NOTARIS",
+  69: "ARSITEK",
+  70: "AKUNTAN",
+  71: "KONSULTAN",
+  72: "DOKTER",
+  73: "BIDAN",
+  74: "PERAWAT",
+  75: "APOTEKER",
+  76: "PSIKIATER / PSIKOLOG",
+  77: "PENYIAR TELEVISI",
+  78: "PENYIAR RADIO",
+  79: "PELAUT",
+  80: "PENELITI",
+  81: "SOPIR",
+  82: "PIALANG",
+  83: "PARANORMAL",
+  84: "PEDAGANG",
+  85: "PERANGKAT DESA",
+  86: "KEPALA DESA",
+  87: "BIARAWATI",
+  88: "WIRASWASTA",
+  89: "LAINNYA"
+};
+
+export function mapResidentFromDb(row: any): Resident {
+  if (!row) return row;
+
+  const dusunId = row.wilayah_dusun_id ? Number(row.wilayah_dusun_id) : undefined;
+  const dusunName = row.dusun || (dusunId ? DUSUN_MAP[dusunId] || `DUSUN ${dusunId}` : undefined);
+
+  let alamat = row.alamat_saat_ini || row.alamat_rt || row.alamat_sebelumnya;
+  if (!alamat && dusunName) {
+    const parts = [dusunName];
+    if (row.rt || row.wilayah_rt_id) parts.push(`RT ${row.rt || row.wilayah_rt_id}`);
+    if (row.rw || row.wilayah_rw_id) parts.push(`RW ${row.rw || row.wilayah_rw_id}`);
+    alamat = parts.join(", ");
+  }
+
+  return {
+    ...row,
+    id: row.id,
+    nik: row.nik || "",
+    nama: row.nama || "",
+    no_kk: row.no_kk || "",
+    jenis_kelamin: row.jenis_kelamin || (row.jenis_kelamin_id ? GENDER_MAP[Number(row.jenis_kelamin_id)] || "" : ""),
+    agama: row.agama || (row.agama_id ? AGAMA_MAP[Number(row.agama_id)] || "" : ""),
+    status_kawin: row.status_kawin || (row.status_kawin_id ? STATUS_KAWIN_MAP[Number(row.status_kawin_id)] || "" : ""),
+    status_penduduk: row.status_penduduk || (row.status_penduduk_id ? STATUS_PENDUDUK_MAP[Number(row.status_penduduk_id)] || "Aktif" : (row.status_dasar === 1 ? "Aktif" : "Aktif")),
+    hubungan_keluarga: row.hubungan_keluarga || (row.hubungan_keluarga_id ? HUBUNGAN_KELUARGA_MAP[Number(row.hubungan_keluarga_id)] || "" : ""),
+    golongan_darah: row.golongan_darah || (row.golongan_darah_id ? GOLONGAN_DARAH_MAP[Number(row.golongan_darah_id)] || "" : ""),
+    dusun: dusunName,
+    alamat_saat_ini: alamat || "-",
+    pekerjaan: row.pekerjaan || (row.pekerjaan_id ? PEKERJAAN_MAP[Number(row.pekerjaan_id)] || "" : ""),
+    pendidikan_kk: row.pendidikan_kk || (row.pendidikan_kk_id ? PENDIDIKAN_KK_MAP[Number(row.pendidikan_kk_id)] || "" : ""),
+    tanggal_lahir: row.tanggal_lahir ? (typeof row.tanggal_lahir === 'string' ? row.tanggal_lahir.split('T')[0] : new Date(row.tanggal_lahir).toISOString().split('T')[0]) : undefined,
+  };
+}
+
+export function mapResidentToDb(resident: Partial<Resident>): any {
+  const payload: any = { ...resident };
+  
+  if (resident.jenis_kelamin) {
+    const s = resident.jenis_kelamin.toUpperCase();
+    payload.jenis_kelamin_id = s.startsWith("L") ? 1 : 2;
+  }
+  
+  if (resident.dusun) {
+    const dUpper = resident.dusun.toUpperCase().replace("DUSUN ", "").trim();
+    const foundEntry = Object.entries(DUSUN_MAP).find(([_, v]) => v.replace("DUSUN ", "").trim() === dUpper);
+    if (foundEntry) payload.wilayah_dusun_id = Number(foundEntry[0]);
+  }
+  
+  return payload;
+}
+
 const getClient = () => createSupabaseBrowserClient();
 
 export const getResidents = async (options?: { rumahTanggaId?: string | null }): Promise<Resident[]> => {
@@ -441,7 +669,7 @@ export const getResidents = async (options?: { rumahTanggaId?: string | null }):
       break;
     }
 
-    allResidents.push(...data);
+    allResidents.push(...(data.map(mapResidentFromDb)));
     
     // Check if we have reached the end based on returned data size
     if (data.length < pageSize) {
@@ -471,7 +699,7 @@ export const getResidentByNIK = async (nik: string): Promise<Resident | null> =>
     return null;
   }
 
-  return data;
+  return mapResidentFromDb(data);
 };
 
 export const getLatestTemporaryNik = async (prefix: string): Promise<string | null> => {
@@ -567,17 +795,19 @@ export const uploadResidentDocument = async (file: File, path: string): Promise<
 };
 
 export const addResident = async (resident: Omit<Resident, "id">) => {
-  const { data, error } = await getClient().from("penduduk").insert(resident).select().single();
+  const payload = mapResidentToDb(resident);
+  const { data, error } = await getClient().from("penduduk").insert(payload).select().single();
   if (error) {
     throw error;
   }
-  return data;
+  return mapResidentFromDb(data);
 };
 
 export const updateResident = async (id: string, resident: Partial<Resident>) => {
+  const payload = mapResidentToDb(resident);
   const { data, error } = await getClient()
     .from("penduduk")
-    .update(resident)
+    .update(payload)
     .eq("id", id)
     .select()
     .single();
@@ -585,7 +815,7 @@ export const updateResident = async (id: string, resident: Partial<Resident>) =>
   if (error) {
     throw error;
   }
-  return data;
+  return mapResidentFromDb(data);
 };
 
 export const deleteResident = async (id: string) => {
