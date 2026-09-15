@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { 
   User, 
   MapPin, 
@@ -16,22 +15,7 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS } from "@/lib/services/penduduk";
-import {
-  ReferenceItem,
-  getRefAgama,
-  getRefPekerjaan,
-  getRefPendidikan,
-  getRefPendidikanKK,
-  getRefStatusKawin,
-  getRefGolonganDarah,
-  getRefWarganegara,
-  getRefHubunganKeluarga,
-  getRefStatusPenduduk,
-  getRefCacat,
-  getRefSakitMenahun,
-  getRefAsuransi,
-  getRefCaraKB
-} from "@/lib/services/referensi";
+import { useReferenceData } from "@/lib/services/referensi";
 
 // New Standard Components
 import { FormLayout } from "@/components/layout/FormLayout";
@@ -52,22 +36,10 @@ interface ResidentFormProps {
   isSubmitting?: boolean;
   embedded?: boolean;
   hideActions?: boolean;
-  // Page header props
   title?: string;
   subtitle?: string;
   backButtonHref?: string;
 }
-
-// Fallback Options (Legacy)
-const AGAMA_OPTIONS = ["Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Khonghucu", "Lainnya"];
-const GENDER_OPTIONS = ["Laki-laki", "Perempuan"];
-const STATUS_PERKAWINAN_OPTIONS = ["Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati"];
-const GOL_DARAH_OPTIONS = ["A", "B", "AB", "O", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Tidak Tahu"];
-const WARGANEGARA_OPTIONS = ["WNI", "WNA"];
-const PENDIDIKAN_OPTIONS = ["Tidak/Belum Sekolah", "Belum Tamat SD/Sederajat", "Tamat SD/Sederajat", "SLTP/Sederajat", "SLTA/Sederajat", "Diploma I/II", "Akademi/Diploma III/S. Muda", "Diploma IV/Strata I", "Strata II", "Strata III"];
-const PEKERJAAN_OPTIONS = ["Belum/Tidak Bekerja", "Mengurus Rumah Tangga", "Pelajar/Mahasiswa", "Pensiunan", "Pegawai Negeri Sipil", "Tentara Nasional Indonesia", "Kepolisian RI", "Perdagangan", "Petani/Pekebun", "Peternak", "Nelayan/Perikanan", "Industri", "Konstruksi", "Transportasi", "Karyawan Swasta", "Karyawan BUMN", "Karyawan BUMD", "Karyawan Honorer", "Buruh Harian Lepas", "Buruh Tani/Perkebunan", "Buruh Nelayan/Perikanan", "Buruh Peternakan", "Pembantu Rumah Tangga", "Tukang Cukur", "Tukang Listrik", "Tukang Batu", "Tukang Kayu", "Tukang Sol Sepatu", "Tukang Las/Pandai Besi", "Tukang Jahit", "Tukang Gigi", "Penata Rias", "Penata Busana", "Penata Rambut", "Mekanik", "Seniman", "Tabib", "Paraji", "Perancang Busana", "Penterjemah", "Imam Masjid", "Pendeta", "Pastor", "Wartawan", "Ustadz/Mubaligh", "Juru Masak", "Promotor Acara", "Anggota DPR-RI", "Anggota DPD", "Anggota DPRD Provinsi", "Anggota DPRD Kabupaten/Kota", "Presiden", "Wakil Presiden", "Anggota Mahkamah Konstitusi", "Anggota Kabinet/Kementerian", "Duta Besar", "Gubernur", "Wakil Gubernur", "Bupati", "Wakil Bupati", "Walikota", "Wakil Walikota", "Penyiar Televisi", "Penyiar Radio", "Pelaut", "Peneliti", "Sopir", "Pialang", "Paranormal", "Pedagang", "Perangkat Desa", "Kepala Desa", "Biarawati", "Wiraswasta", "Lainnya"];
-const HUBUNGAN_KELUARGA_OPTIONS = ["KEPALA KELUARGA", "SUAMI", "ISTRI", "ANAK", "MENANTU", "CUCU", "ORANG TUA", "MERTUA", "FAMILI LAIN", "PEMBANTU", "LAINNYA"];
-const STATUS_PENDUDUK_OPTIONS = ["TETAP", "TIDAK TETAP", "PINDAH DATANG", "PENDUDUK SEMENTARA"];
 
 export default function ResidentForm({
   initialData,
@@ -84,114 +56,49 @@ export default function ResidentForm({
   const [formData, setFormData] = useState<Partial<Resident>>(initialData || {});
   const [showGelar, setShowGelar] = useState(!!(initialData?.gelar_depan || initialData?.gelar_belakang));
 
-  // Reference Data States
-  const [agamaRef, setAgamaRef] = useState<ReferenceItem[]>([]);
-  const [pekerjaanRef, setPekerjaanRef] = useState<ReferenceItem[]>([]);
-  const [pendidikanRef, setPendidikanRef] = useState<ReferenceItem[]>([]); // Current education
-  const [pendidikanKKRef, setPendidikanKKRef] = useState<ReferenceItem[]>([]); // Last education (KK)
-  const [statusKawinRef, setStatusKawinRef] = useState<ReferenceItem[]>([]);
-  const [golDarahRef, setGolDarahRef] = useState<ReferenceItem[]>([]);
-  const [warganegaraRef, setWarganegaraRef] = useState<ReferenceItem[]>([]);
-  const [hubKeluargaRef, setHubKeluargaRef] = useState<ReferenceItem[]>([]);
-  const [statusPendudukRef, setStatusPendudukRef] = useState<ReferenceItem[]>([]);
-  const [cacatRef, setCacatRef] = useState<ReferenceItem[]>([]);
-  const [sakitMenahunRef, setSakitMenahunRef] = useState<ReferenceItem[]>([]);
-  const [asuransiRef, setAsuransiRef] = useState<ReferenceItem[]>([]);
-  const [caraKBRef, setCaraKBRef] = useState<ReferenceItem[]>([]);
-
-  // Wilayah Data States
-  const [dusunOptions, setDusunOptions] = useState<any[]>([]);
-  const [rwOptions, setRwOptions] = useState<any[]>([]);
-  const [rtOptions, setRtOptions] = useState<any[]>([]);
+  // Dynamic Reference Hook
+  const {
+    agama,
+    jenisKelamin,
+    pekerjaan,
+    pendidikan,
+    pendidikanKK,
+    statusKawin,
+    golDarah,
+    warganegara,
+    hubKeluarga,
+    statusPenduduk,
+    cacat,
+    sakitMenahun,
+    asuransi,
+    caraKB,
+    dusun,
+    rw,
+    rt,
+  } = useReferenceData();
 
   const formatNumber = (num: string | number) => {
     return num?.toString().padStart(3, "0") || "";
   };
 
-  // Derived state for filtered options
-  const filteredRw = rwOptions.filter(rw => {
-     const selectedDusun = dusunOptions.find(d => d.nama === formData.dusun);
-     return selectedDusun && rw.dusun_id === selectedDusun.id;
+  // Derived state for filtered wilayah
+  const filteredRw = rw.filter((item) => {
+    const selectedDusun = dusun.find((d) => d.nama === formData.dusun);
+    return selectedDusun && String(item.dusun_id) === String(selectedDusun.id);
   });
 
-  const filteredRt = rtOptions.filter(rt => {
-     const selectedDusun = dusunOptions.find(d => d.nama === formData.dusun);
-     if (!selectedDusun) return false;
-     
-     const selectedRw = rwOptions.find(r => 
-       r.dusun_id === selectedDusun.id && formatNumber(r.nomor_rw) === formData.rw
-     );
-     
-     return selectedRw && rt.rw_id === selectedRw.id;
+  const filteredRt = rt.filter((item) => {
+    const selectedDusun = dusun.find((d) => d.nama === formData.dusun);
+    if (!selectedDusun) return false;
+
+    const selectedRw = rw.find(
+      (r) =>
+        String(r.dusun_id) === String(selectedDusun.id) &&
+        formatNumber(r.nomor_rw) === formData.rw
+    );
+
+    return selectedRw && String(item.rw_id) === String(selectedRw.id);
   });
-
-  useEffect(() => {
-    const fetchReferences = async () => {
-      try {
-        const [
-          agama, 
-          pekerjaan, 
-          pendidikan, 
-          pendidikanKK, 
-          statusKawin, 
-          golDarah, 
-          warganegara, 
-          hubKeluarga, 
-          statusPenduduk,
-          cacat,
-          sakitMenahun,
-          asuransi,
-          caraKB
-        ] = await Promise.all([
-          getRefAgama(),
-          getRefPekerjaan(),
-          getRefPendidikan(),
-          getRefPendidikanKK(),
-          getRefStatusKawin(),
-          getRefGolonganDarah(),
-          getRefWarganegara(),
-          getRefHubunganKeluarga(),
-          getRefStatusPenduduk(),
-          getRefCacat(),
-          getRefSakitMenahun(),
-          getRefAsuransi(),
-          getRefCaraKB()
-        ]);
-
-        if (agama) setAgamaRef(agama);
-        if (pekerjaan) setPekerjaanRef(pekerjaan);
-        if (pendidikan) setPendidikanRef(pendidikan);
-        if (pendidikanKK) setPendidikanKKRef(pendidikanKK);
-        if (statusKawin) setStatusKawinRef(statusKawin);
-        if (golDarah) setGolDarahRef(golDarah);
-        if (warganegara) setWarganegaraRef(warganegara);
-        if (hubKeluarga) setHubKeluargaRef(hubKeluarga);
-        if (statusPenduduk) setStatusPendudukRef(statusPenduduk);
-        if (cacat) setCacatRef(cacat);
-        if (sakitMenahun) setSakitMenahunRef(sakitMenahun);
-        if (asuransi) setAsuransiRef(asuransi);
-        if (caraKB) setCaraKBRef(caraKB);
-      } catch (error) {
-        console.error("Error fetching references:", error);
-      }
-    };
-
-    const fetchWilayah = async () => {
-      const supabase = createSupabaseBrowserClient();
-      
-      const { data: dusun } = await supabase.from("wilayah_dusun").select("*").order("nama");
-      if (dusun) setDusunOptions(dusun);
-      
-      const { data: rw } = await supabase.from("wilayah_rw").select("*").order("nomor_rw");
-      if (rw) setRwOptions(rw);
-      
-      const { data: rt } = await supabase.from("wilayah_rt").select("*").order("nomor_rt");
-      if (rt) setRtOptions(rt);
-    };
-    
-    fetchReferences();
-    fetchWilayah();
-  }, []);
 
   const handleDusunChange = (val: string) => {
     updateField("dusun", val);
@@ -233,7 +140,7 @@ export default function ResidentForm({
   // Scroll spy logic
   useEffect(() => {
     const container = document.getElementById("form-scroll-container");
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -242,14 +149,14 @@ export default function ResidentForm({
           }
         });
       },
-      { 
-        root: container, 
-        rootMargin: "-20% 0px -60% 0px", 
-        threshold: 0.1 
+      {
+        root: container,
+        rootMargin: "-20% 0px -60% 0px",
+        threshold: 0.1,
       }
     );
 
-    sections.forEach(section => {
+    sections.forEach((section) => {
       const element = document.getElementById(section.id);
       if (element) observer.observe(element);
     });
@@ -257,13 +164,7 @@ export default function ResidentForm({
     return () => observer.disconnect();
   }, []);
 
-  // Helpers to convert options
-  const toOptions = (refs: ReferenceItem[], fallback: string[]) => {
-    if (refs.length > 0) return refs.map(r => ({ label: r.nama, value: r.nama }));
-    return fallback.map(s => ({ label: s, value: s }));
-  };
-
-  const simpleOptions = (items: string[]) => items.map(s => ({ label: s, value: s }));
+  const simpleOptions = (items: string[]) => items.map((s) => ({ label: s, value: s }));
 
   const content = (
     <form id="resident-form" onSubmit={handleSubmit} className="space-y-8">
@@ -273,17 +174,17 @@ export default function ResidentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField label="NIK" name="nik" value={formData.nik || ""} onChange={handleChange} placeholder="Nomor Induk Kependudukan" required />
           <InputField label="Nama Lengkap" name="nama" value={formData.nama || ""} onChange={handleChange} placeholder="Nama Lengkap" required />
-          
+
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-2">
-              <Checkbox 
-                id="ceklis_gelar" 
-                checked={showGelar} 
+              <Checkbox
+                id="ceklis_gelar"
+                checked={showGelar}
                 onChange={(e) => setShowGelar(e.target.checked)}
               />
               <label htmlFor="ceklis_gelar" className="text-sm cursor-pointer text-primary-text">Ceklis Gelar (Tampilkan input Gelar)</label>
             </div>
-            
+
             {showGelar && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-card-bg/50 rounded-lg border border-border-color">
                 <InputField label="Gelar Depan" name="gelar_depan" value={formData.gelar_depan || ""} onChange={handleChange} placeholder="Contoh: Dr., Ir." />
@@ -295,24 +196,24 @@ export default function ResidentForm({
           <div className="md:col-span-2 space-y-4 border border-border-color rounded-lg p-4 bg-card-bg/50">
              <h4 className="text-sm font-semibold text-primary-text">Status Kepemilikan Identitas</h4>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SelectField 
+                <SelectField
                   label="Wajib Identitas"
-                  value={formData.status_kepemilikan_identitas} 
+                  value={formData.status_kepemilikan_identitas}
                   onValueChange={(val) => updateField("status_kepemilikan_identitas", val)}
                   options={[
                     { label: "WAJIB", value: "WAJIB" },
                     { label: "TIDAK WAJIB", value: "TIDAK WAJIB" }
                   ]}
                 />
-                <SelectField 
+                <SelectField
                   label="Identitas Elektronik"
-                  value={formData.identitas_elektronik} 
+                  value={formData.identitas_elektronik}
                   onValueChange={(val) => updateField("identitas_elektronik", val)}
                   options={simpleOptions(IDENTITAS_ELEKTRONIK_OPTIONS)}
                 />
-                <SelectField 
+                <SelectField
                   label="Status Rekam"
-                  value={formData.status_rekam} 
+                  value={formData.status_rekam}
                   onValueChange={(val) => updateField("status_rekam", val)}
                   options={simpleOptions(STATUS_REKAM_OPTIONS)}
                 />
@@ -323,32 +224,39 @@ export default function ResidentForm({
           <InputField label="Nomor KK Sebelumnya" name="no_kk_sebelumnya" value={formData.no_kk_sebelumnya || ""} onChange={handleChange} placeholder="No KK Sebelumnya" />
           <InputField label="Nomor KK" name="no_kk" value={formData.no_kk || ""} onChange={handleChange} placeholder="Nomor KK Saat Ini" />
 
-          <SelectField 
+          <SelectField
             label="Hubungan Dalam Keluarga"
-            value={formData.hubungan_keluarga} 
+            value={formData.hubungan_keluarga}
             onValueChange={(val) => updateField("hubungan_keluarga", val)}
-            options={toOptions(hubKeluargaRef, HUBUNGAN_KELUARGA_OPTIONS)}
+            options={hubKeluarga.map((r) => ({ label: r.nama, value: r.nama }))}
           />
 
-          <SelectField 
+          <SelectField
             label="Jenis Kelamin"
-            value={formData.jenis_kelamin} 
+            value={formData.jenis_kelamin}
             onValueChange={(val) => updateField("jenis_kelamin", val)}
-            options={simpleOptions(GENDER_OPTIONS)}
+            options={
+              jenisKelamin.length > 0
+                ? jenisKelamin.map((r) => ({ label: r.nama, value: r.nama }))
+                : [
+                    { label: "LAKI-LAKI", value: "LAKI-LAKI" },
+                    { label: "PEREMPUAN", value: "PEREMPUAN" }
+                  ]
+            }
           />
 
-          <SelectField 
+          <SelectField
             label="Agama"
-            value={formData.agama} 
+            value={formData.agama}
             onValueChange={(val) => updateField("agama", val)}
-            options={toOptions(agamaRef, AGAMA_OPTIONS)}
+            options={agama.map((r) => ({ label: r.nama, value: r.nama }))}
           />
 
-          <SelectField 
+          <SelectField
             label="Status Penduduk"
-            value={formData.status_penduduk} 
+            value={formData.status_penduduk}
             onValueChange={(val) => updateField("status_penduduk", val)}
-            options={toOptions(statusPendudukRef, STATUS_PENDUDUK_OPTIONS)}
+            options={statusPenduduk.map((r) => ({ label: r.nama, value: r.nama }))}
           />
         </div>
       </div>
@@ -359,23 +267,23 @@ export default function ResidentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField label="Nomor Akta Kelahiran" name="akta_kelahiran_nomor" value={formData.akta_kelahiran_nomor || ""} onChange={handleChange} placeholder="Nomor Akta Kelahiran" />
           <InputField label="Tempat Dilahirkan" name="tempat_lahir" value={formData.tempat_lahir || ""} onChange={handleChange} placeholder="Kota/Kabupaten" />
-          
+
           <DatePickerField label="Tanggal Lahir" name="tanggal_lahir" value={formData.tanggal_lahir || ""} onChange={handleChange} />
-          
+
           <InputField type="time" label="Waktu Kelahiran" name="waktu_lahir" value={formData.waktu_lahir || ""} onChange={handleChange} />
 
-          <SelectField 
+          <SelectField
             label="Jenis Kelahiran"
-            value={formData.jenis_kelahiran} 
+            value={formData.jenis_kelahiran}
             onValueChange={(val) => updateField("jenis_kelahiran", val)}
             options={simpleOptions(["TUNGGAL", "KEMBAR 2", "KEMBAR 3", "KEMBAR 4"])}
           />
 
           <InputField type="number" label="Anak Ke" name="anak_ke" value={formData.anak_ke || ""} onChange={handleChange} placeholder="Isi dengan angka" />
 
-          <SelectField 
+          <SelectField
             label="Penolong Kelahiran"
-            value={formData.cara_lahir} 
+            value={formData.cara_lahir}
             onValueChange={(val) => updateField("cara_lahir", val)}
             options={simpleOptions(["DOKTER", "BIDAN", "DUKUN", "LAINNYA"])}
           />
@@ -389,24 +297,24 @@ export default function ResidentForm({
       <div id="pendidikan-pekerjaan" className="scroll-mt-24 space-y-6">
         <SectionTitle title="Pendidikan & Pekerjaan" description="Riwayat pendidikan & profesi" icon={GraduationCap} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField 
+          <SelectField
             label="Pendidikan Dalam KK"
-            value={formData.pendidikan_kk} 
+            value={formData.pendidikan_kk}
             onValueChange={(val) => updateField("pendidikan_kk", val)}
-            options={toOptions(pendidikanKKRef, PENDIDIKAN_OPTIONS)}
+            options={pendidikanKK.map((r) => ({ label: r.nama, value: r.nama }))}
           />
-          <SelectField 
+          <SelectField
             label="Pendidikan Sedang Ditempuh"
-            value={formData.pendidikan_saat_ini} 
+            value={formData.pendidikan_saat_ini}
             onValueChange={(val) => updateField("pendidikan_saat_ini", val)}
-            options={toOptions(pendidikanRef, PENDIDIKAN_OPTIONS)}
+            options={pendidikan.map((r) => ({ label: r.nama, value: r.nama }))}
           />
           <div className="md:col-span-2">
-            <SelectField 
+            <SelectField
               label="Pekerjaan"
-              value={formData.pekerjaan} 
+              value={formData.pekerjaan}
               onValueChange={(val) => updateField("pekerjaan", val)}
-              options={toOptions(pekerjaanRef, PEKERJAAN_OPTIONS)}
+              options={pekerjaan.map((r) => ({ label: r.nama, value: r.nama }))}
             />
           </div>
         </div>
@@ -417,11 +325,11 @@ export default function ResidentForm({
         <SectionTitle title="Data Kewarganegaraan" description="Status kewarganegaraan" icon={Flag} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            <InputField label="Suku/Etnis" name="suku_etnis" value={formData.suku_etnis || ""} onChange={handleChange} placeholder="Suku/Etnis" />
-           <SelectField 
+           <SelectField
               label="Status Warga Negara"
-              value={formData.kewarganegaraan} 
+              value={formData.kewarganegaraan}
               onValueChange={(val) => updateField("kewarganegaraan", val)}
-              options={toOptions(warganegaraRef, WARGANEGARA_OPTIONS)}
+              options={warganegara.map((r) => ({ label: r.nama, value: r.nama }))}
            />
            <InputField label="Nomor Paspor" name="no_paspor" value={formData.no_paspor || ""} onChange={handleChange} placeholder="Nomor Paspor" />
            <DatePickerField label="Tgl Berakhir Paspor" name="tgl_berakhir_paspor" value={formData.tgl_berakhir_paspor || ""} onChange={handleChange} />
@@ -446,27 +354,27 @@ export default function ResidentForm({
            <div className="md:col-span-2">
              <TextAreaField label="Alamat Saat Ini" name="alamat_saat_ini" value={formData.alamat_saat_ini || ""} onChange={handleChange} placeholder="Jalan / Gang / Blok" />
            </div>
-           
-           <SelectField 
+
+           <SelectField
               label="Dusun"
-              value={formData.dusun} 
+              value={formData.dusun}
               onValueChange={handleDusunChange}
-              options={dusunOptions.map(d => ({ label: d.nama, value: d.nama }))}
+              options={dusun.map((d) => ({ label: `Dusun ${d.nama}`, value: d.nama }))}
            />
-           
+
            <div className="grid grid-cols-2 gap-4">
-             <SelectField 
+             <SelectField
                 label="RW"
-                value={formData.rw} 
+                value={formData.rw}
                 onValueChange={handleRwChange}
-                options={filteredRw.map(rw => ({ label: formatNumber(rw.nomor_rw), value: formatNumber(rw.nomor_rw) }))}
+                options={filteredRw.map((item) => ({ label: formatNumber(item.nomor_rw), value: formatNumber(item.nomor_rw) }))}
                 disabled={!formData.dusun}
              />
-             <SelectField 
+             <SelectField
                 label="RT"
-                value={formData.rt} 
+                value={formData.rt}
                 onValueChange={(val) => updateField("rt", val)}
-                options={filteredRt.map(rt => ({ label: formatNumber(rt.nomor_rt), value: formatNumber(rt.nomor_rt) }))}
+                options={filteredRt.map((item) => ({ label: formatNumber(item.nomor_rt), value: formatNumber(item.nomor_rt) }))}
                 disabled={!formData.rw}
              />
            </div>
@@ -480,21 +388,21 @@ export default function ResidentForm({
       <div id="status-perkawinan" className="scroll-mt-24 space-y-6">
         <SectionTitle title="Status Perkawinan" description="Riwayat pernikahan" icon={HeartHandshake} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField 
+          <SelectField
             label="Status Perkawinan"
-            value={formData.status_kawin} 
+            value={formData.status_kawin}
             onValueChange={(val) => updateField("status_kawin", val)}
-            options={toOptions(statusKawinRef, STATUS_PERKAWINAN_OPTIONS)}
+            options={statusKawin.map((r) => ({ label: r.nama, value: r.nama }))}
           />
-          
-          {formData.status_kawin && formData.status_kawin !== "Belum Kawin" && (
+
+          {formData.status_kawin && formData.status_kawin !== "Belum Kawin" && formData.status_kawin !== "BELUM KAWIN" && (
             <>
                <InputField label="No. Akta Perkawinan/Buku Nikah" name="akta_perkawinan" value={formData.akta_perkawinan || ""} onChange={handleChange} placeholder="Nomor Akta" />
                <DatePickerField label="Tanggal Perkawinan" name="tanggal_perkawinan" value={formData.tanggal_perkawinan || ""} onChange={handleChange} />
             </>
           )}
 
-          {formData.status_kawin && (formData.status_kawin === "Cerai Hidup" || formData.status_kawin === "Cerai Mati") && (
+          {formData.status_kawin && (formData.status_kawin.toUpperCase().includes("CERAI")) && (
             <>
                <InputField label="No. Akta Perceraian" name="akta_perceraian" value={formData.akta_perceraian || ""} onChange={handleChange} placeholder="Nomor Akta" />
                <DatePickerField label="Tanggal Perceraian" name="tanggal_perceraian" value={formData.tanggal_perceraian || ""} onChange={handleChange} />
@@ -507,43 +415,43 @@ export default function ResidentForm({
       <div id="data-kesehatan" className="scroll-mt-24 space-y-6">
         <SectionTitle title="Data Kesehatan" description="Kondisi kesehatan & asuransi" icon={Activity} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <SelectField 
+           <SelectField
              label="Golongan Darah"
-             value={formData.golongan_darah} 
+             value={formData.golongan_darah}
              onValueChange={(val) => updateField("golongan_darah", val)}
-             options={toOptions(golDarahRef, GOL_DARAH_OPTIONS)}
+             options={golDarah.map((r) => ({ label: r.nama, value: r.nama }))}
            />
-           <SelectField 
+           <SelectField
              label="Cacat Fisik/Mental"
-             value={formData.cacat_fisik_mental || ""} 
+             value={formData.cacat_fisik_mental || ""}
              onValueChange={(val) => updateField("cacat_fisik_mental", val)}
-             options={cacatRef.map(opt => ({ label: opt.nama, value: opt.nama }))}
+             options={cacat.map((opt) => ({ label: opt.nama, value: opt.nama }))}
            />
-           <SelectField 
+           <SelectField
              label="Sakit Menahun"
-             value={formData.sakit_menahun || ""} 
+             value={formData.sakit_menahun || ""}
              onValueChange={(val) => updateField("sakit_menahun", val)}
-             options={sakitMenahunRef.map(opt => ({ label: opt.nama, value: opt.nama }))}
+             options={sakitMenahun.map((opt) => ({ label: opt.nama, value: opt.nama }))}
            />
-           <SelectField 
+           <SelectField
              label="Akseptor KB"
-             value={formData.cara_kb_id?.toString()} 
+             value={formData.cara_kb_id?.toString()}
              onValueChange={(val) => updateField("cara_kb_id", parseInt(val))}
-             options={caraKBRef.map(opt => ({ label: opt.nama, value: opt.id.toString() }))}
+             options={caraKB.map((opt) => ({ label: opt.nama, value: opt.id.toString() }))}
            />
-           {formData.jenis_kelamin === "Perempuan" && (
-             <SelectField 
+           {formData.jenis_kelamin?.toUpperCase().startsWith("P") && (
+             <SelectField
                label="Status Kehamilan"
-               value={formData.status_kehamilan} 
+               value={formData.status_kehamilan}
                onValueChange={(val) => updateField("status_kehamilan", val)}
                options={simpleOptions(STATUS_HAMIL_OPTIONS)}
              />
            )}
-           <SelectField 
+           <SelectField
              label="Asuransi Kesehatan"
-             value={formData.kepesertaan_asuransi || ""} 
+             value={formData.kepesertaan_asuransi || ""}
              onValueChange={(val) => updateField("kepesertaan_asuransi", val)}
-             options={asuransiRef.map(opt => ({ label: opt.nama, value: opt.nama }))}
+             options={asuransi.map((opt) => ({ label: opt.nama, value: opt.nama }))}
            />
         </div>
       </div>
@@ -558,61 +466,51 @@ export default function ResidentForm({
            <InputField label="Akun Twitter (X)" name="akun_twitter" value={formData.akun_twitter || ""} onChange={handleChange} placeholder="Link/Nama Akun" />
         </div>
       </div>
+
+      {/* Floating or Footer Actions */}
+      {!hideActions && (
+        <div className="sticky bottom-4 z-10 flex justify-end gap-3 p-4 bg-card-bg/90 backdrop-blur border border-border-color rounded-xl shadow-lg">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => window.history.back()}
+            disabled={isSubmitting}
+          >
+            Batal
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-primary text-white hover:bg-primary/90"
+          >
+            {isSubmitting ? "Menyimpan..." : mode === "create" ? "Tambah Penduduk" : "Simpan Perubahan"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 
-  // If embedded, just return the content
   if (embedded) {
     return content;
   }
 
-  // Action buttons
-  const formActions = !hideActions && (
-    <div className="flex items-center gap-2">
-      <Button 
-        type="submit" 
-        form="resident-form"
-        disabled={isSubmitting} 
-        className="min-w-[120px]"
-      >
-        {isSubmitting ? "Menyimpan..." : (mode === "create" ? "Simpan Data" : "Simpan Perubahan")}
-      </Button>
-    </div>
-  );
-
   return (
     <FormLayout
-      title={title}
-      subtitle={subtitle}
-      backButtonHref={backButtonHref}
-      actions={formActions}
+      title={title || (mode === "create" ? "Tambah Penduduk" : "Edit Penduduk")}
+      subtitle={subtitle || (mode === "create" ? "Formulir pendataan penduduk baru" : "Perbarui informasi data penduduk")}
+      backButtonHref={backButtonHref || "/penduduk"}
       sidebar={
-        <FormSidebarNav 
-          sections={sections} 
-          activeSection={activeSection} 
+        <FormSidebarNav
+          sections={sections}
+          activeSection={activeSection}
           onSectionClick={(id) => {
-            setActiveSection(id);
-            const element = document.getElementById(id);
-            const container = document.getElementById("form-scroll-container");
-            
-            if (element && container) {
-              const headerOffset = 24;
-              const elementPosition = element.getBoundingClientRect().top;
-              const containerPosition = container.getBoundingClientRect().top;
-              const offsetPosition = elementPosition - containerPosition + container.scrollTop - headerOffset;
-              
-              container.scrollTo({
-                 top: offsetPosition,
-                 behavior: "smooth"
-              });
-            }
-          }} 
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }}
         />
       }
     >
-      <div className="bg-card-bg rounded-xl border border-border-color p-6 md:p-8">
-        {content}
-      </div>
+      {content}
     </FormLayout>
   );
 }

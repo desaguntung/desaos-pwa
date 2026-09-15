@@ -722,8 +722,7 @@ export async function getLogSuratDetail(id: number) {
     .select(`
       *,
       surat_formats (*),
-      penduduk:id_pend (*),
-      pamong:id_pamong (*)
+      penduduk:id_pend (*)
     `)
     .eq("id", id)
     .single();
@@ -732,6 +731,14 @@ export async function getLogSuratDetail(id: number) {
     console.error("Error fetching log surat detail:", error);
     throw error;
   }
+
+  if (data && data.id_pamong) {
+    try {
+      const pamong = await getPamongById(data.id_pamong);
+      data.pamong = pamong;
+    } catch {}
+  }
+
   return data;
 }
 

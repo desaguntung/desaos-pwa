@@ -11,16 +11,31 @@ export interface ChatMessage {
   content: string;
 }
 
-const getStoredKey = (provider: string): string | null => {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem("ai_api_keys");
-  if (!stored) return null;
+import { getApiSettings } from "@/app/actions/api-settings";
+
+const getStoredKey = async (provider: string): Promise<string | null> => {
   try {
-    const keys = JSON.parse(stored);
-    return keys[provider] || null;
-  } catch {
-    return null;
+    const settings = await getApiSettings();
+    if (provider === "groq" && settings.groq) return settings.groq;
+    if (provider === "gemini" && settings.gemini) return settings.gemini;
+    if (provider === "openai" && settings.openai) return settings.openai;
+  } catch (e) {
+    console.warn("Could not load API settings from server action:", e);
   }
+
+  // Fallback for custom browser sessions if provided
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("ai_api_keys");
+    if (stored) {
+      try {
+        const keys = JSON.parse(stored);
+        return keys[provider] || null;
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
 };
 
 const getVillageContext = async () => {
@@ -49,7 +64,7 @@ export const generateWithAI = async (
   prompt: string,
   context: string = ""
 ): Promise<AIResponse> => {
-  const apiKey = getStoredKey("groq");
+  const apiKey = await getStoredKey("groq");
   
   if (!apiKey) {
     return { error: "API Key Groq tidak ditemukan. Silakan atur di menu Pengaturan > API & Integrasi." };
@@ -115,7 +130,7 @@ export const chatWithAI = async (
   messages: ChatMessage[],
   currentArticleContext: string = ""
 ): Promise<AIResponse> => {
-  const apiKey = getStoredKey("groq");
+  const apiKey = await getStoredKey("groq");
   if (!apiKey) {
     return { error: "API Key Groq tidak ditemukan." };
   }

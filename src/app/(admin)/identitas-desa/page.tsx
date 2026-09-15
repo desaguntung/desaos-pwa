@@ -317,30 +317,6 @@ export default function IdentitasDesaPage() {
       setKodeKabupaten("");
       setKodeKecamatan("");
     }
-    
-    try {
-      // Re-extract for localstorage info
-      let k_kec = "", k_kab = "", k_prov = "";
-      if (parts.length >= 4) {
-         k_prov = parts[0]; k_kab = parts[1]; k_kec = parts[2];
-      } else if (row.kode_desa.length >= 6 && !row.kode_desa.includes(".")) {
-         k_prov = row.kode_desa.substring(0, 2);
-         k_kab = row.kode_desa.substring(2, 4);
-         k_kec = row.kode_desa.substring(4, 6);
-      }
-
-      const info = {
-        kode_desa: row.kode_desa,
-        nama_desa: row.nama_desa,
-        nama_kecamatan: cleanedKecamatan,
-        nama_kabupaten: cleanedKabupaten,
-        nama_provinsi: cleanedProvinsi,
-        kode_kecamatan: k_kec,
-        kode_kabupaten: k_kab,
-        kode_provinsi: k_prov,
-      };
-      localStorage.setItem("desaOS.infoDesa", JSON.stringify(info));
-    } catch {}
   };
 
   return (

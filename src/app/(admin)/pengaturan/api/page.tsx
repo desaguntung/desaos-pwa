@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { toast } from "sonner";
 import { Eye, EyeOff, Save, Trash2, Key } from "lucide-react";
 
+import { getApiSettings, saveApiSettings } from "@/app/actions/api-settings";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function ApiSettingsPage() {
@@ -16,23 +17,34 @@ export default function ApiSettingsPage() {
   });
   const [showKey, setShowKey] = useState<{ [key: string]: boolean }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Load keys from localStorage on mount
-    const storedKeys = localStorage.getItem("ai_api_keys");
-    if (storedKeys) {
-      try {
-        setKeys(JSON.parse(storedKeys));
-      } catch (e) {
-        console.error("Failed to parse API keys", e);
-      }
-    }
-    setIsLoading(false);
+    getApiSettings()
+      .then((settings) => {
+        setKeys({
+          groq: settings.groq || "",
+          gemini: settings.gemini || "",
+          openai: settings.openai || "",
+        });
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem("ai_api_keys", JSON.stringify(keys));
-    toast.success("API Keys berhasil disimpan di penyimpanan lokal browser.");
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const res = await saveApiSettings(keys);
+      if (res.success) {
+        toast.success("API Keys berhasil disimpan ke database pengaturan aplikasi.");
+      } else {
+        toast.error(`Gagal menyimpan: ${res.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`Terjadi kesalahan: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChange = (provider: string, value: string) => {
