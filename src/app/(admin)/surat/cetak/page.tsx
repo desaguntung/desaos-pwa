@@ -450,7 +450,7 @@ export default function CetakSuratPage() {
           </div>
 
           {/* Canvas Area with independent scroll */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex items-start justify-center custom-scrollbar bg-body-bg">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex items-start justify-center custom-scrollbar bg-neutral-100 dark:bg-black">
             {!isFormComplete ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-secondary-text max-w-xs my-auto">
                 <div className="w-12 h-12 rounded-2xl bg-card-bg border border-border-color shadow-xs flex items-center justify-center text-secondary-text mb-3">
