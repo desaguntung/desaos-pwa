@@ -88,11 +88,13 @@ export function PageHeader({
             </>
           )}
           
-          <div className="hidden md:block">
-            <h1 className="text-lg font-semibold text-primary-text">
+          <div>
+            <h1 className="text-sm md:text-base font-bold tracking-tight text-primary-text line-clamp-1">
               {title}
             </h1>
-            {generateBreadcrumbs()}
+            <div className="hidden md:block">
+              {generateBreadcrumbs()}
+            </div>
           </div>
         </div>
       </div>

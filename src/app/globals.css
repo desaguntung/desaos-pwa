@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
-    /* System Font Stack - Modern & Performant */
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    /* Apple San Francisco Pro / Enterprise System Font Stack */
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     /* Light Mode (Slate/Professional SaaS) */
     --body-bg: #f8fafc; /* Slate-50 */
@@ -135,21 +135,30 @@
 
   body {
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background-color: var(--body-bg);
     color: var(--primary-text);
     font-family: var(--font-sans);
-    font-feature-settings: "cv11", "ss01"; /* Tabular nums & stylistic sets */
+    font-feature-settings: "cv11", "ss01", "ss02", "tnum";
     font-size: 0.875rem; /* 14px */
-    line-height: 1.6; /* Premium Spacing */
-    letter-spacing: -0.01em; /* Apple-like tightness */
+    line-height: 1.5;
+    letter-spacing: -0.011em; /* Apple SF standard tracking */
   }
 
-  h1 { @apply text-2xl font-semibold tracking-tight; }
-  h2 { @apply text-xl font-semibold tracking-tight; }
-  h3 { @apply text-lg font-semibold tracking-tight; }
-  h4 { @apply text-base font-medium tracking-tight; }
-  h5 { @apply text-sm font-medium tracking-tight; }
-  h6 { @apply text-xs font-medium tracking-tight; }
+  /* Apple-standard Typography Hierarchy */
+  h1 { @apply text-2xl font-bold tracking-tight text-primary-text; }
+  h2 { @apply text-xl font-bold tracking-tight text-primary-text; }
+  h3 { @apply text-base lg:text-lg font-semibold tracking-tight text-primary-text; }
+  h4 { @apply text-sm lg:text-base font-semibold tracking-tight text-primary-text; }
+  h5 { @apply text-xs lg:text-sm font-medium tracking-tight text-primary-text; }
+  h6 { @apply text-xs font-semibold tracking-wider uppercase text-secondary-text; }
+
+  /* Tabular Numbers for NIK, KK, Dates, Currency */
+  .tabular-nums, .font-tabular, table, [data-tabular] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
 
   /* Global Focus Ring Reset */
   *, ::before, ::after {
@@ -277,9 +286,9 @@
 }
 
 @theme {
-  /* Fonts */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Fonts - Apple San Francisco Pro & SF Mono */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Semantic Colors */
   --color-body-bg: var(--body-bg);

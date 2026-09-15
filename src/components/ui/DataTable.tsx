@@ -57,7 +57,7 @@ export function DataTable<T extends Record<string, any>>({
           className="overflow-auto custom-scrollbar"
           style={{ maxHeight }}
         >
-          <table className={`w-full text-left relative ${data.length === 0 ? "is-empty" : ""}`}>
+          <table className={`w-full text-left relative tabular-nums ${data.length === 0 ? "is-empty" : ""}`}>
             <thead className="border-b border-border-color h-12 sticky top-0 z-10">
               <tr>
                 {columns.map((col, idx) => (
@@ -85,7 +85,7 @@ export function DataTable<T extends Record<string, any>>({
                 <tr className="empty-row">
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-secondary-text"
+                    className="px-6 py-12 text-center text-secondary-text text-xs"
                   >
                     {emptyMessage}
                   </td>
@@ -95,7 +95,7 @@ export function DataTable<T extends Record<string, any>>({
                   <tr
                     key={(row[keyField as string] as string) || rowIdx}
                     onClick={() => onRowClick && onRowClick(row)}
-                    className={`group transition-colors ${
+                    className={`group transition-colors hover:bg-hover-bg/60 ${
                       onRowClick ? "cursor-pointer" : ""
                     }`}
                   >
