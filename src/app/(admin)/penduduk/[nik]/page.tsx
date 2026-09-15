@@ -8,6 +8,7 @@ import { getResidentByNIK, Resident, deleteResident } from "@/lib/services/pendu
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { toast } from "sonner";
 
 export default function DetailPendudukPage() {
   const router = useRouter();
@@ -43,10 +44,11 @@ export default function DetailPendudukPage() {
     if (confirm("Apakah Anda yakin ingin menghapus data penduduk ini?")) {
       try {
         await deleteResident(resident.id);
+        toast.success("Data penduduk berhasil dihapus");
         router.push("/penduduk");
       } catch (error) {
         console.error("Error deleting resident:", error);
-        alert("Gagal menghapus data penduduk");
+        toast.error("Gagal menghapus data penduduk");
       }
     }
   };

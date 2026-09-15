@@ -18,6 +18,7 @@ import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Editor } from "@/components/editor/Editor";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { toast } from "sonner";
 import { Pagination } from "@/components/ui/Pagination";
 import { 
   CheckCircle2, 
@@ -265,10 +266,11 @@ export default function VerifikasiSuratPage() {
     try {
       await processSuratFlow(selectedSurat.id, action, role, comment);
       setIsSheetOpen(false);
+      toast.success("Aksi berhasil diproses!");
       fetchTasks(); // Refresh list
-    } catch (error) {
+    } catch (error: any) {
       console.error("Action failed", error);
-      alert("Action failed: " + error);
+      toast.error("Gagal memproses aksi: " + (error?.message || error));
     } finally {
       setProcessing(false);
     }
@@ -300,12 +302,13 @@ export default function VerifikasiSuratPage() {
             status: SuratFlowStatus.SIGNED
         }));
         
+        toast.success("Naskah berhasil ditandatangani!");
         setSignMode(mode);
         setSignStep('signed');
         fetchTasks(); // Background refresh
     } catch (e: any) {
         console.error(e);
-        alert("Gagal menandatangani: " + e.message);
+        toast.error("Gagal menandatangani: " + e.message);
     } finally {
         setProcessing(false);
     }
@@ -316,7 +319,7 @@ export default function VerifikasiSuratPage() {
       
       const element = document.querySelector('#surat-preview-wrapper .bg-white');
       if (!element) {
-          alert("Gagal menemukan dokumen untuk didownload. Pastikan preview dokumen sudah muncul.");
+          toast.error("Gagal menemukan dokumen untuk didownload. Pastikan preview dokumen sudah muncul.");
           return;
       }
 
@@ -447,12 +450,12 @@ export default function VerifikasiSuratPage() {
           const html2pdf = (await import("html2pdf.js")).default;
           await (html2pdf as any)().set(opt as any).from(clone).save();
           
-          // Clean up
+           // Clean up
           document.body.removeChild(container);
-          
+          toast.success("Dokumen berhasil diunduh");
       } catch (error: any) {
           console.error("Download failed:", error);
-          alert("Gagal mendownload dokumen: " + error.message);
+          toast.error("Gagal mendownload dokumen: " + error.message);
       } finally {
           setProcessing(false);
       }
@@ -464,7 +467,7 @@ export default function VerifikasiSuratPage() {
 
       const file = e.target.files[0];
       if (file.type !== 'application/pdf') {
-          alert("Hanya file PDF yang diperbolehkan");
+          toast.error("Hanya file PDF yang diperbolehkan");
           return;
       }
 
@@ -507,12 +510,12 @@ export default function VerifikasiSuratPage() {
               }
           }));
           
-          alert("Dokumen berhasil diupload!");
+          toast.success("Dokumen berhasil diupload!");
           setIsSheetOpen(false);
           
       } catch (error: any) {
           console.error("Upload failed:", error);
-          alert("Gagal upload dokumen: " + error.message);
+          toast.error("Gagal upload dokumen: " + error.message);
       } finally {
           setProcessing(false);
       }

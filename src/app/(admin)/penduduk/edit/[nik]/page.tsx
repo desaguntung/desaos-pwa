@@ -7,6 +7,7 @@ import ResidentForm from "@/components/ResidentForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { toast } from "sonner";
 
 export default function EditPendudukPage() {
   const router = useRouter();
@@ -47,10 +48,11 @@ export default function EditPendudukPage() {
     try {
       setIsSubmitting(true);
       await updateResident(resident.id, data);
+      toast.success("Data penduduk berhasil diperbarui");
       router.push("/penduduk");
     } catch (error: any) {
       console.error("Error updating resident:", error);
-      alert(error.message || "Gagal memperbarui data penduduk");
+      toast.error(error.message || "Gagal memperbarui data penduduk");
     } finally {
       setIsSubmitting(false);
     }

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { getLogSuratDetail, getIdentitasDesa, buildSuratPreviewData } from "@/lib/services/surat";
 import { Button } from "@/components/ui/Button";
 import { Printer } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ViewSuratPage() {
   const params = useParams();
@@ -28,15 +29,15 @@ export default function ViewSuratPage() {
         getLogSuratDetail(suratId),
         getIdentitasDesa()
       ]);
+
+      if (!log) throw new Error("Surat tidak ditemukan");
       
       setData(log);
 
-      // Build 100% Real Hydrated Preview Data
       const pData = buildSuratPreviewData({
         surat: {
-          id: log.id,
-          no_surat: log.no_surat,
           nomor: log.no_surat,
+          no_surat: log.no_surat,
           tanggal: log.tanggal,
           tanggal_surat: log.tanggal,
           nama_surat: log.nama_surat || log.surat_formats?.nama,
@@ -53,7 +54,7 @@ export default function ViewSuratPage() {
       setPreviewData(pData);
     } catch (error) {
       console.error("Error loading surat:", error);
-      alert("Gagal memuat data surat");
+      toast.error("Gagal memuat data surat");
     } finally {
       setLoading(false);
     }

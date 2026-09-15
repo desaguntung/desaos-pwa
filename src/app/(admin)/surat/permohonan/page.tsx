@@ -28,11 +28,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from "@/components/ui/DropdownMenu";
-import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { toast } from "sonner";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 
 export default function PermohonanSuratPage() {
@@ -191,7 +191,7 @@ export default function PermohonanSuratPage() {
               <DropdownMenuLabel>Aksi Permohonan</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => alert(`Fitur detail untuk ID ${row.id} belum tersedia`)}
+                onClick={() => toast.info(`Fitur detail untuk ID ${row.id} sedang dalam sinkronisasi.`)}
               >
                 <Eye className="w-3.5 h-3.5 mr-2" />
                 Lihat Detail

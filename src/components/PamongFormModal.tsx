@@ -5,6 +5,7 @@ import { X, User, Save, Search, Briefcase, FileText, Settings, UserCheck } from 
 import { Pamong } from "@/lib/services/surat";
 import { Resident } from "@/lib/services/penduduk";
 import ResidentPickerModal from "./ResidentPickerModal";
+import { toast } from "sonner";
 
 interface PamongFormModalProps {
   open: boolean;
@@ -84,10 +85,11 @@ export default function PamongFormModal({
       if (!dataToSend.id_pend) delete dataToSend.id_pend;
       
       await onSave(dataToSend);
+      toast.success("Data aparatur desa berhasil disimpan");
       onClose();
     } catch (error: any) {
       console.error("Error saving pamong:", error);
-      alert(`Gagal menyimpan data aparatur: ${error.message || JSON.stringify(error)}`);
+      toast.error(`Gagal menyimpan data aparatur: ${error.message || "Terjadi kesalahan"}`);
     } finally {
       setLoading(false);
     }

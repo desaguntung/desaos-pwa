@@ -26,6 +26,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { DataTable, Column, MobileConfig } from "@/components/ui/DataTable";
+import { toast } from "sonner";
 
 export default function SuratMasukPage() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function SuratMasukPage() {
       setSuratList(data || []);
     } catch (error) {
       console.error("Error fetching surat masuk:", error);
+      toast.error("Gagal memuat data surat masuk");
     } finally {
       setLoading(false);
     }
@@ -61,9 +63,10 @@ export default function SuratMasukPage() {
       try {
         await deleteSuratMasuk(id);
         setSuratList((prev) => prev.filter((s) => s.id !== id));
+        toast.success("Surat masuk berhasil dihapus");
       } catch (error) {
         console.error("Error deleting surat:", error);
-        alert("Gagal menghapus surat");
+        toast.error("Gagal menghapus surat masuk");
       }
     }
   };

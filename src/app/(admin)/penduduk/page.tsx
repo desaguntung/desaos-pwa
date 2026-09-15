@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
+import { toast } from "sonner";
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";
@@ -137,10 +138,11 @@ export default function PendudukPage() {
     if (confirm(`Apakah Anda yakin ingin menghapus data penduduk "${nama}"?`)) {
       try {
         await deleteResident(id);
+        toast.success(`Data penduduk "${nama}" berhasil dihapus`);
         fetchResidents();
       } catch (error) {
         console.error("Error deleting resident:", error);
-        alert("Gagal menghapus data penduduk");
+        toast.error("Gagal menghapus data penduduk");
       }
     }
   };

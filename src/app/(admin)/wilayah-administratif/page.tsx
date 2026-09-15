@@ -45,6 +45,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { Badge } from "@/components/ui/Badge";
 import ResidentPickerModal from "@/components/ResidentPickerModal";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // --- Types ---
 
@@ -206,7 +207,7 @@ export default function WilayahAdministratifPage() {
       setResidents(residentList);
     } catch (error) {
       console.error("Error loading data:", error);
-      alert("Gagal memuat data wilayah.");
+      toast.error("Gagal memuat data wilayah.");
     } finally {
       setLoading(false);
     }
@@ -263,7 +264,7 @@ export default function WilayahAdministratifPage() {
 
   const handleSubmitDusun = async () => {
     if (!dusunForm.nama.trim()) {
-      alert("Nama dusun wajib diisi.");
+      toast.error("Nama dusun wajib diisi.");
       return;
     }
     
@@ -280,16 +281,18 @@ export default function WilayahAdministratifPage() {
           .update(payload)
           .eq("id", dusunForm.id);
         if (error) throw error;
+        toast.success("Data dusun berhasil diperbarui");
       } else {
         const { error } = await supabase.from("wilayah_dusun").insert(payload);
         if (error) throw error;
+        toast.success("Dusun baru berhasil ditambahkan");
       }
 
       await fetchData();
       setIsDusunSheetOpen(false);
     } catch (error) {
       console.error("Error saving dusun:", error);
-      alert("Gagal menyimpan data dusun.");
+      toast.error("Gagal menyimpan data dusun.");
     }
   };
 
@@ -303,17 +306,18 @@ export default function WilayahAdministratifPage() {
             .eq("dusun_id", id);
             
         if ((count ?? 0) > 0) {
-            alert("Dusun tidak dapat dihapus karena masih memiliki RW.");
+            toast.error("Dusun tidak dapat dihapus karena masih memiliki RW.");
             return;
         }
 
         const { error } = await supabase.from("wilayah_dusun").delete().eq("id", id);
         if (error) throw error;
         
+        toast.success("Dusun berhasil dihapus");
         await fetchData();
     } catch (error) {
         console.error("Error deleting dusun:", error);
-        alert("Gagal menghapus dusun.");
+        toast.error("Gagal menghapus dusun.");
     }
   };
 
@@ -340,10 +344,11 @@ export default function WilayahAdministratifPage() {
           .eq("id", headPickerContext.dusunId);
         
         if (error) throw error;
+        toast.success("Kepala Dusun berhasil diperbarui");
         await fetchData();
       } catch (err) {
         console.error("Failed to update head directly:", err);
-        alert("Gagal memperbarui Kepala Dusun.");
+        toast.error("Gagal memperbarui Kepala Dusun.");
       }
     }
     setShowHeadPicker(false);
@@ -712,9 +717,10 @@ function StructureManager({
         });
         
         if (error) {
-            alert("Gagal menambah RW");
+            toast.error("Gagal menambah RW");
             console.error(error);
         } else {
+            toast.success("RW berhasil ditambahkan");
             onUpdate();
         }
     };
@@ -723,8 +729,9 @@ function StructureManager({
         if (!confirm("Hapus RW ini? Pastikan tidak ada RT di dalamnya.")) return;
         const { error } = await supabase.from("wilayah_rw").delete().eq("id", rwId);
         if (error) {
-            alert("Gagal menghapus RW (Mungkin masih ada RT)");
+            toast.error("Gagal menghapus RW (Mungkin masih ada RT)");
         } else {
+            toast.success("RW berhasil dihapus");
             onUpdate();
         }
     };
@@ -792,8 +799,9 @@ function RwItem({
         });
         
         if (error) {
-            alert("Gagal menambah RT");
+            toast.error("Gagal menambah RT");
         } else {
+            toast.success("RT berhasil ditambahkan");
             onUpdate();
             setIsExpanded(true);
         }
@@ -803,8 +811,9 @@ function RwItem({
         if (!confirm("Hapus RT ini?")) return;
         const { error } = await supabase.from("wilayah_rt").delete().eq("id", rtId);
         if (error) {
-            alert("Gagal menghapus RT");
+            toast.error("Gagal menghapus RT");
         } else {
+            toast.success("RT berhasil dihapus");
             onUpdate();
         }
     };

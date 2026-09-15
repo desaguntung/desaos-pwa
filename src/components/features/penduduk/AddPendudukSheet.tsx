@@ -15,6 +15,7 @@ import {
 import ResidentForm from "../../ResidentForm";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Resident } from "@/lib/services/penduduk";
+import { toast } from "sonner";
 
 export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: () => void, trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -33,7 +34,7 @@ export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: (
         .single();
         
       if (existing) {
-        alert("NIK sudah terdaftar!");
+        toast.error("NIK sudah terdaftar dalam sistem!");
         setIsSubmitting(false);
         return;
       }
@@ -46,12 +47,13 @@ export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: (
 
       if (error) throw error;
 
+      toast.success(`Data penduduk "${data.nama}" berhasil disimpan`);
       setOpen(false);
       if (onSuccess) onSuccess();
       
     } catch (error: any) {
       console.error("Error saving:", error);
-      alert(error.message || "Gagal menyimpan data");
+      toast.error(error.message || "Gagal menyimpan data penduduk");
     } finally {
       setIsSubmitting(false);
     }

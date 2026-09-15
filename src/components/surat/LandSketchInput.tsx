@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Move, Ruler, RotateCcw, Save, X, Trash2, User, Map as MapIcon, SplitSquareHorizontal, Waves, Anchor, Sunset } from "lucide-react";
 import { LandSketchCanvas } from "../shared/LandSketchCanvas";
+import { toast } from "sonner";
 
 interface LandSketchInputProps {
   value?: any;
@@ -183,7 +184,7 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
   const deleteVertex = () => {
      if (selectedEdgeIndex === null) return;
      if (points.length <= 3) {
-         alert("Minimal harus ada 3 titik sudut untuk membentuk area.");
+         toast.error("Minimal harus ada 3 titik sudut untuk membentuk area.");
          return;
      }
      

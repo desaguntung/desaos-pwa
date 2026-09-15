@@ -46,6 +46,8 @@ import FormatPickerModal from "@/components/FormatPickerModal";
 import LandSketchInput from "@/components/surat/LandSketchInput";
 import { Editor } from "@/components/editor/Editor";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { toast } from "sonner";
+import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 
 export default function CetakSuratPage() {
   const router = useRouter();
@@ -220,7 +222,7 @@ export default function CetakSuratPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedResident || !selectedFormat) {
-      alert("Mohon lengkapi data surat (Pilih Penduduk & Format Surat terlebih dahulu).");
+      toast.error("Mohon lengkapi data surat (Pilih Penduduk & Format Surat terlebih dahulu).");
       return;
     }
 
@@ -230,13 +232,28 @@ export default function CetakSuratPage() {
         await incrementNomorSurat(counterKey);
       }
 
+      const supabase = createSupabaseBrowserClient();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+
+      let userId = 1;
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+        // Fallback or use standard integer user identifier
+        userId = 1;
+      }
+
       const pamongId = selectedPamong ? parseInt(selectedPamong) : (selectedPamongObj ? selectedPamongObj.pamong_id : 1);
 
       await createLogSurat({
         id_format_surat: selectedFormat.id!,
         id_pend: selectedResident.id,
         id_pamong: pamongId,
-        id_user: 1,
+        id_user: userId,
         tanggal: new Date().toISOString(),
         no_surat: nomorSurat || `SURAT/${new Date().getFullYear()}/${Math.floor(Math.random() * 1000)}`,
         nama_surat: selectedFormat.nama,
@@ -246,14 +263,14 @@ export default function CetakSuratPage() {
         form_data: dynamicValues
       });
 
-      alert("Surat berhasil diproses dan dikirim ke antrian Verifikasi!");
+      toast.success("Surat berhasil diproses dan dikirim ke antrian Verifikasi!");
       router.push("/surat/verifikasi");
     } catch (error: any) {
       console.error("Error creating surat:", error);
       if (error?.code === '42703' && error?.message?.includes('form_data')) {
-         alert("GAGAL: Kolom 'form_data' tidak ditemukan di database.\n\nMohon jalankan script SQL 'supabase_schema_update_form_data.sql' di Supabase SQL Editor.");
+         toast.error("Kolom 'form_data' tidak ditemukan di database. Mohon jalankan script update schema di Supabase.");
       } else {
-         alert("Gagal memproses surat. Silakan coba lagi atau hubungi administrator.");
+         toast.error("Gagal memproses surat. Silakan coba lagi atau hubungi administrator.");
       }
     } finally {
       setLoading(false);

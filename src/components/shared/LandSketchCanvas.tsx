@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Move, Plus, Trash, RotateCcw, Type, Check, Ruler, ZoomIn, ZoomOut, Info } from "lucide-react";
+import { toast } from "sonner";
 
 // ==========================================
 // Helper Functions (Geometry)
@@ -164,7 +165,7 @@ export const LandSketchCanvas = ({
     if (readOnly || !onChange) return;
     if (e) e.stopPropagation();
     if (points.length <= 3) {
-        alert("Minimal harus ada 3 titik.");
+        toast.error("Minimal harus ada 3 titik.");
         return;
     }
 

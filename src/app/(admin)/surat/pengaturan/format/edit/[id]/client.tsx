@@ -3,6 +3,7 @@
 import Editor from "@/components/editor/Editor";
 import { updateFormatTemplate } from "@/actions/surat";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { toast } from "sonner";
 
 interface EditFormatClientProps {
   initialJson?: string;
@@ -21,10 +22,10 @@ export default function EditFormatClient({
   const handleSave = async (json: string) => {
     try {
       await updateFormatTemplate(id, json);
-      // Success state is handled by the Editor Header component
+      toast.success("Template naskah berhasil disimpan!");
     } catch (error) {
       console.error("Failed to save template:", error);
-      alert("Gagal menyimpan template. Silakan coba lagi.");
+      toast.error("Gagal menyimpan template. Silakan coba lagi.");
     }
   };
 

@@ -44,6 +44,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/Dialog";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export default function KeluargaPage() {
@@ -128,10 +129,11 @@ export default function KeluargaPage() {
     if (confirm(`Yakin ingin menghapus KK ${keluarga.nomorKK}? Semua anggota akan dihapus nomor KK-nya.`)) {
       try {
         await deleteKeluarga(keluarga.nomorKK, keluarga.members);
+        toast.success(`Data KK ${keluarga.nomorKK} berhasil dihapus`);
         await fetchData(); // Refresh data
       } catch (error) {
         console.error("Failed to delete keluarga", error);
-        alert("Gagal menghapus data keluarga.");
+        toast.error("Gagal menghapus data keluarga.");
       }
     }
   };
