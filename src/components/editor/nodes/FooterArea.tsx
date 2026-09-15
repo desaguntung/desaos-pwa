@@ -6,7 +6,7 @@ export const FooterArea = ({ children }: { children?: React.ReactNode }) => {
   
   return (
     <div 
-      ref={connect}
+      ref={(ref) => { if (ref) connect(ref); }}
       id="footer-area-portal"
       className="absolute bottom-0 left-0 right-0 min-h-[100px] flex flex-col justify-end items-center"
       style={{

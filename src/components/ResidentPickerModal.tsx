@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/Button";
 interface ResidentPickerModalProps {
   open: boolean;
   residents?: Resident[];
-  onClose: () => void;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onSelect: (resident: Resident) => void;
   onlyUnassigned?: boolean; // Filters for no_kk
   onlyUnassignedHousehold?: boolean; // Filters for no rumah_tangga_id
@@ -20,10 +21,15 @@ export default function ResidentPickerModal({
   open,
   residents = [],
   onClose,
+  onOpenChange,
   onSelect,
   onlyUnassigned = false,
   onlyUnassignedHousehold = false,
 }: ResidentPickerModalProps) {
+  const handleClose = () => {
+    if (onClose) onClose();
+    if (onOpenChange) onOpenChange(false);
+  };
   const [searchTerm, setSearchTerm] = useState("");
   const [localResidents, setLocalResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(false);
@@ -154,7 +160,7 @@ export default function ResidentPickerModal({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onClose}
+            onClick={handleClose}
             className="text-xs font-medium text-secondary-text hover:text-primary-text"
           >
             Tutup (Esc)

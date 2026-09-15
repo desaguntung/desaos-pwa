@@ -183,7 +183,7 @@ export default function PortalNewsCard({
   // Default Vertical
   return (
     <Link 
-      href={`/berita/${item.slug}`}
+      href={item.href || (item.slug ? `/berita/${item.slug}` : "#")}
       className="group relative flex flex-col overflow-hidden rounded-2xl bg-card-bg dark:bg-zinc-900 border border-border-color/30 dark:border-zinc-800 shadow-sm transition-all duration-300 hover:shadow-md h-full"
     >
       <div className={cn("relative mb-4 w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-zinc-800 shadow-sm", imageHeight)}>

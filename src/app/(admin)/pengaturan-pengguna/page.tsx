@@ -56,8 +56,8 @@ export default function PengaturanPenggunaPage() {
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
   const sections = [
-    { id: "tambah-user", label: "Tambah Pengguna", icon: UserPlus },
-    ...(currentRole === "super_admin" ? [{ id: "daftar-user", label: "Daftar Pengguna", icon: Users }] : []),
+    { id: "tambah-user", title: "Tambah Pengguna", icon: UserPlus },
+    ...(currentRole === "super_admin" ? [{ id: "daftar-user", title: "Daftar Pengguna", icon: Users }] : []),
   ];
 
   const scrollToSection = (id: string) => {

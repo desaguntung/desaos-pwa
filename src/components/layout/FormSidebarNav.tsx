@@ -6,14 +6,16 @@ import { ChevronRight } from "lucide-react";
 
 export interface NavSection {
   id: string;
-  title: string;
+  title?: string;
+  label?: string;
   icon?: React.ElementType;
 }
 
 interface FormSidebarNavProps {
   sections: NavSection[];
   activeSection: string;
-  onSectionClick: (id: string) => void;
+  onSectionClick?: (id: string) => void;
+  onSectionChange?: (id: string) => void;
   title?: string;
   className?: string;
 }
@@ -22,9 +24,14 @@ export function FormSidebarNav({
   sections,
   activeSection,
   onSectionClick,
+  onSectionChange,
   title = "Navigasi Form",
   className,
 }: FormSidebarNavProps) {
+  const handleClick = (id: string) => {
+    if (onSectionClick) onSectionClick(id);
+    if (onSectionChange) onSectionChange(id);
+  };
   return (
     <nav className={cn("space-y-1", className)}>
       {title && (
@@ -43,7 +50,7 @@ export function FormSidebarNav({
               key={section.id}
               onClick={(e) => {
                 e.preventDefault();
-                onSectionClick(section.id);
+                handleClick(section.id);
               }}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 group",
@@ -61,7 +68,7 @@ export function FormSidebarNav({
                     )} 
                   />
                 )}
-                <span>{section.title}</span>
+                <span>{section.title || section.label}</span>
               </div>
               
               {isActive && (

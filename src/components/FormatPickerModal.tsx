@@ -1,36 +1,63 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileText, Search, X, Check } from "lucide-react";
 import { FormatSurat } from "@/lib/services/surat";
+import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { InputField } from "@/components/ui/FormFields";
 import { Button } from "@/components/ui/Button";
 
 interface FormatPickerModalProps {
   open: boolean;
-  formats: FormatSurat[];
-  onClose: () => void;
+  formats?: FormatSurat[];
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onSelect: (format: FormatSurat) => void;
 }
 
 export default function FormatPickerModal({
   open,
-  formats,
+  formats: initialFormats,
   onClose,
+  onOpenChange,
   onSelect,
 }: FormatPickerModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [localFormats, setLocalFormats] = useState<FormatSurat[]>([]);
+
+  const handleClose = () => {
+    if (onClose) onClose();
+    if (onOpenChange) onOpenChange(false);
+  };
+
+  useEffect(() => {
+    if (open && !initialFormats) {
+      const fetchFormats = async () => {
+        const supabase = createSupabaseBrowserClient();
+        const { data } = await supabase
+          .from("surat_formats")
+          .select("*")
+          .order("nama", { ascending: true });
+        if (data) {
+          setLocalFormats(data as FormatSurat[]);
+        }
+      };
+      fetchFormats();
+    }
+  }, [open, initialFormats]);
+
+  const activeFormats = initialFormats || localFormats;
 
   const filteredFormats = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return formats;
+    if (!term) return activeFormats;
     
-    return formats.filter((format) => {
+    return activeFormats.filter((format) => {
       const nama = format.nama?.toLowerCase() ?? "";
       const kode = format.kode_surat?.toLowerCase() ?? "";
       return nama.includes(term) || kode.includes(term);
     });
-  }, [formats, searchTerm]);
+  }, [activeFormats, searchTerm]);
 
   if (!open) return null;
 
@@ -43,14 +70,14 @@ export default function FormatPickerModal({
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-zinc-700" />
             <h3 className="text-sm font-semibold text-zinc-900">
-              Pilih Jenis Surat <span className="text-zinc-400 font-normal">({formats.length})</span>
+              Pilih Jenis Surat <span className="text-zinc-400 font-normal">({activeFormats.length})</span>
             </h3>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={handleClose}
             className="text-zinc-400 hover:text-zinc-600"
           >
             <X className="w-4 h-4" />
@@ -76,7 +103,7 @@ export default function FormatPickerModal({
 
         {/* List */}
         <div className="flex-1 overflow-y-auto p-2">
-          {formats.length === 0 ? (
+          {activeFormats.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               <div className="w-12 h-12 bg-zinc-50 rounded-full flex items-center justify-center mb-3 border border-zinc-100">
                 <FileText className="w-6 h-6 text-zinc-300" />
@@ -145,7 +172,7 @@ export default function FormatPickerModal({
             type="button"
             variant="secondary"
             size="sm"
-            onClick={onClose}
+            onClick={handleClose}
           >
             Batal
           </Button>

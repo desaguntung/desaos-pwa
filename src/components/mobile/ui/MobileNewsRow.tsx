@@ -5,14 +5,14 @@ import Link from "next/link";
 import { Calendar, ArrowRight, Clock } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 export interface NewsItem {
   id?: string | number;
   slug?: string;
   title: string;
   excerpt: string;
-  date: string;
+  date?: string;
   author?: string;
   imageSrc: string;
   category?: string;
@@ -71,7 +71,8 @@ export default function MobileNewsRow({ items }: MobileNewsRowProps) {
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-";
     try {
       // Assuming dateStr is in a standard format or Indonesian format
       // We'll try to parse it and format to dd mm yyyy

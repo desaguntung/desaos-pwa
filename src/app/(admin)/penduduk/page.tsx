@@ -197,7 +197,7 @@ export default function PendudukPage() {
   const currentData = filteredResidents.slice(startIndex, endIndex);
 
   // Helper function for status badge color
-  const getBadgeVariant = (status: string | null): "success" | "error" | "info" | "default" => {
+  const getBadgeVariant = (status?: string | null): "success" | "error" | "info" | "default" => {
     if (!status) return "success";
     const s = status.toUpperCase();
     if (["MATI", "PINDAH", "HILANG", "MENINGGAL"].includes(s)) return "error";

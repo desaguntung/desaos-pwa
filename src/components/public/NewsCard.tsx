@@ -6,11 +6,14 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 export interface NewsItem {
+  id?: string | number;
+  slug?: string;
   title: string;
   excerpt: string;
   href: string;
   imageSrc: string;
   tag?: string;
+  category?: string;
   date?: string;
   views?: number;
 }

@@ -188,7 +188,7 @@ export default function PengaturanSuratPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-64 group">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-text group-focus-within:text-blue-500 transition-colors" />
-              <InputField
+              <Input
                 placeholder="Cari Nama atau Kode Surat..."
                 className="pl-9 h-9 text-xs"
                 value={searchTerm}

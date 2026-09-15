@@ -37,6 +37,7 @@ export interface Resident {
   cacat_fisik_mental?: string;
   sakit_menahun?: string;
   akseptor_kb?: string;
+  cara_kb_id?: number | null;
   status_kehamilan?: string;
   status_ekonomi_dtks?: string;
   penghasilan_rata_rata?: string;
@@ -83,6 +84,7 @@ export interface Resident {
   no_kitas?: string;
   tgl_berakhir_paspor?: string;
   akta_perceraian?: string;
+  akta_perkawinan?: string;
   tanggal_perceraian?: string;
   no_akta_nikah?: string;
   cara_hubung_warga?: string;

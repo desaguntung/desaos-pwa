@@ -19,21 +19,30 @@ interface BaseFieldProps {
   description?: string;
 }
 
-interface InputFieldProps extends BaseFieldProps, React.InputHTMLAttributes<HTMLInputElement> {}
+interface InputFieldProps extends BaseFieldProps, React.InputHTMLAttributes<HTMLInputElement> {
+  icon?: React.ReactNode;
+}
 
 export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
-  ({ label, required, error, className, description, ...props }, ref) => (
+  ({ label, required, error, className, description, icon, ...props }, ref) => (
     <div className="space-y-1.5">
       {label && (
         <label className="block text-xs font-medium text-primary-text">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      <Input
-        ref={ref}
-        className={cn(error && "border-red-500 focus-visible:ring-red-500", className)}
-        {...props}
-      />
+      <div className="relative">
+        {icon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {icon}
+          </div>
+        )}
+        <Input
+          ref={ref}
+          className={cn(icon && "pl-9", error && "border-red-500 focus-visible:ring-red-500", className)}
+          {...props}
+        />
+      </div>
       {description && <p className="text-xs text-secondary-text">{description}</p>}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
@@ -64,12 +73,12 @@ export const TextAreaField = React.forwardRef<HTMLTextAreaElement, TextAreaField
 TextAreaField.displayName = "TextAreaField";
 
 interface SelectOption {
-  value: string;
+  value: string | number;
   label: string;
 }
 
 interface SelectFieldProps extends BaseFieldProps {
-  value?: string;
+  value?: string | number;
   onValueChange?: (value: string) => void;
   onChange?: (value: string) => void;
   options: SelectOption[];
@@ -96,13 +105,13 @@ export const SelectField = ({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
     )}
-    <Select value={value} onValueChange={onChange || onValueChange || (() => {})}>
+    <Select value={value !== undefined ? String(value) : undefined} onValueChange={onChange || onValueChange || (() => {})}>
       <SelectTrigger disabled={disabled} className={cn(error && "border-red-500 focus:ring-red-500", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={String(opt.value)} value={String(opt.value)}>
             {opt.label}
           </SelectItem>
         ))}
@@ -143,12 +152,24 @@ export const DatePickerField = React.forwardRef<HTMLInputElement, InputFieldProp
 );
 DatePickerField.displayName = "DatePickerField";
 
-export const SectionTitle = ({ title, icon: Icon, description }: { title: string; icon?: any; description?: string }) => (
-  <div className="pb-4 mb-6 border-b border-border-color">
+export const SectionTitle = ({
+  title,
+  icon: Icon,
+  description,
+  subtitle,
+  className,
+}: {
+  title: string;
+  icon?: any;
+  description?: string;
+  subtitle?: string;
+  className?: string;
+}) => (
+  <div className={cn("pb-4 mb-6 border-b border-border-color", className)}>
     <div className="flex items-center gap-2 mb-1">
       {Icon && <Icon className="w-4 h-4 text-accent" />}
       <h3 className="text-lg font-semibold text-primary-text">{title}</h3>
     </div>
-    {description && <p className="text-sm text-secondary-text">{description}</p>}
+    {(description || subtitle) && <p className="text-sm text-secondary-text">{description || subtitle}</p>}
   </div>
 );

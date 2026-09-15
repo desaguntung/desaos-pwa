@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
     serverSourceMaps: true,
   },
   productionBrowserSourceMaps: false,
-  devIndicators: {
-    buildActivity: false,
-    appIsrStatus: false,
-  },
   images: {
     remotePatterns: [
       {

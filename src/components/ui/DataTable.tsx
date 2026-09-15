@@ -12,10 +12,10 @@ export interface Column<T> {
 }
 
 export interface MobileConfig<T> {
-  titleKey: keyof T | ((row: T) => React.ReactNode);
-  subtitleKey?: keyof T | ((row: T) => React.ReactNode);
-  imageKey?: keyof T; // If provided, assumes URL string
-  statusKey?: keyof T | ((row: T) => React.ReactNode);
+  titleKey: keyof T | string | ((row: T) => React.ReactNode);
+  subtitleKey?: keyof T | string | ((row: T) => React.ReactNode);
+  imageKey?: keyof T | string; // If provided, assumes URL string
+  statusKey?: keyof T | string | ((row: T) => React.ReactNode);
   action?: (row: T) => React.ReactNode;
 }
 
@@ -26,6 +26,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   keyField?: keyof T; // Unique ID field, defaults to 'id'
   loading?: boolean;
+  isLoading?: boolean;
   maxHeight?: string;
   emptyMessage?: React.ReactNode;
 }
@@ -37,9 +38,11 @@ export function DataTable<T extends Record<string, any>>({
   onRowClick,
   keyField = "id",
   loading = false,
+  isLoading,
   maxHeight = "calc(100vh - 420px)", // Default height adjusted to ensure pagination is visible and not touching
   emptyMessage = "No data available.",
 }: DataTableProps<T>) {
+  const isTableLoading = loading || isLoading || false;
   
   // Helper to get value from accessor
   const getValue = (row: T, accessor: keyof T | string) => {
@@ -68,7 +71,7 @@ export function DataTable<T extends Record<string, any>>({
               </tr>
             </thead>
             <tbody className="divide-y divide-border-color">
-              {loading ? (
+              {isTableLoading ? (
                 Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="loading-row">
                     {columns.map((_, colIdx) => (
@@ -116,7 +119,7 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Mobile View (below md) */}
       <div className="md:hidden space-y-0 divide-y divide-border-color border-t border-b border-border-color bg-card-bg">
-        {loading ? (
+        {isTableLoading ? (
           Array.from({ length: 3 }).map((_, idx) => (
             <div key={idx} className="p-4 flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />

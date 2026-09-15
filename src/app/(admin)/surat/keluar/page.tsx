@@ -378,7 +378,7 @@ export default function SuratKeluarPage() {
                 <DropdownMenuSeparator />
                 
                 <DropdownMenuItem 
-                  onClick={() => handleDelete(surat.id!)}
+                  onClick={() => confirmDelete(surat)}
                   className="text-error-text focus:text-error-text focus:bg-error-bg/10"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-2" />

@@ -50,9 +50,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 
-// @ts-ignore
-import html2pdf from "html2pdf.js";
-
 // Helper for status badges
 const getStatusBadge = (status: number) => {
   switch (status) {
@@ -448,7 +445,9 @@ export default function VerifikasiSuratPage() {
               }
           };
 
-          await html2pdf().set(opt as any).from(clone).save();
+          // @ts-ignore
+          const html2pdf = (await import("html2pdf.js")).default;
+          await (html2pdf as any)().set(opt as any).from(clone).save();
           
           // Clean up
           document.body.removeChild(container);

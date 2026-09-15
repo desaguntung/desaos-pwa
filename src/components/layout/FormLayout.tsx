@@ -4,7 +4,7 @@ import React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface FormLayoutProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   backButtonHref?: string;
   actions?: React.ReactNode;
@@ -14,7 +14,7 @@ interface FormLayoutProps {
 }
 
 export function FormLayout({
-  title,
+  title = "Formulir",
   subtitle,
   backButtonHref,
   actions,

@@ -182,7 +182,7 @@ export default async function VerificationPage(props: { params: Promise<{ id: st
   const StatusIcon = status.icon;
 
   // Modern Styles
-  const themes = {
+  const themeMap = {
     emerald: {
         sidebar: "bg-emerald-600",
         sidebarPattern: "opacity-20",
@@ -215,7 +215,8 @@ export default async function VerificationPage(props: { params: Promise<{ id: st
         subtext: "text-zinc-300",
         button: "bg-primary-text hover:opacity-90 text-card-bg"
     }
-  }[status.theme];
+  };
+  const currentTheme = themeMap[status.theme as keyof typeof themeMap] || themeMap.slate;
 
   return (
     <div className="min-h-screen bg-body-bg flex items-center justify-center p-4 sm:p-6 font-sans text-primary-text">
@@ -224,7 +225,7 @@ export default async function VerificationPage(props: { params: Promise<{ id: st
         <div className="w-full max-w-5xl bg-card-bg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[400px]">
             
             {/* LEFT SIDEBAR: Visual Status Indicator */}
-            <div className={`w-full md:w-[320px] shrink-0 ${themes.sidebar} relative p-8 md:p-10 flex flex-col justify-between overflow-hidden`}>
+            <div className={`w-full md:w-[320px] shrink-0 ${currentTheme.sidebar} relative p-8 md:p-10 flex flex-col justify-between overflow-hidden`}>
                 {/* Abstract Pattern */}
                 <div className={`absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay`}></div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -243,7 +244,7 @@ export default async function VerificationPage(props: { params: Promise<{ id: st
                             <StatusIcon className="w-10 h-10 text-white" />
                         </div>
                         <h2 className="text-2xl font-bold text-white mb-2 leading-tight">{status.title}</h2>
-                        <p className={`text-sm ${themes.subtext} leading-relaxed opacity-90`}>{status.desc}</p>
+                        <p className={`text-sm ${currentTheme.subtext} leading-relaxed opacity-90`}>{status.desc}</p>
                     </div>
                 </div>
 
@@ -360,7 +361,7 @@ export default async function VerificationPage(props: { params: Promise<{ id: st
                             href={downloadUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`w-full md:w-auto px-8 py-4 rounded-xl font-bold shadow-lg shadow-zinc-200/50 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 ${themes.button}`}
+                            className={`w-full md:w-auto px-8 py-4 rounded-xl font-bold shadow-lg shadow-zinc-200/50 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 ${currentTheme.button}`}
                         >
                             <Download className="w-5 h-5" />
                             <span>{isElectronic ? "Unduh Asli" : "Unduh Salinan"}</span>

@@ -497,7 +497,7 @@ export default function ResidentForm({
           {formData.status_kawin && (formData.status_kawin === "Cerai Hidup" || formData.status_kawin === "Cerai Mati") && (
             <>
                <InputField label="No. Akta Perceraian" name="akta_perceraian" value={formData.akta_perceraian || ""} onChange={handleChange} placeholder="Nomor Akta" />
-               <DatePickerField label="Tanggal Perceraian" name="tanggalperceraian" value={formData.tanggalperceraian || ""} onChange={handleChange} />
+               <DatePickerField label="Tanggal Perceraian" name="tanggal_perceraian" value={formData.tanggal_perceraian || ""} onChange={handleChange} />
             </>
           )}
         </div>
