@@ -10,7 +10,13 @@ import {
   RotateCw,
   Eye,
   Send,
-  MessageSquare
+  MessageSquare,
+  Printer,
+  X,
+  CheckCircle2,
+  Calendar,
+  MapPin,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -21,6 +27,7 @@ import {
   createLogSurat,
   incrementNomorSurat,
   generateNomorSurat,
+  buildSuratPreviewData,
   FormatSurat,
   Pamong,
   IdentitasDesa
@@ -33,6 +40,7 @@ import LandSketchInput from "@/components/surat/LandSketchInput";
 import { FormLayout } from "@/components/layout/FormLayout";
 import { FormSidebarNav } from "@/components/layout/FormSidebarNav";
 import { InputField, TextAreaField, SelectField, SectionTitle } from "@/components/ui/FormFields";
+import { Editor } from "@/components/editor/Editor";
 
 export default function CetakSuratPage() {
   const router = useRouter();
@@ -108,9 +116,7 @@ export default function CetakSuratPage() {
   // Parse template and generate number when format changes
   useEffect(() => {
     if (selectedFormat?.template) {
-      console.log("Parsing template for fields...", selectedFormat.id);
       const fields = extractFieldsFromTemplate(selectedFormat.template);
-      console.log("Extracted fields:", fields);
       setDynamicFields(fields);
       
       // Initialize values
@@ -150,6 +156,16 @@ export default function CetakSuratPage() {
     try {
       const pamongs = await getPamong();
       setPamongList(pamongs || []);
+      
+      // Auto-select active Kepala Desa or Penandatangan
+      if (pamongs && pamongs.length > 0) {
+        const defaultPamong = pamongs.find(p => p.pamong_ttd === 1 && p.pamong_status === 1) 
+          || pamongs.find(p => p.jabatan_id === 1)
+          || pamongs[0];
+        if (defaultPamong) {
+          setSelectedPamong(String(defaultPamong.pamong_id));
+        }
+      }
     } catch (error) {
       console.error("Error fetching pamongs:", error);
       setPamongList([]);
@@ -175,6 +191,26 @@ export default function CetakSuratPage() {
     setIsFormatPickerOpen(false);
   };
 
+  const selectedPamongObj = pamongList.find(p => String(p.pamong_id) === String(selectedPamong))
+    || pamongList.find(p => p.pamong_ttd === 1)
+    || pamongList[0];
+
+  const currentPreviewData = buildSuratPreviewData({
+    surat: {
+      nomor: nomorSurat || "[Nomor Surat Akan Digenerate]",
+      no_surat: nomorSurat || "[Nomor Surat Akan Digenerate]",
+      tanggal: new Date(),
+      tanggal_surat: new Date(),
+      nama_surat: selectedFormat?.nama || "Surat Pelayanan",
+      kode: selectedFormat?.kode_surat || "000",
+      keterangan: keterangan,
+    },
+    resident: selectedResident,
+    pamong: selectedPamongObj,
+    identitasDesa: identitasDesa,
+    formData: dynamicValues,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedResident || !selectedFormat) {
@@ -188,7 +224,7 @@ export default function CetakSuratPage() {
         await incrementNomorSurat(counterKey);
       }
 
-      const pamongId = selectedPamong ? parseInt(selectedPamong) : (pamongList.length > 0 ? pamongList[0].pamong_id : 1);
+      const pamongId = selectedPamong ? parseInt(selectedPamong) : (selectedPamongObj ? selectedPamongObj.pamong_id : 1);
 
       await createLogSurat({
         id_format_surat: selectedFormat.id!,
@@ -204,7 +240,7 @@ export default function CetakSuratPage() {
         form_data: dynamicValues
       });
 
-      alert("Surat berhasil diproses dan dikirim ke Verifikasi!");
+      alert("Surat berhasil diproses dan dikirim ke antrian Verifikasi!");
       router.push("/surat/verifikasi");
     } catch (error: any) {
       console.error("Error creating surat:", error);
@@ -253,7 +289,7 @@ export default function CetakSuratPage() {
     <>
       <FormLayout 
         title="Cetak Surat" 
-        subtitle="Buat dan cetak surat pelayanan desa"
+        subtitle="Buat dan cetak surat pelayanan desa langsung dari data kependudukan"
         backButtonHref="/surat/keluar"
         actions={formActions}
         sidebar={
@@ -274,7 +310,7 @@ export default function CetakSuratPage() {
           >
             <SectionTitle 
               title="Penerima Surat" 
-              description="Pilih penduduk yang akan menerima surat." 
+              description="Pilih penduduk dari database desa untuk membaca data identitas secara lengkap." 
               icon={User} 
             />
             
@@ -283,9 +319,11 @@ export default function CetakSuratPage() {
                 <InputField
                   label="NIK / Nama Penduduk"
                   value={selectedResident ? `${selectedResident.nik} - ${selectedResident.nama}` : ""}
-                  placeholder="Pilih penduduk..."
+                  placeholder="Klik tombol Cari untuk memilih penduduk..."
                   readOnly
                   required
+                  onClick={() => setIsPickerOpen(true)}
+                  className="cursor-pointer"
                 />
               </div>
               <Button
@@ -295,24 +333,38 @@ export default function CetakSuratPage() {
                 variant="secondary"
               >
                 <Search className="w-3.5 h-3.5" />
-                Cari
+                Cari Penduduk
               </Button>
             </div>
 
             {/* Data Otomatis (Dari Database) */}
             {selectedResident && (
-              <div className="p-4 bg-body-bg rounded-lg border border-border-color/60">
-                <div className="flex items-center gap-2 mb-4">
-                  <RotateCw className="w-3.5 h-3.5 text-secondary-text" />
-                  <h4 className="text-xs font-semibold text-secondary-text uppercase tracking-wide">
-                    Data Otomatis (Dari Database)
-                  </h4>
+              <div className="p-5 bg-body-bg rounded-xl border border-border-color space-y-4 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between border-b border-border-color/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <h4 className="text-xs font-semibold text-primary-text uppercase tracking-wide">
+                      Data Terbaca dari Database
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-secondary-text">
+                    ID: {selectedResident.id?.substring(0, 8)}...
+                  </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InputField label="Nama Lengkap" value={selectedResident.nama} readOnly className="opacity-70 bg-transparent border-border-color/60" />
-                    <InputField label="NIK" value={selectedResident.nik} readOnly className="opacity-70 bg-transparent border-border-color/60" />
-                    <InputField label="Tempat, Tanggal Lahir" value={`${selectedResident.tempat_lahir || '-'}, ${selectedResident.tanggal_lahir || '-'}`} readOnly className="opacity-70 bg-transparent border-border-color/60" />
-                    <InputField label="Alamat" value={selectedResident.alamat_saat_ini || '-'} readOnly className="opacity-70 bg-transparent border-border-color/60" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <InputField label="Nama Lengkap" value={selectedResident.nama || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="NIK" value={selectedResident.nik || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="No. Kartu Keluarga" value={selectedResident.no_kk || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Tempat, Tanggal Lahir" value={`${selectedResident.tempat_lahir || '-'}, ${selectedResident.tanggal_lahir || '-'}`} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Jenis Kelamin" value={selectedResident.jenis_kelamin || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Agama" value={selectedResident.agama || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Pekerjaan" value={selectedResident.pekerjaan || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Status Perkawinan" value={selectedResident.status_kawin || "-"} readOnly className="bg-card-bg text-xs" />
+                    <InputField label="Kewarganegaraan" value={selectedResident.kewarganegaraan || "WNI"} readOnly className="bg-card-bg text-xs" />
+                    <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                      <InputField label="Alamat Lengkap" value={currentPreviewData.penduduk?.alamat || selectedResident.alamat_saat_ini || "-"} readOnly className="bg-card-bg text-xs" />
+                    </div>
                 </div>
               </div>
             )}
@@ -326,7 +378,7 @@ export default function CetakSuratPage() {
           >
             <SectionTitle 
               title="Detail Surat" 
-              description="Pilih jenis format surat dan nomor surat." 
+              description="Pilih jenis format surat dan nomor registrasi surat." 
               icon={FileText} 
             />
 
@@ -336,8 +388,9 @@ export default function CetakSuratPage() {
                   <InputField
                     label="Jenis Surat"
                     value={selectedFormat ? selectedFormat.nama : ""}
-                    placeholder={isLoadingData ? "Memuat data..." : "Pilih jenis surat..."}
+                    placeholder={isLoadingData ? "Memuat data format..." : "Pilih jenis surat..."}
                     readOnly
+                    required
                     className={cn(
                       isLoadingData ? "cursor-wait opacity-70" : "cursor-pointer hover:border-primary-text"
                     )}
@@ -352,16 +405,16 @@ export default function CetakSuratPage() {
                   className="gap-2 h-[38px] mb-[2px]"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  Pilih
+                  Pilih Format
                 </Button>
               </div>
 
               <InputField
-                label="Nomor Surat (Opsional)"
+                label="Nomor Surat (Otomatis)"
                 value={nomorSurat}
                 onChange={(e) => setNomorSurat(e.target.value)}
-                placeholder="Kosongkan untuk auto-generate"
-                description="Jika kosong, nomor akan dibuat otomatis saat disimpan."
+                placeholder="Nomor surat digenerate otomatis berdasarkan penomoran desa"
+                description="Nomor diisi otomatis mengikuti konfigurasi penomoran desa, atau dapat diedit manual jika diperlukan."
               />
             </div>
           </div>
@@ -374,8 +427,8 @@ export default function CetakSuratPage() {
               className="bg-card-bg rounded-xl shadow-sm border border-border-color p-6 md:p-8 scroll-mt-24"
             >
               <SectionTitle 
-                title="Form Isian Surat" 
-                description="Lengkapi data khusus sesuai jenis surat." 
+                title="Form Isian Khusus Surat" 
+                description="Lengkapi kolom data tambahan yang dibutuhkan oleh format surat ini." 
                 icon={PenTool} 
               />
               
@@ -451,7 +504,7 @@ export default function CetakSuratPage() {
                               })}
                             </div>
                           ) : (
-                            <p className="text-[10px] text-secondary-text italic">Data batas diambil dari Sketsa Tanah.</p>
+                            <p className="text-[10px] text-secondary-text italic">Data batas diambil otomatis dari Sketsa Tanah.</p>
                           )}
                       </div>
                     ) : (
@@ -478,21 +531,28 @@ export default function CetakSuratPage() {
           >
             <SectionTitle 
               title="Penandatangan Surat" 
-              description="Pilih perangkat desa yang akan menandatangani surat." 
+              description="Pilih aparatur pemerintah desa yang menandatangani dokumen ini." 
               icon={User} 
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SelectField
-                label="Penandatangan"
-                placeholder="Pilih Penandatangan..."
+                label="Pejabat Penandatangan"
+                placeholder="Pilih Pejabat Penandatangan..."
                 options={pamongList.map(p => ({
-                  label: `${p.pamong_nama} (${p.pamong_pangkat})`,
+                  label: `${p.pamong_nama} (${p.jabatan || p.pamong_pangkat || "Perangkat Desa"})`,
                   value: String(p.pamong_id)
                 }))}
                 value={selectedPamong}
                 onChange={(val) => setSelectedPamong(val)}
                 required
               />
+              {selectedPamongObj && (
+                <div className="p-3 bg-body-bg rounded-lg border border-border-color flex flex-col justify-center text-xs space-y-1">
+                  <div className="font-semibold text-primary-text">{selectedPamongObj.pamong_nama}</div>
+                  <div className="text-secondary-text">Jabatan: <span className="font-medium text-primary-text">{selectedPamongObj.jabatan || "Kepala Desa"}</span></div>
+                  <div className="text-secondary-text">NIP: <span className="font-medium text-primary-text">{selectedPamongObj.pamong_nip || "-"}</span></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -504,7 +564,7 @@ export default function CetakSuratPage() {
           >
             <SectionTitle 
               title="Keterangan Tambahan" 
-              description="Catatan opsional untuk surat ini." 
+              description="Catatan opsional internal untuk arsip surat ini." 
               icon={MessageSquare} 
             />
             <TextAreaField
@@ -519,17 +579,75 @@ export default function CetakSuratPage() {
         </form>
       </FormLayout>
 
+      {/* Resident Picker */}
       <ResidentPickerModal
         open={isPickerOpen}
         onOpenChange={setIsPickerOpen}
         onSelect={handleSelectResident}
       />
 
+      {/* Format Picker */}
       <FormatPickerModal
         open={isFormatPickerOpen}
         onOpenChange={setIsFormatPickerOpen}
         onSelect={handleSelectFormat}
       />
+
+      {/* Fullscreen Live Preview & Print Modal */}
+      {isPreviewOpen && selectedFormat && (
+        <div className="fixed inset-0 z-[3000] flex flex-col bg-body-bg/95 backdrop-blur-md animate-in fade-in duration-200">
+          {/* Modal Header */}
+          <div className="h-16 border-b border-border-color bg-card-bg px-6 flex items-center justify-between shadow-sm shrink-0 print:hidden">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-primary-text">
+                  Preview Surat: {selectedFormat.nama}
+                </h3>
+                <p className="text-xs text-secondary-text">
+                  Pemohon: {selectedResident?.nama || "Warga"} ({selectedResident?.nik || "-"})
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="gap-2 bg-card-bg"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Cetak / PDF</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPreviewOpen(false)}
+                className="p-2 h-9 w-9 text-secondary-text hover:text-primary-text"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Modal Body: Editor in ReadOnly Preview Mode */}
+          <div className="flex-1 overflow-hidden relative" id="surat-preview-wrapper">
+            <Editor
+              initialJson={selectedFormat.template}
+              letterType={selectedFormat.kode_surat}
+              letterName={selectedFormat.nama}
+              previewData={currentPreviewData}
+              readOnly={true}
+              hideHeaderNavigation={true}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

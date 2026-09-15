@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Users, Search, Loader2 } from "lucide-react";
-import { Resident } from "@/lib/services/penduduk";
+import { Resident, mapResidentFromDb } from "@/lib/services/penduduk";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { InputField } from "@/components/ui/FormFields";
 import { Button } from "@/components/ui/Button";
@@ -71,8 +71,6 @@ export default function ResidentPickerModal({
   }, [searchTerm, open, isServerSide]);
 
   const fetchResidents = async (term: string) => {
-    // if (!term.trim()) return; // Removed restriction to allow initial fetch
-    
     try {
       setLoading(true);
       const supabase = createSupabaseBrowserClient();
@@ -103,7 +101,7 @@ export default function ResidentPickerModal({
       }
 
       if (data) {
-        setLocalResidents(data);
+        setLocalResidents((data || []).map(mapResidentFromDb));
       }
     } catch (error) {
       console.error("Error in fetchResidents:", error);

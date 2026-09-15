@@ -1,4 +1,5 @@
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
+import { mapResidentFromDb, Resident } from "./penduduk";
 
 // Interfaces
 export interface KlasifikasiSurat {
@@ -306,28 +307,29 @@ export async function incrementNomorSurat(key: string) {
 
 export function mapAparaturToPamong(row: any): Pamong {
   if (!row) return row;
+  const idVal = row.id !== undefined ? Number(row.id) : (row.pamong_id !== undefined ? Number(row.pamong_id) : 1);
   return {
-    pamong_id: row.id ?? row.pamong_id,
-    pamong_nama: row.nama ?? row.pamong_nama ?? "",
-    gelar_depan: row.gelar_depan ?? undefined,
-    gelar_belakang: row.gelar_belakang ?? undefined,
-    pamong_nip: row.nip ?? row.pamong_nip ?? undefined,
-    pamong_nik: row.nik ?? row.pamong_nik ?? undefined,
-    pamong_niap: row.niap ?? row.pamong_niap ?? undefined,
-    pamong_pangkat: row.pangkat ?? row.pamong_pangkat ?? undefined,
-    jabatan: row.jabatan ?? undefined,
+    pamong_id: idVal,
+    pamong_nama: row.nama || row.pamong_nama || "",
+    gelar_depan: row.gelar_depan || undefined,
+    gelar_belakang: row.gelar_belakang || undefined,
+    pamong_nip: row.nip || row.pamong_nip || "-",
+    pamong_nik: row.nik || row.pamong_nik || "",
+    pamong_niap: row.niap || row.pamong_niap || undefined,
+    pamong_pangkat: row.pangkat || row.pamong_pangkat || undefined,
+    jabatan: row.jabatan || (row.jabatan_id === 1 ? "Kepala Desa" : row.jabatan_id === 2 ? "Sekretaris Desa" : "Perangkat Desa"),
     jabatan_id: row.jabatan_id ?? undefined,
     pamong_status: row.status !== undefined
       ? (typeof row.status === "boolean" ? (row.status ? 1 : 0) : Number(row.status))
-      : (row.is_active !== undefined ? (row.is_active ? 1 : 0) : (row.pamong_status ?? 1)),
+      : (row.is_active !== undefined ? (row.is_active ? 1 : 0) : 1),
     pamong_ttd: row.ttd_berhak !== undefined
       ? (typeof row.ttd_berhak === "boolean" ? (row.ttd_berhak ? 1 : 0) : Number(row.ttd_berhak))
       : (row.pamong_ttd ?? 0),
-    foto: row.avatar_url ?? row.foto ?? undefined,
-    pamong_nosk: row.no_sk_angkat ?? row.pamong_nosk ?? undefined,
-    pamong_tglsk: row.tgl_sk_angkat ?? row.pamong_tglsk ?? undefined,
-    pamong_nohenti: row.no_sk_henti ?? row.pamong_nohenti ?? undefined,
-    pamong_tglhenti: row.tgl_sk_henti ?? row.pamong_tglhenti ?? undefined,
+    foto: row.avatar_url || row.foto || undefined,
+    pamong_nosk: row.no_sk_angkat || row.pamong_nosk || undefined,
+    pamong_tglsk: row.tgl_sk_angkat || row.pamong_tglsk || undefined,
+    pamong_nohenti: row.no_sk_henti || row.pamong_nohenti || undefined,
+    pamong_tglhenti: row.tgl_sk_henti || row.pamong_tglhenti || undefined,
     id_pend: row.penduduk_id ? String(row.penduduk_id) : (row.id_pend ? String(row.id_pend) : undefined),
     urut: row.urutan ?? row.urut ?? undefined,
     atasan: row.atasan_id ?? row.atasan ?? undefined,
@@ -372,9 +374,10 @@ export async function getPamong(): Promise<Pamong[]> {
   // 1. Try 'aparatur_desa' (standard Supabase schema)
   const { data: dataAparatur, error: errorAparatur } = await supabase
     .from("aparatur_desa")
-    .select("*, penduduk:penduduk_id(nama, nik, foto)");
+    .select("*")
+    .order("urutan", { ascending: true });
 
-  if (!errorAparatur && dataAparatur) {
+  if (!errorAparatur && dataAparatur && dataAparatur.length > 0) {
     return (dataAparatur as any[]).map(mapAparaturToPamong);
   }
 
@@ -383,7 +386,7 @@ export async function getPamong(): Promise<Pamong[]> {
     .from("pamong_desa")
     .select("*");
 
-  if (!errorPamongDesa && dataPamongDesa) {
+  if (!errorPamongDesa && dataPamongDesa && dataPamongDesa.length > 0) {
     return (dataPamongDesa as any[]).map(mapAparaturToPamong);
   }
 
@@ -392,12 +395,14 @@ export async function getPamong(): Promise<Pamong[]> {
     .from("pamong")
     .select("*");
 
-  if (!errorLegacy && dataLegacy) {
+  if (!errorLegacy && dataLegacy && dataLegacy.length > 0) {
     return (dataLegacy as any[]).map(mapAparaturToPamong);
   }
 
-  console.error("Error fetching pamong from all tables:", errorAparatur || errorPamongDesa || errorLegacy);
-  throw errorAparatur || errorPamongDesa || errorLegacy;
+  if (errorAparatur) {
+    console.error("Error fetching aparatur_desa:", errorAparatur);
+  }
+  return [];
 }
 
 export async function getPamongById(id: number | string): Promise<Pamong | null> {
@@ -406,7 +411,7 @@ export async function getPamongById(id: number | string): Promise<Pamong | null>
   // 1. Try 'aparatur_desa'
   const { data: dataAparatur, error: errorAparatur } = await supabase
     .from("aparatur_desa")
-    .select("*, penduduk:penduduk_id(nama, nik, foto)")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
 
@@ -436,9 +441,6 @@ export async function getPamongById(id: number | string): Promise<Pamong | null>
     return mapAparaturToPamong(dataLegacy);
   }
 
-  if (errorAparatur && errorPamongDesa && errorLegacy) {
-    throw errorAparatur || errorPamongDesa || errorLegacy;
-  }
   return null;
 }
 
@@ -715,6 +717,206 @@ export const uploadSignedSurat = async (id: number, file: File) => {
   return filePath;
 };
 
+export interface BuildSuratPreviewParams {
+  surat?: {
+    id?: number;
+    nomor?: string;
+    no_surat?: string;
+    tanggal?: string | Date;
+    tanggal_surat?: string | Date;
+    nama_surat?: string;
+    kode?: string;
+    kode_surat?: string;
+    keterangan?: string;
+  };
+  resident?: Resident | any;
+  pamong?: Pamong | any;
+  identitasDesa?: IdentitasDesa | null;
+  formData?: Record<string, any>;
+  signature?: any;
+}
+
+export function buildSuratPreviewData({
+  surat,
+  resident,
+  pamong,
+  identitasDesa,
+  formData = {},
+  signature,
+}: BuildSuratPreviewParams) {
+  // Format Date Helper
+  const formatDateIndo = (d: string | Date | undefined) => {
+    if (!d) return "";
+    try {
+      const dt = typeof d === "string" ? new Date(d) : d;
+      if (isNaN(dt.getTime())) return String(d);
+      return dt.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return String(d);
+    }
+  };
+
+  // Title Case Helper
+  const toTitleCase = (str: string) => {
+    if (!str) return "";
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
+  };
+
+  // 1. Format Surat Data
+  const tglSuratRaw = surat?.tanggal_surat || surat?.tanggal || new Date();
+  const tglSuratFormatted = formatDateIndo(tglSuratRaw);
+  const nomorSurat = surat?.nomor || surat?.no_surat || "";
+
+  const suratObj = {
+    ...surat,
+    id: surat?.id,
+    nomor: nomorSurat,
+    no_surat: nomorSurat,
+    format_nomor_surat: nomorSurat,
+    tanggal: tglSuratFormatted,
+    tanggal_surat: tglSuratFormatted,
+    tgl_surat: tglSuratFormatted,
+    nama_surat: surat?.nama_surat || "",
+    keterangan: surat?.keterangan || "",
+    kode: surat?.kode || surat?.kode_surat || "",
+    kode_surat: surat?.kode || surat?.kode_surat || "",
+  };
+
+  // 2. Format Desa Data
+  const desaObj = {
+    id: identitasDesa?.id,
+    nama: identitasDesa?.nama_desa || "",
+    nama_desa: identitasDesa?.nama_desa || "",
+    kode_desa: identitasDesa?.kode_desa || "",
+    sebutan_desa: identitasDesa?.sebutan_desa || "DESA",
+    kecamatan: identitasDesa?.nama_kecamatan || "",
+    nama_kecamatan: identitasDesa?.nama_kecamatan || "",
+    kode_kecamatan: identitasDesa?.kode_kecamatan || "",
+    sebutan_kecamatan: identitasDesa?.sebutan_kecamatan || "KECAMATAN",
+    kabupaten: identitasDesa?.nama_kabupaten || "",
+    nama_kabupaten: identitasDesa?.nama_kabupaten || "",
+    kode_kabupaten: identitasDesa?.kode_kabupaten || "",
+    sebutan_kabupaten: identitasDesa?.sebutan_kabupaten || "KABUPATEN",
+    provinsi: identitasDesa?.nama_provinsi || "",
+    nama_provinsi: identitasDesa?.nama_provinsi || "",
+    kode_provinsi: identitasDesa?.kode_provinsi || "",
+    alamat: identitasDesa?.alamat_kantor || "",
+    alamat_kantor: identitasDesa?.alamat_kantor || "",
+    alamat_desa: identitasDesa?.alamat_kantor || "",
+    alamat_des: identitasDesa?.alamat_kantor || "",
+    kode_pos: identitasDesa?.kode_pos || "",
+    email_desa: identitasDesa?.email_desa || "",
+    telepon_desa: identitasDesa?.telepon_desa || "",
+    website: identitasDesa?.website_desa || "",
+    website_desa: identitasDesa?.website_desa || "",
+    logo: identitasDesa?.logo || "",
+    kades: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "",
+    nama_kepala_desa: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "",
+    kades_nip: identitasDesa?.nip_kepala_desa || pamong?.pamong_nip || pamong?.nip || "-",
+    nip_kepala_desa: identitasDesa?.nip_kepala_desa || pamong?.pamong_nip || pamong?.nip || "-",
+  };
+
+  // 3. Format Pamong / Penandatangan Data
+  const pamongNama = pamong?.pamong_nama || pamong?.nama || "";
+  const pamongNip = pamong?.pamong_nip || pamong?.nip || "-";
+  const pamongPangkat = pamong?.pamong_pangkat || pamong?.pangkat || "";
+  const pamongJabatan = pamong?.jabatan || (pamong?.jabatan_id === 1 ? "Kepala Desa" : pamong?.jabatan_id === 2 ? "Sekretaris Desa" : "Perangkat Desa");
+
+  const pamongObj = {
+    ...pamong,
+    id: pamong?.pamong_id || pamong?.id,
+    nama: pamongNama,
+    pamong_nama: pamongNama,
+    nip: pamongNip,
+    pamong_nip: pamongNip,
+    pangkat: pamongPangkat,
+    pamong_pangkat: pamongPangkat,
+    jabatan: pamongJabatan,
+    penandatangan: pamongJabatan,
+  };
+
+  // 4. Format Resident Data
+  let residentObj: Record<string, any> = {};
+  if (resident) {
+    const rawRes: any = typeof resident === "object" ? mapResidentFromDb(resident) : {};
+    const tglLahirFormatted = formatDateIndo(rawRes.tanggal_lahir);
+    const tempatLahir = rawRes.tempat_lahir ? toTitleCase(rawRes.tempat_lahir) : "";
+    const ttl = tempatLahir && tglLahirFormatted 
+      ? `${tempatLahir}, ${tglLahirFormatted}` 
+      : (tempatLahir || tglLahirFormatted || "-");
+
+    // Address Assembly
+    const jalan = rawRes.alamat_saat_ini || rawRes.alamat_rt || rawRes.alamat_sebelumnya || "";
+    const rt = rawRes.rt ? `RT ${rawRes.rt}` : "";
+    const rw = rawRes.rw ? `RW ${rawRes.rw}` : "";
+    const dusun = rawRes.dusun ? (rawRes.dusun.toLowerCase().startsWith("dusun") ? rawRes.dusun : `Dusun ${rawRes.dusun}`) : "";
+
+    const addressParts = [
+      jalan && jalan !== "-" ? jalan : "",
+      dusun,
+      rt && rw ? `${rt} / ${rw}` : (rt || rw),
+      identitasDesa?.nama_desa ? `${identitasDesa.sebutan_desa || "Desa"} ${identitasDesa.nama_desa}` : "",
+      identitasDesa?.nama_kecamatan ? `Kec. ${identitasDesa.nama_kecamatan}` : "",
+      identitasDesa?.nama_kabupaten ? `${identitasDesa.sebutan_kabupaten || "Kab."} ${identitasDesa.nama_kabupaten}` : "",
+    ].filter(Boolean);
+
+    const fullAddress = addressParts.length > 0 
+      ? addressParts.join(", ") 
+      : (rawRes.alamat_saat_ini || "-");
+
+    const genderVal = rawRes.jenis_kelamin || (rawRes.sex === 1 || rawRes.sex === "1" ? "Laki-laki" : rawRes.sex === 2 || rawRes.sex === "2" ? "Perempuan" : rawRes.sex || "-");
+    const kewarganegaraan = rawRes.kewarganegaraan || rawRes.warga_negara || "WNI";
+
+    residentObj = {
+      ...rawRes,
+      nama: rawRes.nama || "",
+      nama_lengkap: rawRes.nama || "",
+      nama_penduduk: rawRes.nama || "",
+      nik: rawRes.nik || "",
+      no_kk: rawRes.no_kk || "",
+      tempat_lahir: tempatLahir,
+      tanggal_lahir: tglLahirFormatted,
+      ttl: ttl,
+      tempat_tanggal_lahir: ttl,
+      sex: genderVal,
+      jenis_kelamin: genderVal,
+      jk: genderVal,
+      agama: rawRes.agama || "-",
+      pekerjaan: rawRes.pekerjaan || "-",
+      pendidikan: rawRes.pendidikan_kk || rawRes.pendidikan_saat_ini || rawRes.pendidikan || "-",
+      status_kawin: rawRes.status_kawin || "-",
+      status_perkawinan: rawRes.status_kawin || "-",
+      alamat: fullAddress,
+      alamat_saat_ini: fullAddress,
+      alamat_penduduk: fullAddress,
+      alamat_lengkap: fullAddress,
+      rt: rawRes.rt || "-",
+      rw: rawRes.rw || "-",
+      dusun: rawRes.dusun || "-",
+      warga_negara: kewarganegaraan,
+      kewarganegaraan: kewarganegaraan,
+      warganegara: kewarganegaraan,
+      ayah: rawRes.nama_ayah || "-",
+      nama_ayah: rawRes.nama_ayah || "-",
+      ibu: rawRes.nama_ibu || "-",
+      nama_ibu: rawRes.nama_ibu || "-",
+    };
+  }
+
+  return {
+    surat: suratObj,
+    desa: desaObj,
+    pamong: pamongObj,
+    penduduk: residentObj,
+    form_data: formData,
+    signature: signature,
+  };
+}
+
 export async function getLogSuratDetail(id: number) {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
@@ -732,11 +934,16 @@ export async function getLogSuratDetail(id: number) {
     throw error;
   }
 
-  if (data && data.id_pamong) {
-    try {
-      const pamong = await getPamongById(data.id_pamong);
-      data.pamong = pamong;
-    } catch {}
+  if (data) {
+    if (data.penduduk) {
+      data.penduduk = mapResidentFromDb(data.penduduk);
+    }
+    if (data.id_pamong) {
+      try {
+        const pamong = await getPamongById(data.id_pamong);
+        data.pamong = pamong;
+      } catch {}
+    }
   }
 
   return data;

@@ -13,7 +13,7 @@ import {
   updateSuratSignature,
   updateSuratDocument
 } from "@/lib/services/surat-flow";
-import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong } from "@/lib/services/surat";
+import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong, buildSuratPreviewData } from "@/lib/services/surat";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Editor } from "@/components/editor/Editor";
 import { Button } from "@/components/ui/Button";
@@ -625,101 +625,27 @@ export default function VerifikasiSuratPage() {
                  </div>
                ) : detailSurat && detailSurat.surat_formats?.template ? (
                  <div className="flex-1 w-full h-full relative" id="surat-preview-wrapper">
-                    <Editor 
+                     <Editor 
                       initialJson={detailSurat.surat_formats.template}
                       readOnly={true}
                       hideHeaderNavigation={true}
-                      previewData={{
+                      previewData={buildSuratPreviewData({
                         surat: {
+                          id: detailSurat.id,
                           nomor: detailSurat.no_surat || "SURAT/2024/XXX",
                           no_surat: detailSurat.no_surat || "SURAT/2024/XXX",
-                          tanggal: new Date(detailSurat.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-                          nama_surat: detailSurat.surat_formats.nama,
+                          tanggal: detailSurat.tanggal,
+                          tanggal_surat: detailSurat.tanggal,
+                          nama_surat: detailSurat.surat_formats?.nama,
                           keterangan: detailSurat.keterangan,
-                          kode: detailSurat.surat_formats.kode_surat
+                          kode: detailSurat.surat_formats?.kode_surat
                         },
-                        form_data: detailSurat.form_data,
-                        desa: identitasDesa ? {
-                          ...identitasDesa,
-                          nama: identitasDesa.nama_desa,
-                          alamat: identitasDesa.alamat_kantor,
-                          kecamatan: identitasDesa.nama_kecamatan,
-                          kabupaten: identitasDesa.nama_kabupaten,
-                          provinsi: identitasDesa.nama_provinsi,
-                          sebutan_desa: identitasDesa.sebutan_desa || "DESA",
-                          sebutan_kabupaten: identitasDesa.sebutan_kabupaten || "KABUPATEN"
-                        } : undefined,
-                        penduduk: detailSurat.penduduk ? (() => {
-                            const p = detailSurat.penduduk;
-                            const toTitleCase = (str: string) => str ? str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '';
-                            const tempatLahir = p.tempat_lahir ? toTitleCase(p.tempat_lahir) : (p.tempatlahir ? toTitleCase(p.tempatlahir) : '-');
-                            
-                            // Date formatting
-                            const tglStr = p.tanggal_lahir || p.tanggallahir;
-                            const tglFormatted = tglStr ? new Date(tglStr).toLocaleDateString("id-ID", {
-                                day: "2-digit",
-                                month: "long",
-                                year: "numeric"
-                            }) : "-";
-
-                            // Gender Normalization
-                            const getJenisKelamin = (res: any) => {
-                                const val = res.sex || res.jenis_kelamin || res.jk;
-                                if (val === 1 || val === "1" || val === "LAKI-LAKI" || val === "Laki-Laki" || val === "Laki-laki") return "Laki-Laki";
-                                if (val === 2 || val === "2" || val === "PEREMPUAN" || val === "Perempuan") return "Perempuan";
-                                return val || "-";
-                            };
-                            const jenisKelamin = getJenisKelamin(p);
-
-                            // Address Construction
-                            const jalanRaw = p.alamat_saat_ini || p.alamat_sebelumnya || p.alamat || "";
-                            const jalan = (jalanRaw && jalanRaw !== '-') ? (jalanRaw.toLowerCase().startsWith('jl') ? jalanRaw : `Jl. ${jalanRaw}`) : '';
-                            
-                            const alamatFull = [
-                                jalan,
-                                `${identitasDesa?.sebutan_dusun || 'Dusun'} ${p.dusun || '-'}`,
-                                `RT ${p.rt || '-'} / RW ${p.rw || '-'}`,
-                                `${identitasDesa?.sebutan_desa || 'Desa'} ${identitasDesa?.nama_desa || '-'}`,
-                                `${identitasDesa?.sebutan_kecamatan || 'Kecamatan'} ${identitasDesa?.nama_kecamatan || '-'}`,
-                                `${identitasDesa?.sebutan_kabupaten || 'Kabupaten'} ${identitasDesa?.nama_kabupaten || '-'}`
-                            ].filter(part => part && part.trim() !== '' && !part.includes('undefined') && !part.includes('null') && !part.includes(' -') && part !== '-').join(', ');
-
-                            return {
-                                ...p,
-                                nama: p.nama,
-                                nik: p.nik,
-                                tempat_lahir: tempatLahir,
-                                tanggal_lahir: tglFormatted,
-                                ttl: `${tempatLahir}, ${tglFormatted}`,
-                                "tempat_tanggal_lahir": `${tempatLahir}, ${tglFormatted}`,
-                                sex: jenisKelamin,
-                                jenis_kelamin: jenisKelamin,
-                                alamat: alamatFull, 
-                                alamat_penduduk: alamatFull,
-                                alamat_tempat_tinggal: alamatFull,
-                                rt: p.rt,
-                                rw: p.rw,
-                                dusun: p.dusun,
-                                desa: p.nama_desa,
-                                kecamatan: p.nama_kecamatan,
-                                kabupaten: p.nama_kabupaten,
-                                provinsi: p.nama_provinsi,
-                                agama: p.agama,
-                                status_kawin: p.status_kawin,
-                                pekerjaan: p.pekerjaan,
-                                warganegara: p.kewarganegaraan || "WNI"
-                            };
-                        })() : undefined,
-                        pamong: (() => {
-                          const p = pamongList.find(p => p.pamong_id === detailSurat?.id_pamong) || pamongList.find(p => p.pamong_ttd === 1 && p.pamong_status === 1);
-                          return p ? {
-                            nama: p.pamong_nama,
-                            nip: p.pamong_nip,
-                            pangkat: p.pamong_pangkat,
-                            jabatan: "Kepala Desa" 
-                          } : undefined;
-                        })()
-                      }}
+                        resident: detailSurat.penduduk,
+                        pamong: pamongList.find(p => p.pamong_id === detailSurat?.id_pamong) || pamongList.find(p => p.pamong_ttd === 1 && p.pamong_status === 1) || pamongList[0],
+                        identitasDesa: identitasDesa,
+                        formData: detailSurat.form_data || {},
+                        signature: detailSurat.form_data?.signature
+                      })}
                     />
                  </div>
                ) : (

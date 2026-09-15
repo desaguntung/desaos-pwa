@@ -36,11 +36,17 @@ export const Input = ({
   const { mode, data } = useSuratContext();
 
   if (mode === 'preview') {
-      // In DataRow, label prop is used as variable key
-      const value = data.form_data?.[label || ""];
+      const cleanLabel = (label || "").trim();
+      const lowerKey = cleanLabel.toLowerCase().replace(/[\/\s\-]+/g, '_');
+      const value = data.form_data?.[cleanLabel] 
+        ?? data.form_data?.[cleanLabel.toLowerCase()]
+        ?? data.form_data?.[lowerKey]
+        ?? data.form_data?.[cleanLabel.replace(/\s+/g, '_')]
+        ?? data.form_data?.[cleanLabel.toLowerCase().replace(/\s+/g, '_')];
+
       return (
         <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'Arial, sans-serif' }}>
-          {value || "-"}
+          {value !== undefined && value !== null && value !== "" ? String(value) : "-"}
         </span>
       );
   }
