@@ -115,8 +115,8 @@ export default function CetakSuratPage() {
 
   // Parse template and generate number when format changes
   useEffect(() => {
-    if (selectedFormat?.template) {
-      const fields = extractFieldsFromTemplate(selectedFormat.template);
+    if (selectedFormat) {
+      const fields = extractFieldsFromTemplate(selectedFormat.template || "", selectedFormat.url_surat || selectedFormat.nama);
       setDynamicFields(fields);
       
       // Initialize values
@@ -639,7 +639,7 @@ export default function CetakSuratPage() {
           <div className="flex-1 overflow-hidden relative" id="surat-preview-wrapper">
             <Editor
               initialJson={selectedFormat.template}
-              letterType={selectedFormat.kode_surat}
+              letterType={selectedFormat.url_surat || selectedFormat.kode_surat || selectedFormat.nama}
               letterName={selectedFormat.nama}
               previewData={currentPreviewData}
               readOnly={true}

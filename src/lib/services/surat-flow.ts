@@ -53,7 +53,7 @@ export interface FormFieldDefinition {
     defaultValue?: any;
 }
 
-export function extractFieldsFromTemplate(content: string): FormFieldDefinition[] {
+export function extractFieldsFromTemplate(content: string, typeOrName?: string): FormFieldDefinition[] {
     const uniqueFields = new Set<string>();
     const fields: FormFieldDefinition[] = [];
     
@@ -113,11 +113,11 @@ export function extractFieldsFromTemplate(content: string): FormFieldDefinition[
                     type = 'date';
                 } else if (lowerKey.includes('umur') || lowerKey.includes('jumlah') || lowerKey.includes('nilai') || lowerKey.includes('harga')) {
                     type = 'number';
-                } else if (lowerKey.includes('uraian') || lowerKey.includes('keterangan') || lowerKey.includes('isi') || lowerKey.includes('pesan') || lowerKey.includes('keperluan')) {
+                } else if (lowerKey.includes('uraian') || lowerKey.includes('keterangan') || lowerKey.includes('isi') || lowerKey.includes('pesan') || lowerKey.includes('keperluan') || lowerKey.includes('alasan')) {
                     type = 'textarea';
-                } else if (key === 'Sketsa_Tanah') {
+                } else if (key === 'Sketsa_Tanah' || lowerKey.includes('sketsa_tanah')) {
                     type = 'land_sketch';
-                } else if (key === 'Batas_Tanah') {
+                } else if (key === 'Batas_Tanah' || lowerKey.includes('batas_tanah')) {
                     type = 'land_boundaries';
                 }
             }
@@ -133,7 +133,8 @@ export function extractFieldsFromTemplate(content: string): FormFieldDefinition[
     };
 
     // Try parsing as JSON first (for visual editor templates)
-    try {
+    if (content && typeof content === 'string' && content.trim().startsWith('{')) {
+      try {
         const jsonContent = JSON.parse(content);
         if (typeof jsonContent === 'object' && jsonContent !== null) {
             Object.values(jsonContent).forEach((node: any) => {
@@ -154,23 +155,102 @@ export function extractFieldsFromTemplate(content: string): FormFieldDefinition[
                 }
             });
             
-            // If we found fields via JSON traversal, return them.
-            // But we should also consider that the template might be a mix or the JSON might wrap the text.
-            // If fields were found, we assume the JSON structure is the source of truth.
             if (fields.length > 0) return fields;
         }
-    } catch (e) {
-        // Not JSON, ignore and proceed to regex fallback
+      } catch (e) {
+        // Not JSON, proceed to regex fallback
+      }
     }
 
-    // Fallback: Regex on the entire content string
-    // This catches [Variable] in plain text templates or if JSON parsing missed something/failed
-    const regex = /\[([^"\{\}\[\]]+)\]/g;
-    const matches = Array.from(content.matchAll(regex));
-    
-    matches.forEach(match => {
-        addField(match[1]);
-    });
+    // Fallback: Regex on content string if available
+    if (content && typeof content === 'string') {
+      const regex = /\[([^"\{\}\[\]]+)\]/g;
+      const matches = Array.from(content.matchAll(regex));
+      matches.forEach(match => {
+          addField(match[1]);
+      });
+      if (fields.length > 0) return fields;
+    }
+
+    // Fallback: Check built-in template type or format name
+    if (typeOrName) {
+      const t = typeOrName.toLowerCase().replace(/[\s\-_/]+/g, '_');
+      
+      if (t.includes('sporadik')) {
+        addField('Sketsa_Tanah', 'land_sketch', 'Sketsa Tanah');
+        addField('Batas_Tanah', 'land_boundaries', 'Batas Tanah');
+      } else if (t.includes('domisili_usaha_non_warga')) {
+        addField('Nama Usaha', 'text', 'Nama Usaha');
+        addField('Jenis Usaha', 'text', 'Jenis Usaha');
+        addField('Alamat Usaha', 'text', 'Alamat Usaha');
+        addField('Status Bangunan', 'text', 'Status Bangunan');
+      } else if (t.includes('domisili_usaha') || t.includes('ket_usaha') || t.includes('usaha')) {
+        addField('Nama Usaha', 'text', 'Nama Usaha');
+        addField('Jenis Usaha', 'text', 'Jenis Usaha');
+        addField('Alamat Usaha', 'text', 'Alamat Usaha');
+      } else if (t.includes('pindah')) {
+        addField('Alasan Pindah', 'textarea', 'Alasan Pindah');
+        addField('Alamat Tujuan', 'text', 'Alamat Tujuan');
+        addField('Desa Tujuan', 'text', 'Desa/Kelurahan Tujuan');
+        addField('Kecamatan Tujuan', 'text', 'Kecamatan Tujuan');
+        addField('Kabupaten Tujuan', 'text', 'Kabupaten/Kota Tujuan');
+        addField('Provinsi Tujuan', 'text', 'Provinsi Tujuan');
+        addField('Pengikut', 'number', 'Jumlah Pengikut');
+      } else if (t.includes('rujuk_cerai') || t.includes('rujuk')) {
+        addField('Status', 'text', 'Status (Rujuk/Cerai)');
+        addField('Nama Pasangan', 'text', 'Nama Pasangan');
+        addField('Tanggal Kejadian', 'date', 'Tanggal Kejadian');
+        addField('No Akta', 'text', 'No. Akta / Surat');
+      } else if (t.includes('wali_hakim')) {
+        addField('Sebab Wali Hakim', 'textarea', 'Alasan Wali Hakim');
+        addField('Nama Calon', 'text', 'Nama Calon Suami');
+      } else if (t.includes('kuasa')) {
+        addField('Nama Penerima', 'text', 'Nama Penerima Kuasa');
+        addField('NIK Penerima', 'text', 'NIK Penerima Kuasa');
+        addField('Umur Penerima', 'text', 'Umur Penerima Kuasa');
+        addField('Pekerjaan Penerima', 'text', 'Pekerjaan Penerima Kuasa');
+        addField('Alamat Penerima', 'text', 'Alamat Penerima Kuasa');
+        addField('Keperluan Kuasa', 'textarea', 'Keperluan / Isi Kuasa');
+      } else if (t.includes('perjalanan_dinas') || t.includes('sppd')) {
+        addField('Nama Pejabat', 'text', 'Nama Pejabat Yang Berangkat');
+        addField('Jabatan Pejabat', 'text', 'Jabatan Pejabat');
+        addField('Tujuan Dinas', 'text', 'Tempat Tujuan');
+        addField('Keperluan Dinas', 'textarea', 'Maksud Perjalanan Dinas');
+        addField('Lama Dinas', 'text', 'Lama Perjalanan (Hari)');
+        addField('Tgl Berangkat', 'date', 'Tanggal Berangkat');
+        addField('Tgl Kembali', 'date', 'Tanggal Kembali');
+        addField('Anggaran', 'text', 'Sumber Dana / Beban Anggaran');
+      } else if (t.includes('permohonan_akta')) {
+        addField('Nama Anak', 'text', 'Nama Anak');
+        addField('TTL Anak', 'text', 'Tempat/Tgl Lahir Anak');
+        addField('Anak Ke', 'number', 'Anak Ke-');
+        addField('JK Anak', 'text', 'Jenis Kelamin Anak (L/P)');
+        addField('Nama Ayah', 'text', 'Nama Ayah');
+        addField('Nama Ibu', 'text', 'Nama Ibu');
+      } else if (t.includes('cerai')) {
+        addField('Nama Pasangan', 'text', 'Nama Pasangan');
+        addField('Alasan Cerai', 'textarea', 'Alasan Perceraian');
+      } else if (t.includes('duplikat_kelahiran')) {
+        addField('Alasan Duplikat', 'textarea', 'Alasan Duplikat');
+        addField('Keterangan', 'textarea', 'Keterangan Tambahan');
+      } else if (t.includes('duplikat_nikah')) {
+        addField('Alasan Duplikat', 'textarea', 'Alasan Duplikat');
+        addField('No Nikah Lama', 'text', 'Nomor Surat Nikah Lama');
+      } else if (t.includes('permohonan_kk')) {
+        addField('Alasan Permohonan', 'textarea', 'Alasan Permohonan KK');
+        addField('Jumlah Anggota', 'number', 'Jumlah Anggota Keluarga');
+      } else if (t.includes('perubahan_kk')) {
+        addField('Alasan Perubahan', 'textarea', 'Alasan Perubahan Data');
+        addField('No KK Lama', 'text', 'Nomor KK Lama');
+      } else if (t.includes('kurang_mampu') || t.includes('sktm') || t.includes('catatan_kriminal') || t.includes('skck')) {
+        addField('Keperluan', 'textarea', 'Keperluan Surat');
+      } else if (t.includes('kehilangan')) {
+        addField('Barang Hilang', 'text', 'Barang / Dokumen Yang Hilang');
+        addField('Rincian', 'textarea', 'Rincian / Ciri-ciri');
+        addField('Tempat Hilang', 'text', 'Perkiraan Tempat Hilang');
+        addField('Tgl Hilang', 'date', 'Perkiraan Tanggal Hilang');
+      }
+    }
     
     return fields;
 }

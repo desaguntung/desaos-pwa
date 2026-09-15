@@ -101,7 +101,7 @@ export default function ViewSuratPage() {
       <div className="flex-1 overflow-hidden">
         <Editor
           initialJson={data.surat_formats.template}
-          letterType={data.surat_formats.kode_surat}
+          letterType={data.surat_formats.url_surat || data.surat_formats.kode_surat || data.surat_formats.nama}
           letterName={data.surat_formats.nama}
           id={data.surat_formats.id.toString()}
           previewData={previewData}

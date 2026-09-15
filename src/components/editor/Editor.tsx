@@ -92,69 +92,70 @@ export const templates = [
   { key: "domisili_usaha_non_warga", label: "Domisili Usaha Non Warga", desc: "Domisili usaha non warga", color: "green" }
 ];
 
-export const getTemplateKeyFromType = (type: string): string => {
-  if (!type) return "blank";
+export const getTemplateKeyFromType = (type?: string, name?: string): string => {
+  const combined = `${type || ""} ${name || ""}`.toLowerCase().replace(/[\s\-_/]+/g, "_");
+  if (!combined.trim()) return "standard";
   
   // Specific checks first (Longer strings that contain substrings of others)
-  if (type.includes("surat_ket_domisili_usaha_non_warga") || type.includes("surat_domisili_usaha_non_warga")) return "domisili_usaha_non_warga";
-  if (type.includes("surat_ket_domisili_usaha")) return "domisili_usaha";
-  if (type.includes("surat_ket_domisili")) return "domisili";
+  if (combined.includes("domisili_usaha_non_warga")) return "domisili_usaha_non_warga";
+  if (combined.includes("domisili_usaha")) return "domisili_usaha";
+  if (combined.includes("domisili")) return "domisili";
 
-  if (type.includes("surat_ket_nikah_non_muslim")) return "nikah_non_muslim";
-  if (type.includes("surat_ket_nikah")) return "nikah";
+  if (combined.includes("nikah_non_muslim")) return "nikah_non_muslim";
+  if (combined.includes("nikah")) return "nikah";
 
-  if (type.includes("surat_ket_penghasilan_ayah")) return "penghasilan_ayah";
-  if (type.includes("surat_ket_penghasilan_ibu")) return "penghasilan_ibu";
-  if (type.includes("surat_ket_penghasilan_orangtua")) return "penghasilan_orangtua";
-  if (type.includes("surat_ket_penghasilan")) return "penghasilan";
+  if (combined.includes("penghasilan_ayah")) return "penghasilan_ayah";
+  if (combined.includes("penghasilan_ibu")) return "penghasilan_ibu";
+  if (combined.includes("penghasilan_orangtua") || combined.includes("penghasilan_ortu")) return "penghasilan_orangtua";
+  if (combined.includes("penghasilan")) return "penghasilan";
 
-  if (type.includes("surat_permohonan_perubahan_kartu_keluarga")) return "perubahan_kk";
-  if (type.includes("surat_permohonan_kartu_keluarga")) return "permohonan_kk";
+  if (combined.includes("perubahan_kartu_keluarga") || combined.includes("perubahan_kk")) return "perubahan_kk";
+  if (combined.includes("kartu_keluarga") || combined.includes("permohonan_kk")) return "permohonan_kk";
 
   // Standard checks
-  if (type.includes("surat_ket_usaha")) return "ket_usaha";
-  if (type.includes("surat_bio_penduduk")) return "bio_penduduk";
-  if (type.includes("surat_ket_beda_identitas_kis")) return "beda_identitas_kis";
-  if (type.includes("surat_jalan")) return "jalan";
-  if (type.includes("surat_izin_orangtua_suami_istri")) return "izin_orangtua";
-  if (type.includes("surat_izin_keramaian")) return "keramaian";
-  if (type.includes("surat_ket_beda_nama")) return "beda_nama";
-  if (type.includes("surat_ket_catatan_kriminal")) return "catatan_kriminal";
-  if (type.includes("surat_ket_jamkesos")) return "jamkesos";
-  if (type.includes("surat_ket_jual_beli")) return "jual_beli";
-  if (type.includes("surat_ket_kehilangan")) return "kehilangan";
-  if (type.includes("surat_ket_kelahiran")) return "kelahiran";
-  if (type.includes("surat_ket_kematian")) return "kematian";
-  if (type.includes("surat_ket_kepemilikan_kendaraan")) return "kendaraan";
-  if (type.includes("surat_ket_kepemilikan_tanah")) return "kepemilikan_tanah";
-  if (type.includes("surat_ket_ktp_dalam_proses")) return "ktp_dalam_proses";
-  if (type.includes("surat_ket_kurang_mampu")) return "kurang_mampu";
-  if (type.includes("surat_ket_janda")) return "janda";
-  if (type.includes("surat_ket_lahir_mati")) return "lahir_mati";
-  if (type.includes("surat_ket_penduduk")) return "ket_penduduk";
-  if (type.includes("surat_ket_pengantar")) return "pengantar";
-  if (type.includes("surat_ket_pergi_kawin")) return "pergi_kawin";
-  if (type.includes("surat_ket_pindah_penduduk")) return "pindah";
-  if (type.includes("surat_ket_rujuk_cerai")) return "rujuk_cerai";
-  if (type.includes("surat_ket_wali_hakim")) return "wali_hakim";
-  if (type.includes("surat_kuasa")) return "kuasa";
-  if (type.includes("surat_perjalanan_dinas")) return "perjalanan_dinas";
-  if (type.includes("surat_permohonan_akta")) return "permohonan_akta";
-  if (type.includes("surat_permohonan_cerai")) return "cerai";
-  if (type.includes("surat_permohonan_duplikat_kelahiran")) return "duplikat_kelahiran";
-  if (type.includes("surat_permohonan_duplikat_surat_nikah")) return "duplikat_nikah";
-  if (type.includes("surat_permohonan_pas_lintas")) return "pas_lintas";
-  if (type.includes("surat_pernyataan_akta")) return "pernyataan_akta";
-  if (type.includes("surat_sporadik")) return "sporadik";
+  if (combined.includes("ket_usaha") || combined.includes("keterangan_usaha") || combined.includes("usaha")) return "ket_usaha";
+  if (combined.includes("bio_penduduk") || combined.includes("biodata")) return "bio_penduduk";
+  if (combined.includes("beda_identitas") || combined.includes("kis")) return "beda_identitas_kis";
+  if (combined.includes("jalan") || combined.includes("bepergian") || combined.includes("berpergian")) return "jalan";
+  if (combined.includes("izin_orangtua") || combined.includes("izin_orang_tua")) return "izin_orangtua";
+  if (combined.includes("keramaian")) return "keramaian";
+  if (combined.includes("beda_nama")) return "beda_nama";
+  if (combined.includes("catatan_kriminal") || combined.includes("skck")) return "catatan_kriminal";
+  if (combined.includes("jamkesos")) return "jamkesos";
+  if (combined.includes("jual_beli")) return "jual_beli";
+  if (combined.includes("kehilangan")) return "kehilangan";
+  if (combined.includes("kelahiran") && !combined.includes("duplikat") && !combined.includes("lahir_mati")) return "kelahiran";
+  if (combined.includes("kematian")) return "kematian";
+  if (combined.includes("kendaraan")) return "kendaraan";
+  if (combined.includes("kepemilikan_tanah") || combined.includes("tanah")) return "kepemilikan_tanah";
+  if (combined.includes("ktp_dalam_proses")) return "ktp_dalam_proses";
+  if (combined.includes("kurang_mampu") || combined.includes("sktm")) return "kurang_mampu";
+  if (combined.includes("janda") || combined.includes("duda")) return "janda";
+  if (combined.includes("lahir_mati")) return "lahir_mati";
+  if (combined.includes("ket_penduduk") || combined.includes("keterangan_penduduk")) return "ket_penduduk";
+  if (combined.includes("pengantar")) return "pengantar";
+  if (combined.includes("pergi_kawin")) return "pergi_kawin";
+  if (combined.includes("pindah")) return "pindah";
+  if (combined.includes("rujuk_cerai") || combined.includes("rujuk")) return "rujuk_cerai";
+  if (combined.includes("wali_hakim")) return "wali_hakim";
+  if (combined.includes("kuasa")) return "kuasa";
+  if (combined.includes("perjalanan_dinas") || combined.includes("sppd")) return "perjalanan_dinas";
+  if (combined.includes("permohonan_akta")) return "permohonan_akta";
+  if (combined.includes("cerai")) return "cerai";
+  if (combined.includes("duplikat_kelahiran")) return "duplikat_kelahiran";
+  if (combined.includes("duplikat_nikah")) return "duplikat_nikah";
+  if (combined.includes("pas_lintas")) return "pas_lintas";
+  if (combined.includes("pernyataan_akta")) return "pernyataan_akta";
+  if (combined.includes("sporadik")) return "sporadik";
   
-  return "blank";
+  return "standard";
 };
 
 const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previewData, readOnly, hideHeaderNavigation }: EditorProps) => {
   const { actions, query, enabled } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
-  const [selectedTemplate, setSelectedTemplate] = useState("blank");
+  const [selectedTemplate, setSelectedTemplate] = useState("standard");
   const [zoom, setZoom] = useState(100);
 
   // Construct context value
@@ -188,6 +189,22 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
     if (!content) content = loadTemplatePart6(type);
     if (!content) content = loadTemplatePart7(type);
 
+    if (!content) {
+      content = (
+        <Element is={Page} canvas>
+          <KopSurat />
+          <div className="h-4"></div>
+          <Element id="judul_standard_fb" is={Text} text="SURAT KETERANGAN" fontSize="16" textAlign="center" bold={true} />
+          <Element id="nomor_standard_fb" is={Text} text="Nomor : [format_nomor_surat]" fontSize="12" textAlign="center" />
+          <div className="h-6"></div>
+          <OpeningText />
+          <CommonPendudukData />
+          <ClosingText />
+          <Signature />
+        </Element>
+      );
+    }
+
     if (content) {
       // Wrap content in Root Container
       const wrappedContent = (
@@ -216,80 +233,28 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
   };
 
   useEffect(() => {
-    if (initialJson) {
+    let hasValidJson = false;
+    if (initialJson && typeof initialJson === 'string' && initialJson.trim().startsWith('{')) {
       try {
         actions.deserialize(initialJson);
+        hasValidJson = true;
       } catch (e) {
         console.error("Error loading initial JSON:", e);
       }
-    } else if (letterType) {
-       const templateKey = getTemplateKeyFromType(letterType);
-       if (templateKey && templateKey !== "blank") {
-          loadTemplate(templateKey);
-       } else {
-          // Default/Blank template
-          const defaultContent = (
-            <Element
-              is={Container}
-              canvas
-              width="100%"
-              height="auto"
-              background="transparent"
-              padding="0"
-              flexDirection="column"
-              alignItems="center"
-            >
-              <Element is={Page} canvas>
-                 <KopSurat />
-                 <div className="h-20"></div>
-                 <Text text="Klik tombol 'Edit' untuk mulai membuat surat." fontSize="14" textAlign="center" />
-              </Element>
-            </Element>
-          );
-          
-          try {
-             // @ts-ignore - React 19 compatibility
-             const tree = query.parseReactElement(defaultContent).toNodeTree();
-             actions.deserialize(tree.nodes as any);
-          } catch (e) {
-             console.error("Error loading default content:", e);
-          }
-       }
-    } else {
-        // Fallback if no letterType (e.g. direct create)
-        const defaultContent = (
-            <Element
-              is={Container}
-              canvas
-              width="100%"
-              height="auto"
-              background="transparent"
-              padding="0"
-              flexDirection="column"
-              alignItems="center"
-            >
-              <Element is={Page} canvas>
-                 <KopSurat />
-                 <div className="h-20"></div>
-                 <Text text="Klik tombol 'Edit' untuk mulai membuat surat." fontSize="14" textAlign="center" />
-              </Element>
-            </Element>
-          );
-          
-          try {
-             // @ts-ignore - React 19 compatibility
-             const tree = query.parseReactElement(defaultContent).toNodeTree();
-             actions.deserialize(tree.nodes as any);
-          } catch (e) {
-             console.error("Error loading default content:", e);
-          }
     }
-  }, [initialJson, letterType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (!hasValidJson) {
+      const templateKey = getTemplateKeyFromType(letterType, letterName);
+      loadTemplate(templateKey);
+    }
+  }, [initialJson, letterType, letterName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <SuratContext.Provider value={contextValue}>
       <div className={`h-full flex flex-col overflow-hidden ${readOnly ? 'bg-transparent' : 'bg-zinc-50'}`}>
-        <Header onSave={onSave} zoom={zoom} setZoom={setZoom} readOnly={readOnly} hideNavigation={hideHeaderNavigation} />
+        {!hideHeaderNavigation && (
+          <Header onSave={onSave} zoom={zoom} setZoom={setZoom} readOnly={readOnly} hideNavigation={hideHeaderNavigation} />
+        )}
         
         <div className="flex-1 flex overflow-hidden">
           {/* Left: Toolbox */}
@@ -297,9 +262,9 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
 
           {/* Center: Canvas */}
           <div className={`flex-1 flex flex-col relative transition-all ${readOnly ? 'bg-transparent' : 'bg-zinc-100/50'}`}>
-            <div className={`flex-1 overflow-auto flex justify-center custom-scrollbar ${readOnly ? 'py-10' : 'p-8'}`}>
+            <div className={`flex-1 overflow-auto flex justify-center custom-scrollbar ${readOnly ? 'py-6 px-4' : 'p-8'}`}>
                <div 
-                 className={`transition-transform duration-200 ease-out origin-top flex flex-col items-center ${readOnly ? 'pb-10' : 'pb-20'}`}
+                 className={`transition-transform duration-200 ease-out origin-top flex flex-col items-center ${readOnly ? 'pb-8' : 'pb-20'}`}
                  style={{ 
                    transform: `scale(${zoom / 100})`,
                    marginBottom: `${(zoom > 100 ? (zoom - 100) * 4 : 0)}mm` // Add extra space at bottom when zoomed in

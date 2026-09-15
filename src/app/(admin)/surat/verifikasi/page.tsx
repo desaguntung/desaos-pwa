@@ -623,10 +623,12 @@ export default function VerifikasiSuratPage() {
                    <div className="w-8 h-8 border-2 border-border-color border-t-primary-text rounded-full animate-spin" />
                    <p className="text-sm text-secondary-text font-medium">Memuat dokumen...</p>
                  </div>
-               ) : detailSurat && detailSurat.surat_formats?.template ? (
+               ) : detailSurat && detailSurat.surat_formats ? (
                  <div className="flex-1 w-full h-full relative" id="surat-preview-wrapper">
                      <Editor 
                       initialJson={detailSurat.surat_formats.template}
+                      letterType={detailSurat.surat_formats.url_surat || detailSurat.surat_formats.kode_surat || detailSurat.surat_formats.nama}
+                      letterName={detailSurat.surat_formats.nama}
                       readOnly={true}
                       hideHeaderNavigation={true}
                       previewData={buildSuratPreviewData({
