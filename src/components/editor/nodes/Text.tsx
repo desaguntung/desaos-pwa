@@ -148,11 +148,21 @@ export const Text = ({
     
     let processedText = text;
 
-    // Helper for Title Case
+    // Helper for Title Case with Roman numerals and acronyms support
+    const ROMAN_OR_ACRONYMS = new Set([
+      'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii',
+      'rt', 'rw', 'kk', 'nik', 'ktp', 'skck', 'wni', 'wna', 'pns', 'tni', 'polri',
+      'bpd', 'lpm', 'pdam', 'pln', 'bpjs', 'sim', 'hp', 'dki', 'diy'
+    ]);
+
     const toTitleCase = (str: string) => {
       if (!str) return "";
       return str.replace(/\w\S*/g, (txt) => {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        const lower = txt.toLowerCase();
+        if (ROMAN_OR_ACRONYMS.has(lower)) {
+          return lower.toUpperCase();
+        }
+        return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
       });
     };
 
@@ -161,7 +171,7 @@ export const Text = ({
         if (!dateStr) return "";
         try {
             const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr; // Return original if invalid date
+            if (isNaN(date.getTime())) return dateStr;
             return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
         } catch (e) {
             return dateStr;
@@ -172,20 +182,21 @@ export const Text = ({
     const variables: Record<string, string> = {};
     
     if (data.desa) {
-      variables['nama_des'] = data.desa.nama_desa || "";
-      variables['nama_desa'] = data.desa.nama_desa || "";
+      variables['nama_des'] = data.desa.nama_desa || data.desa.nama || "";
+      variables['nama_desa'] = data.desa.nama_desa || data.desa.nama || "";
       variables['sebutan_desa'] = data.desa.sebutan_desa || "Desa";
-      variables['nama_kec'] = data.desa.nama_kecamatan || "";
-      variables['nama_kecamatan'] = data.desa.nama_kecamatan || "";
-      variables['nama_kab'] = data.desa.nama_kabupaten || "";
-      variables['nama_kabupaten'] = data.desa.nama_kabupaten || "";
+      variables['nama_kec'] = data.desa.nama_kecamatan || data.desa.kecamatan || "";
+      variables['nama_kecamatan'] = data.desa.nama_kecamatan || data.desa.kecamatan || "";
+      variables['sebutan_kecamatan'] = data.desa.sebutan_kecamatan || "Kecamatan";
+      variables['nama_kab'] = data.desa.nama_kabupaten || data.desa.kabupaten || "";
+      variables['nama_kabupaten'] = data.desa.nama_kabupaten || data.desa.kabupaten || "";
       variables['sebutan_kabupaten'] = data.desa.sebutan_kabupaten || "Kabupaten";
-      variables['nama_prov'] = data.desa.nama_provinsi || "";
-      variables['nama_provinsi'] = data.desa.nama_provinsi || "";
+      variables['nama_prov'] = data.desa.nama_provinsi || data.desa.provinsi || "";
+      variables['nama_provinsi'] = data.desa.nama_provinsi || data.desa.provinsi || "";
       variables['kode_prov'] = data.desa.kode_provinsi || "";
       variables['kode_provinsi'] = data.desa.kode_provinsi || "";
-      variables['alamat_des'] = data.desa.alamat_kantor || "";
-      variables['alamat_desa'] = data.desa.alamat_kantor || "";
+      variables['alamat_des'] = data.desa.alamat_kantor || data.desa.alamat || "";
+      variables['alamat_desa'] = data.desa.alamat_kantor || data.desa.alamat || "";
       variables['kode_pos'] = data.desa.kode_pos || "";
       variables['website'] = data.desa.website || data.desa.website_desa || "";
       variables['email_desa'] = data.desa.email_desa || "";
@@ -198,21 +209,21 @@ export const Text = ({
     }
 
     if (data.pamong) {
-      variables['penandatangan'] = data.pamong.jabatan || data.pamong.pangkat || "";
+      variables['penandatangan'] = data.pamong.jabatan || data.pamong.pangkat || "Kepala Desa";
       variables['nama_pamong'] = data.pamong.nama || "";
-      variables['nama-pamong'] = variables['nama_pamong']; // Alias for dashed
+      variables['nama-pamong'] = variables['nama_pamong'];
       variables['nip_pamong'] = data.pamong.nip || "";
-      variables['nip-pamong'] = variables['nip_pamong']; // Alias for dashed
+      variables['nip-pamong'] = variables['nip_pamong'];
       variables['pangkat_pamong'] = data.pamong.pangkat || "";
-      variables['pangkat-pamong'] = variables['pangkat_pamong']; // Alias for dashed
+      variables['pangkat-pamong'] = variables['pangkat_pamong'];
     }
 
     if (data.surat) {
-       variables['nomor_surat'] = data.surat.nomor || "";
-       variables['format_nomor_surat'] = data.surat.nomor || "";
+       variables['nomor_surat'] = data.surat.nomor || data.surat.no_surat || "";
+       variables['format_nomor_surat'] = data.surat.nomor || data.surat.no_surat || "";
        variables['tgl_surat'] = data.surat.tanggal_surat || data.surat.tanggal || "";
        variables['tanggal_surat'] = data.surat.tanggal_surat || data.surat.tanggal || "";
-       variables['kode_surat'] = data.surat.kode || "";
+       variables['kode_surat'] = data.surat.kode || data.surat.kode_surat || "";
     }
 
     // Combine penduduk and form_data for variable resolution
@@ -222,8 +233,8 @@ export const Text = ({
     // Helper to get value from either source
     const getValue = (keys: string[]) => {
         for (const key of keys) {
-            if (pendudukData[key] !== undefined && pendudukData[key] !== null) return pendudukData[key];
-            if (formData[key] !== undefined && formData[key] !== null) return formData[key];
+            if (pendudukData[key] !== undefined && pendudukData[key] !== null && pendudukData[key] !== "") return String(pendudukData[key]);
+            if (formData[key] !== undefined && formData[key] !== null && formData[key] !== "") return String(formData[key]);
         }
         return "";
     };
@@ -243,65 +254,47 @@ export const Text = ({
       const tempat = variables['tempat_lahir'];
       const tgl = variables['tanggal_lahir_penduduk'];
       variables['tempat_tanggal_lahir'] = (tempat && tgl) ? `${tempat}, ${tgl}` : (tempat || tgl);
-      variables['ttl'] = variables['tempat_tanggal_lahir']; // Alias
-      variables['tempat_tgl_lahir'] = variables['tempat_tanggal_lahir']; // Alias
-      variables['tempat-tanggal-lahir'] = variables['tempat_tanggal_lahir']; // Alias for dashed
-      variables['tempat-tgl-lahir'] = variables['tempat_tanggal_lahir']; // Alias for dashed
+      variables['ttl'] = variables['tempat_tanggal_lahir'];
+      variables['tempat_tgl_lahir'] = variables['tempat_tanggal_lahir'];
+      variables['tempat-tanggal-lahir'] = variables['tempat_tanggal_lahir'];
+      variables['tempat-tgl-lahir'] = variables['tempat_tanggal_lahir'];
 
       // Jenis Kelamin
       const sex = getValue(['sex', 'jenis_kelamin', 'jk', 'gender']);
       let jk = sex;
-      if (sex == 1 || sex === "1") jk = "Laki-laki";
-      else if (sex == 2 || sex === "2") jk = "Perempuan";
-      else if (typeof sex === 'string') {
+      if (sex === "1") jk = "Laki-laki";
+      else if (sex === "2") jk = "Perempuan";
+      else if (sex) {
           if (sex.toUpperCase() === "L" || sex.toUpperCase() === "LAKI-LAKI") jk = "Laki-laki";
           else if (sex.toUpperCase() === "P" || sex.toUpperCase() === "PEREMPUAN") jk = "Perempuan";
       }
       variables['jenis_kelamin'] = jk || "";
-      variables['jk'] = jk || ""; // Alias
-      variables['sex'] = jk || ""; // Alias
-      variables['jenis-kelamin'] = jk || ""; // Alias for dashed
+      variables['jk'] = jk || "";
+      variables['sex'] = jk || "";
+      variables['jenis-kelamin'] = jk || "";
 
       variables['agama'] = getValue(['agama']);
       variables['pekerjaan'] = getValue(['pekerjaan', 'pekerjaan_kk']);
       variables['pendidikan'] = getValue(['pendidikan', 'pendidikan_kk', 'pendidikan_terakhir']);
       variables['status_kawin'] = getValue(['status_kawin', 'status_perkawinan']);
       
-      // Alamat
-      const jalan = getValue(['alamat', 'alamat_sekarang', 'alamat_jalan', 'alamat_saat_ini', 'jalan', 'alamat_sebelumnya']);
-      const rtVal = getValue(['rt']);
-      const rwVal = getValue(['rw']);
-      const dusunVal = getValue(['dusun', 'dusun_sekarang']);
-      
-      const rt = (rtVal && rtVal !== "-" && rtVal !== "0") ? `RT ${rtVal}` : "";
-      const rw = (rwVal && rwVal !== "-" && rwVal !== "0") ? `RW ${rwVal}` : "";
-      
-      let dusunStr = "";
-      if (dusunVal) {
-          dusunStr = dusunVal.toLowerCase().includes('dusun') ? dusunVal : `Dusun ${dusunVal}`;
-      }
-      
-      // Prevent duplication if jalan already contains dusun
-      if (jalan && dusunStr && jalan.toLowerCase().includes(dusunStr.toLowerCase())) {
-          dusunStr = "";
-      }
-      
-      const fullAddress = [jalan, dusunStr, rt, rw].filter(Boolean).join(" ");
+      // Alamat from penduduk (pre-formatted by buildSuratPreviewData)
+      const fullAddress = getValue(['alamat', 'alamat_lengkap', 'alamat_penduduk', 'alamat_tempat_tinggal', 'alamat_saat_ini']);
       
       variables['alamat_penduduk'] = fullAddress;
       variables['alamat_tempat_tinggal'] = fullAddress;
-      variables['alamat-tempat-tinggal'] = fullAddress; // Alias for dashed
+      variables['alamat-tempat-tinggal'] = fullAddress;
       variables['alamat'] = fullAddress;
-      variables['alamat_lengkap'] = fullAddress; // Alias
+      variables['alamat_lengkap'] = fullAddress;
       
-      variables['rt'] = rtVal || "";
-      variables['rw'] = rwVal || "";
-      variables['dusun'] = dusunVal || "";
+      variables['rt'] = getValue(['rt']);
+      variables['rw'] = getValue(['rw']);
+      variables['dusun'] = getValue(['dusun', 'dusun_sekarang']);
       
       variables['warganegara'] = getValue(['warga_negara', 'warganegara', 'kewarganegaraan', 'status_kewarganegaraan']) || "WNI";
       variables['kewarganegaraan'] = variables['warganegara'];
-      variables['wn'] = variables['warganegara']; // Alias
-      variables['warga-negara'] = variables['warganegara']; // Alias for dashed
+      variables['wn'] = variables['warganegara'];
+      variables['warga-negara'] = variables['warganegara'];
 
       variables['nama_ayah'] = getValue(['ayah', 'nama_ayah']);
       variables['nama_ibu'] = getValue(['ibu', 'nama_ibu']);
@@ -331,21 +324,11 @@ export const Text = ({
 
         // 1. ALL CAPS ([NAMA_DESA] or [KEPERLUAN]) -> UPPERCASE
         if (key === key.toUpperCase() && key !== key.toLowerCase()) {
-            return value.toUpperCase();
+            return String(value).toUpperCase();
         }
 
-        // 2. all lowercase ([nama_desa]) -> lowercase
-        if (key === key.toLowerCase() && key !== key.toUpperCase()) {
-            return value.toLowerCase();
-        }
-
-        // 3. Title Case ([Nama_Desa] or [Nama Usaha]) -> Title Case
-        if (key[0] === key[0].toUpperCase()) {
-            return toTitleCase(value);
-        }
-
-        // Default
-        return value;
+        // 2. Default: Return formatted value directly (never downcase proper nouns like desa/kecamatan)
+        return String(value);
     });
 
     return processedText;

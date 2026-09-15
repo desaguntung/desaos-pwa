@@ -760,10 +760,22 @@ export function buildSuratPreviewData({
     }
   };
 
-  // Title Case Helper
+  // Title Case Helper with Roman numerals and acronyms support
+  const ROMAN_OR_ACRONYMS = new Set([
+    'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii',
+    'rt', 'rw', 'kk', 'nik', 'ktp', 'skck', 'wni', 'wna', 'pns', 'tni', 'polri',
+    'bpd', 'lpm', 'pdam', 'pln', 'bpjs', 'sim', 'hp', 'dki', 'diy'
+  ]);
+
   const toTitleCase = (str: string) => {
     if (!str) return "";
-    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
+    return str.replace(/\w\S*/g, (txt) => {
+      const lower = txt.toLowerCase();
+      if (ROMAN_OR_ACRONYMS.has(lower)) {
+        return lower.toUpperCase();
+      }
+      return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
+    });
   };
 
   // Helper to clean duplicate prefixes like "Kabupaten Kabupaten", "Kecamatan Kecamatan", "Desa Desa"
@@ -772,6 +784,102 @@ export function buildSuratPreviewData({
     const trimmed = str.trim();
     const reg = new RegExp(`^${prefix}\\s+`, 'i');
     return trimmed.replace(reg, '').trim();
+  };
+
+  // Helper to format and deduplicate Indonesian address
+  const formatIndonesianAddress = (params: {
+    jalan?: string;
+    dusun?: string;
+    rt?: any;
+    rw?: any;
+    desa?: string;
+    kecamatan?: string;
+    kabupaten?: string;
+  }) => {
+    const { jalan, dusun, rt, rw, desa, kecamatan, kabupaten } = params;
+    let rawJalan = (jalan && jalan !== "-" && jalan !== "0") ? jalan.trim() : "";
+    let rawDusun = (dusun && dusun !== "-" && dusun !== "0") ? dusun.trim() : "";
+
+    // Normalize Dusun
+    let cleanDusun = "";
+    if (rawDusun) {
+      const dusunLower = rawDusun.toLowerCase();
+      if (dusunLower.startsWith("dusun ") || dusunLower.startsWith("lingkungan ") || dusunLower.startsWith("dukuh ") || dusunLower.startsWith("kampung ")) {
+        cleanDusun = toTitleCase(rawDusun);
+      } else {
+        cleanDusun = `Dusun ${toTitleCase(rawDusun)}`;
+      }
+    }
+
+    // Normalize Jalan & prevent duplicate with Dusun
+    let cleanJalan = "";
+    if (rawJalan) {
+      const normJalan = rawJalan.toLowerCase().replace(/[\s\-_.,/]+/g, "");
+      const normDusun = rawDusun.toLowerCase().replace(/[\s\-_.,/]+/g, "");
+      const normDusunNoPrefix = normDusun.replace(/^(dusun|lingkungan|dukuh|kampung)/, "");
+
+      const isSameAsDusun = normJalan === normDusun || 
+        normJalan === `dusun${normDusunNoPrefix}` || 
+        normJalan === normDusunNoPrefix;
+
+      if (isSameAsDusun) {
+        if (!cleanDusun) {
+          cleanDusun = rawJalan.toLowerCase().startsWith("dusun ") ? toTitleCase(rawJalan) : `Dusun ${toTitleCase(rawJalan)}`;
+        }
+        cleanJalan = "";
+      } else {
+        cleanJalan = toTitleCase(rawJalan);
+        if (cleanDusun && cleanJalan.toLowerCase().includes(cleanDusun.toLowerCase())) {
+          cleanDusun = "";
+        }
+      }
+    }
+
+    // Format RT / RW
+    let rtRw = "";
+    const cleanRt = (rt && rt !== "-" && rt !== "0") ? String(rt).replace(/^rt\.?\s*/i, "").trim() : "";
+    const cleanRw = (rw && rw !== "-" && rw !== "0") ? String(rw).replace(/^rw\.?\s*/i, "").trim() : "";
+    if (cleanRt && cleanRw) {
+      rtRw = `RT ${cleanRt} / RW ${cleanRw}`;
+    } else if (cleanRt) {
+      rtRw = `RT ${cleanRt}`;
+    } else if (cleanRw) {
+      rtRw = `RW ${cleanRw}`;
+    }
+
+    // Prevent duplicate RT/RW if already in jalan
+    if (rtRw && cleanJalan) {
+      const jLow = cleanJalan.toLowerCase();
+      if (jLow.includes("rt ") || jLow.includes("rt.") || jLow.includes("rw ") || jLow.includes("rw.")) {
+        rtRw = "";
+      }
+    }
+
+    const desaVal = desa ? `Desa ${cleanPrefix(desa, "Desa")}` : "";
+    const kecVal = kecamatan ? `Kec. ${cleanPrefix(kecamatan, "Kecamatan")}` : "";
+    const kabVal = kabupaten ? `Kab. ${cleanPrefix(kabupaten, "Kabupaten")}` : "";
+
+    const rawParts = [
+      cleanJalan,
+      cleanDusun,
+      rtRw,
+      desaVal,
+      kecVal,
+      kabVal,
+    ].filter(Boolean);
+
+    // Deduplicate parts case-insensitively
+    const uniqueParts: string[] = [];
+    for (const part of rawParts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const alreadyPresent = uniqueParts.some(p => p.toLowerCase() === trimmed.toLowerCase());
+      if (!alreadyPresent) {
+        uniqueParts.push(trimmed);
+      }
+    }
+
+    return uniqueParts.length > 0 ? uniqueParts.join(", ") : (jalan || "-");
   };
 
   const rawKab = identitasDesa?.nama_kabupaten || "";
@@ -800,51 +908,46 @@ export function buildSuratPreviewData({
     tanggal: tglSuratFormatted,
     tanggal_surat: tglSuratFormatted,
     tgl_surat: tglSuratFormatted,
-    nama_surat: surat?.nama_surat || "",
-    keterangan: surat?.keterangan || "",
     kode: surat?.kode || surat?.kode_surat || "",
     kode_surat: surat?.kode || surat?.kode_surat || "",
   };
 
-  // 2. Format Desa Data (Cleaned and legally structured)
+  // 2. Format Desa Data
   const desaObj = {
-    id: identitasDesa?.id,
-    nama: cleanDes || rawDes,
-    nama_desa: cleanDes || rawDes,
-    kode_desa: identitasDesa?.kode_desa || "",
-    sebutan_desa: sebutanDes,
-    kecamatan: cleanKec || rawKec,
-    nama_kecamatan: cleanKec || rawKec,
-    kode_kecamatan: identitasDesa?.kode_kecamatan || "",
-    sebutan_kecamatan: sebutanKec,
-    kabupaten: cleanKab || rawKab,
-    nama_kabupaten: cleanKab || rawKab,
-    kode_kabupaten: identitasDesa?.kode_kabupaten || "",
-    sebutan_kabupaten: sebutanKab,
-    provinsi: identitasDesa?.nama_provinsi || "",
-    nama_provinsi: identitasDesa?.nama_provinsi || "",
-    kode_provinsi: identitasDesa?.kode_provinsi || "",
+    ...identitasDesa,
+    nama: identitasDesa?.nama_desa ? toTitleCase(cleanDes) : "",
+    nama_desa: identitasDesa?.nama_desa ? toTitleCase(cleanDes) : "",
+    sebutan_desa: toTitleCase(sebutanDes),
+    kecamatan: identitasDesa?.nama_kecamatan ? toTitleCase(cleanKec) : "",
+    nama_kecamatan: identitasDesa?.nama_kecamatan ? toTitleCase(cleanKec) : "",
+    sebutan_kecamatan: toTitleCase(sebutanKec),
+    kabupaten: identitasDesa?.nama_kabupaten ? toTitleCase(cleanKab) : "",
+    nama_kabupaten: identitasDesa?.nama_kabupaten ? toTitleCase(cleanKab) : "",
+    sebutan_kabupaten: toTitleCase(sebutanKab),
+    provinsi: identitasDesa?.nama_provinsi ? toTitleCase(identitasDesa.nama_provinsi) : "",
+    nama_provinsi: identitasDesa?.nama_provinsi ? toTitleCase(identitasDesa.nama_provinsi) : "",
     alamat: identitasDesa?.alamat_kantor || "",
     alamat_kantor: identitasDesa?.alamat_kantor || "",
     alamat_desa: identitasDesa?.alamat_kantor || "",
-    alamat_des: identitasDesa?.alamat_kantor || "",
     kode_pos: identitasDesa?.kode_pos || "",
-    email_desa: identitasDesa?.email_desa || "",
+    telepon: identitasDesa?.telepon_desa || "",
     telepon_desa: identitasDesa?.telepon_desa || "",
+    email: identitasDesa?.email_desa || "",
+    email_desa: identitasDesa?.email_desa || "",
     website: identitasDesa?.website_desa || "",
     website_desa: identitasDesa?.website_desa || "",
-    logo: identitasDesa?.logo || "",
-    kades: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "",
-    nama_kepala_desa: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "",
+    kades: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "IDRIS",
+    nama_kepala_desa: identitasDesa?.nama_kepala_desa || pamong?.pamong_nama || pamong?.nama || "IDRIS",
     kades_nip: identitasDesa?.nip_kepala_desa || pamong?.pamong_nip || pamong?.nip || "-",
     nip_kepala_desa: identitasDesa?.nip_kepala_desa || pamong?.pamong_nip || pamong?.nip || "-",
+    logo: identitasDesa?.logo || "",
   };
 
   // 3. Format Pamong / Penandatangan Data
-  const pamongNama = pamong?.pamong_nama || pamong?.nama || "";
-  const pamongNip = pamong?.pamong_nip || pamong?.nip || "-";
-  const pamongPangkat = pamong?.pamong_pangkat || pamong?.pangkat || "";
-  const pamongJabatan = pamong?.jabatan || (pamong?.jabatan_id === 1 ? "Kepala Desa" : pamong?.jabatan_id === 2 ? "Sekretaris Desa" : "Perangkat Desa");
+  const pamongNama = pamong?.pamong_nama || pamong?.nama || desaObj.kades || "IDRIS";
+  const pamongNip = pamong?.pamong_nip || pamong?.nip || desaObj.kades_nip || "-";
+  const pamongJabatan = pamong?.pamong_jabatan || pamong?.jabatan || "Kepala Desa";
+  const pamongPangkat = pamong?.pamong_pangkat || pamong?.pangkat || "-";
 
   const pamongObj = {
     ...pamong,
@@ -869,24 +972,16 @@ export function buildSuratPreviewData({
       ? `${tempatLahir}, ${tglLahirFormatted}` 
       : (tempatLahir || tglLahirFormatted || "-");
 
-    // Address Assembly
-    const jalan = rawRes.alamat_saat_ini || rawRes.alamat_rt || rawRes.alamat_sebelumnya || "";
-    const rt = rawRes.rt ? `RT ${rawRes.rt}` : "";
-    const rw = rawRes.rw ? `RW ${rawRes.rw}` : "";
-    const dusun = rawRes.dusun ? (rawRes.dusun.toLowerCase().startsWith("dusun") ? rawRes.dusun : `Dusun ${rawRes.dusun}`) : "";
-
-    const addressParts = [
-      jalan && jalan !== "-" ? jalan : "",
-      dusun,
-      rt && rw ? `${rt} / ${rw}` : (rt || rw),
-      desaObj.nama ? `${desaObj.sebutan_desa || "Desa"} ${desaObj.nama}` : "",
-      desaObj.kecamatan ? `Kec. ${desaObj.kecamatan}` : "",
-      desaObj.kabupaten ? `${desaObj.sebutan_kabupaten || "Kab."} ${desaObj.kabupaten}` : "",
-    ].filter(Boolean);
-
-    const fullAddress = addressParts.length > 0 
-      ? addressParts.join(", ") 
-      : (rawRes.alamat_saat_ini || "-");
+    // Address Assembly using Deduplication Formatter
+    const fullAddress = formatIndonesianAddress({
+      jalan: rawRes.alamat_saat_ini || rawRes.alamat_rt || rawRes.alamat_sebelumnya,
+      dusun: rawRes.dusun,
+      rt: rawRes.rt,
+      rw: rawRes.rw,
+      desa: desaObj.nama,
+      kecamatan: desaObj.kecamatan,
+      kabupaten: desaObj.kabupaten,
+    });
 
     const genderVal = rawRes.jenis_kelamin || (rawRes.sex === 1 || rawRes.sex === "1" ? "Laki-laki" : rawRes.sex === 2 || rawRes.sex === "2" ? "Perempuan" : rawRes.sex || "-");
     const kewarganegaraan = rawRes.kewarganegaraan || rawRes.warga_negara || "WNI";

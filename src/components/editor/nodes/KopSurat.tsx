@@ -28,7 +28,9 @@ export const KopSurat = ({
     selected: state.events.selected,
   }));
   const { data, mode } = useSuratContext();
-  const effectiveLogo = logoUrl || data?.desa?.logo || "";
+  const rawLogo = logoUrl || data?.desa?.logo || "";
+  const isValidLogo = rawLogo && (rawLogo.startsWith('http://') || rawLogo.startsWith('https://') || rawLogo.startsWith('data:') || rawLogo.startsWith('/'));
+  const effectiveLogo = isValidLogo ? rawLogo : "";
 
   if (mode === 'preview') {
     return (
@@ -42,12 +44,13 @@ export const KopSurat = ({
               {showLogoLeft && (
                   <div style={{ width: `${logoSize}px`, height: `${Number(logoSize) * 1.2}px` }} className="flex items-center justify-center">
                      {effectiveLogo ? (
-                       <img src={effectiveLogo} alt="Logo" className="w-full h-full object-contain" />
-                     ) : (
-                       <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded text-gray-400">
-                          <span className="text-[10px] text-center">LOGO</span>
-                       </div>
-                     )}
+                       <img 
+                         src={effectiveLogo} 
+                         alt="Logo" 
+                         className="w-full h-full object-contain" 
+                         onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                       />
+                     ) : null}
                   </div>
               )}
           </div>

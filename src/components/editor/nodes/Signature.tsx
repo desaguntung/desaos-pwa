@@ -117,6 +117,84 @@ export const Signature = ({
     </div>
   );
 
+  if (context?.mode === 'preview') {
+    const desaName = data.desa?.nama || data.desa?.nama_desa || "Guntung";
+    const tglSurat = data.surat?.tanggal_surat || data.surat?.tanggal || "";
+    const placeDateFormatted = `${desaName}, ${tglSurat}`;
+    const jabatan = data.pamong?.jabatan || data.pamong?.penandatangan || "Kepala Desa";
+    const officialName = data.pamong?.nama || data.desa?.kades || data.desa?.nama_kepala_desa || "IDRIS";
+    const officialNip = data.pamong?.nip && data.pamong?.nip !== '-' ? data.pamong.nip : "";
+    const pemohonName = data.penduduk?.nama || data.penduduk?.nama_lengkap || "PEMOHON";
+
+    return (
+      <>
+        <div
+          className="w-full flex flex-col"
+          style={{ marginTop: `${marginTop}px` }}
+        >
+          <div 
+            className="w-full flex"
+            style={{
+              justifyContent,
+              gap: gap !== "0" ? `${gap}px` : undefined
+            }}
+          >
+            {/* Left Signature: Pemegang Surat */}
+            {showLeftSignature && (
+              <div className="w-64" style={{ textAlign: textAlign as any }}>
+                <div className="h-4"></div>
+                <div style={{ fontSize: `${fontSize}px` }}>{leftTitle || "Pemegang Surat"}</div>
+                <div className="h-20"></div>
+                <div style={{ fontSize: `${fontSize}px`, fontWeight: "bold", textTransform: "uppercase", textDecoration: "underline" }}>
+                  {pemohonName}
+                </div>
+              </div>
+            )}
+
+            {/* Right Signature: Kades/Pamong */}
+            <div className="w-64" style={{ textAlign: textAlign as any }}>
+              <div style={{ fontSize: `${fontSize}px` }}>{placeDateFormatted}</div>
+              <div style={{ fontSize: `${fontSize}px`, textTransform: "capitalize" }}>{jabatan}</div>
+              
+              {/* QR Code or Space */}
+              {shouldShowQrCode && !isManual ? (
+                <div className={`h-20 flex items-center ${textAlign === 'left' ? 'justify-start' : textAlign === 'right' ? 'justify-end' : 'justify-center'} my-1`}>
+                  {qrSrc ? (
+                    <img src={qrSrc} alt="QR Code" className="w-16 h-16 object-contain" />
+                  ) : (
+                    <div className="h-16"></div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-20"></div>
+              )}
+
+              <div style={{ fontSize: `${fontSize}px`, fontWeight: "bold", textTransform: "uppercase", textDecoration: "underline" }}>
+                {officialName}
+              </div>
+              <div className="h-1"></div>
+              
+              {/* Line for NIP */}
+              {showNip && officialNip && (
+                <div className="nip-container">
+                  <div className={`flex ${textAlign === 'center' ? 'justify-center' : textAlign === 'right' ? 'justify-end' : 'justify-start'} gap-1 mt-1`}>
+                    <span style={{ fontSize: `${fontSize}px` }}>NIP:</span>
+                    <span style={{ fontSize: `${fontSize}px` }}>{officialNip}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Portal to Footer Area */}
+        {domReady && isManual && shouldShowQrCode && document.getElementById('footer-area-portal') && 
+          createPortal(footerContent, document.getElementById('footer-area-portal')!)
+        }
+      </>
+    );
+  }
+
   return (
     <>
     <div
