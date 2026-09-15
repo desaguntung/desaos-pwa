@@ -60,19 +60,48 @@ export async function getProfileData(): Promise<{ data: ProfileData | null; erro
 
     if (idError) throw idError;
 
-    // 2. Fetch Pamong Desa (Apparatus)
-    const { data: pamong, error: pamongError } = await supabase
-      .from("pamong_desa")
+    // 2. Fetch Pamong / Aparatur Desa
+    let pamongList: any[] = [];
+    const { data: aparatur, error: aparaturError } = await supabase
+      .from("aparatur_desa")
       .select(`
         *,
-        penduduk:id_pend (
+        penduduk:penduduk_id (
           nama
         )
       `)
-      .eq("pamong_status", 1) // Active only
-      .order("pamong_nama", { ascending: true });
+      .order("nama", { ascending: true });
 
-    if (pamongError) console.error("Error fetching pamong:", pamongError);
+    if (!aparaturError && aparatur) {
+      pamongList = aparatur.map((a: any) => ({
+        pamong_id: a.id,
+        pamong_nama: a.nama,
+        gelar_depan: a.gelar_depan,
+        gelar_belakang: a.gelar_belakang,
+        pamong_nip: a.nip,
+        pamong_nik: a.nik,
+        pamong_niap: a.niap,
+        pamong_pangkat: a.pangkat,
+        jabatan: a.jabatan,
+        foto: a.avatar_url,
+        pamong_status: a.status ?? (a.is_active ? 1 : 0),
+        penduduk: a.penduduk
+      }));
+    } else {
+      const { data: pamongLegacy, error: pamongError } = await supabase
+        .from("pamong_desa")
+        .select(`
+          *,
+          penduduk:id_pend (
+            nama
+          )
+        `)
+        .eq("pamong_status", 1) // Active only
+        .order("pamong_nama", { ascending: true });
+
+      if (pamongError) console.error("Error fetching pamong:", pamongError);
+      pamongList = pamongLegacy || [];
+    }
 
     // 3. Fetch Prestasi Desa
     const { data: prestasi, error: prestasiError } = await supabase
@@ -85,7 +114,7 @@ export async function getProfileData(): Promise<{ data: ProfileData | null; erro
     return {
       data: {
         identitas: identitas || {},
-        pamong: pamong || [],
+        pamong: pamongList || [],
         prestasi: prestasi || []
       }
     };

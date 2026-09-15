@@ -302,88 +302,263 @@ export async function incrementNomorSurat(key: string) {
 }
 
 
-// --- Surat Masuk ---
+// --- Aparatur / Pamong Helpers & Services ---
 
-export async function getPamong() {
-  const supabase = createSupabaseBrowserClient();
-  // Try to fetch from pamong_desa first (more likely correct in this schema)
-  const { data, error } = await supabase
-    .from("pamong_desa") 
-    .select("*");
-
-  if (error) {
-    // Fallback to 'pamong' if 'pamong_desa' fails (legacy support)
-    const { data: dataLegacy, error: errorLegacy } = await supabase
-      .from("pamong")
-      .select("*");
-      
-    if (errorLegacy) {
-      console.error("Error fetching pamong:", errorLegacy);
-      throw errorLegacy;
-    }
-    return dataLegacy as Pamong[];
-  }
-  return data as Pamong[];
+export function mapAparaturToPamong(row: any): Pamong {
+  if (!row) return row;
+  return {
+    pamong_id: row.id ?? row.pamong_id,
+    pamong_nama: row.nama ?? row.pamong_nama ?? "",
+    gelar_depan: row.gelar_depan ?? undefined,
+    gelar_belakang: row.gelar_belakang ?? undefined,
+    pamong_nip: row.nip ?? row.pamong_nip ?? undefined,
+    pamong_nik: row.nik ?? row.pamong_nik ?? undefined,
+    pamong_niap: row.niap ?? row.pamong_niap ?? undefined,
+    pamong_pangkat: row.pangkat ?? row.pamong_pangkat ?? undefined,
+    jabatan: row.jabatan ?? undefined,
+    jabatan_id: row.jabatan_id ?? undefined,
+    pamong_status: row.status !== undefined
+      ? (typeof row.status === "boolean" ? (row.status ? 1 : 0) : Number(row.status))
+      : (row.is_active !== undefined ? (row.is_active ? 1 : 0) : (row.pamong_status ?? 1)),
+    pamong_ttd: row.ttd_berhak !== undefined
+      ? (typeof row.ttd_berhak === "boolean" ? (row.ttd_berhak ? 1 : 0) : Number(row.ttd_berhak))
+      : (row.pamong_ttd ?? 0),
+    foto: row.avatar_url ?? row.foto ?? undefined,
+    pamong_nosk: row.no_sk_angkat ?? row.pamong_nosk ?? undefined,
+    pamong_tglsk: row.tgl_sk_angkat ?? row.pamong_tglsk ?? undefined,
+    pamong_nohenti: row.no_sk_henti ?? row.pamong_nohenti ?? undefined,
+    pamong_tglhenti: row.tgl_sk_henti ?? row.pamong_tglhenti ?? undefined,
+    id_pend: row.penduduk_id ? String(row.penduduk_id) : (row.id_pend ? String(row.id_pend) : undefined),
+    urut: row.urutan ?? row.urut ?? undefined,
+    atasan: row.atasan_id ?? row.atasan ?? undefined,
+    bagan_tingkat: row.level_struktur ?? row.bagan_tingkat ?? undefined,
+    penduduk: row.penduduk ?? undefined,
+  };
 }
 
-export async function getPamongById(id: number) {
+export function mapPamongToAparatur(p: Partial<Pamong>): any {
+  const payload: any = {};
+  if (p.pamong_nama !== undefined) payload.nama = p.pamong_nama;
+  if (p.gelar_depan !== undefined) payload.gelar_depan = p.gelar_depan;
+  if (p.gelar_belakang !== undefined) payload.gelar_belakang = p.gelar_belakang;
+  if (p.pamong_nip !== undefined) payload.nip = p.pamong_nip;
+  if (p.pamong_nik !== undefined) payload.nik = p.pamong_nik;
+  if (p.pamong_niap !== undefined) payload.niap = p.pamong_niap;
+  if (p.pamong_pangkat !== undefined) payload.pangkat = p.pamong_pangkat;
+  if (p.jabatan !== undefined) payload.jabatan = p.jabatan;
+  if (p.jabatan_id !== undefined) payload.jabatan_id = p.jabatan_id;
+  if (p.pamong_status !== undefined) {
+    payload.status = p.pamong_status;
+    payload.is_active = p.pamong_status === 1;
+  }
+  if (p.pamong_ttd !== undefined) {
+    payload.ttd_berhak = Boolean(p.pamong_ttd);
+  }
+  if (p.foto !== undefined) payload.avatar_url = p.foto;
+  if (p.pamong_nosk !== undefined) payload.no_sk_angkat = p.pamong_nosk;
+  if (p.pamong_tglsk !== undefined) payload.tgl_sk_angkat = p.pamong_tglsk;
+  if (p.pamong_nohenti !== undefined) payload.no_sk_henti = p.pamong_nohenti;
+  if (p.pamong_tglhenti !== undefined) payload.tgl_sk_henti = p.pamong_tglhenti;
+  if (p.id_pend !== undefined) payload.penduduk_id = p.id_pend;
+  if (p.urut !== undefined) payload.urutan = p.urut;
+  if (p.atasan !== undefined) payload.atasan_id = p.atasan;
+  if (p.bagan_tingkat !== undefined) payload.level_struktur = p.bagan_tingkat;
+  return payload;
+}
+
+export async function getPamong(): Promise<Pamong[]> {
   const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
+
+  // 1. Try 'aparatur_desa' (standard Supabase schema)
+  const { data: dataAparatur, error: errorAparatur } = await supabase
+    .from("aparatur_desa")
+    .select("*, penduduk:penduduk_id(nama, nik, foto)");
+
+  if (!errorAparatur && dataAparatur) {
+    return (dataAparatur as any[]).map(mapAparaturToPamong);
+  }
+
+  // 2. Try 'pamong_desa'
+  const { data: dataPamongDesa, error: errorPamongDesa } = await supabase
+    .from("pamong_desa")
+    .select("*");
+
+  if (!errorPamongDesa && dataPamongDesa) {
+    return (dataPamongDesa as any[]).map(mapAparaturToPamong);
+  }
+
+  // 3. Try 'pamong' (legacy fallback)
+  const { data: dataLegacy, error: errorLegacy } = await supabase
+    .from("pamong")
+    .select("*");
+
+  if (!errorLegacy && dataLegacy) {
+    return (dataLegacy as any[]).map(mapAparaturToPamong);
+  }
+
+  console.error("Error fetching pamong from all tables:", errorAparatur || errorPamongDesa || errorLegacy);
+  throw errorAparatur || errorPamongDesa || errorLegacy;
+}
+
+export async function getPamongById(id: number | string): Promise<Pamong | null> {
+  const supabase = createSupabaseBrowserClient();
+
+  // 1. Try 'aparatur_desa'
+  const { data: dataAparatur, error: errorAparatur } = await supabase
+    .from("aparatur_desa")
+    .select("*, penduduk:penduduk_id(nama, nik, foto)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!errorAparatur && dataAparatur) {
+    return mapAparaturToPamong(dataAparatur);
+  }
+
+  // 2. Try 'pamong_desa'
+  const { data: dataPamongDesa, error: errorPamongDesa } = await supabase
     .from("pamong_desa")
     .select("*")
     .eq("pamong_id", id)
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    console.error("Error fetching pamong by id:", error);
-    throw error;
+  if (!errorPamongDesa && dataPamongDesa) {
+    return mapAparaturToPamong(dataPamongDesa);
   }
-  return data as Pamong;
+
+  // 3. Try 'pamong'
+  const { data: dataLegacy, error: errorLegacy } = await supabase
+    .from("pamong")
+    .select("*")
+    .eq("pamong_id", id)
+    .maybeSingle();
+
+  if (!errorLegacy && dataLegacy) {
+    return mapAparaturToPamong(dataLegacy);
+  }
+
+  if (errorAparatur && errorPamongDesa && errorLegacy) {
+    throw errorAparatur || errorPamongDesa || errorLegacy;
+  }
+  return null;
 }
 
-export async function createPamong(pamong: Partial<Pamong>) {
+export async function createPamong(pamong: Partial<Pamong>): Promise<Pamong> {
   const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
+
+  // 1. Try insert into 'aparatur_desa'
+  const aparaturPayload = mapPamongToAparatur(pamong);
+  const { data: dataAparatur, error: errorAparatur } = await supabase
+    .from("aparatur_desa")
+    .insert([aparaturPayload])
+    .select()
+    .single();
+
+  if (!errorAparatur && dataAparatur) {
+    return mapAparaturToPamong(dataAparatur);
+  }
+
+  // 2. Fallback to 'pamong_desa'
+  const { data: dataPamongDesa, error: errorPamongDesa } = await supabase
     .from("pamong_desa")
     .insert([pamong])
     .select()
     .single();
 
-  if (error) {
-    console.error("Error creating pamong:", error);
-    throw error;
+  if (!errorPamongDesa && dataPamongDesa) {
+    return mapAparaturToPamong(dataPamongDesa);
   }
-  return data as Pamong;
+
+  // 3. Fallback to 'pamong'
+  const { data: dataLegacy, error: errorLegacy } = await supabase
+    .from("pamong")
+    .insert([pamong])
+    .select()
+    .single();
+
+  if (!errorLegacy && dataLegacy) {
+    return mapAparaturToPamong(dataLegacy);
+  }
+
+  throw errorAparatur || errorPamongDesa || errorLegacy;
 }
 
-export async function updatePamong(id: number, pamong: Partial<Pamong>) {
+export async function updatePamong(id: number | string, pamong: Partial<Pamong>): Promise<Pamong> {
   const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
+
+  // 1. Try 'aparatur_desa'
+  const aparaturPayload = mapPamongToAparatur(pamong);
+  const { data: dataAparatur, error: errorAparatur } = await supabase
+    .from("aparatur_desa")
+    .update(aparaturPayload)
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+
+  if (!errorAparatur && dataAparatur) {
+    return mapAparaturToPamong(dataAparatur);
+  }
+
+  // 2. Fallback to 'pamong_desa'
+  const { data: dataPamongDesa, error: errorPamongDesa } = await supabase
     .from("pamong_desa")
     .update(pamong)
     .eq("pamong_id", id)
     .select()
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    console.error("Error updating pamong:", error);
-    throw error;
+  if (!errorPamongDesa && dataPamongDesa) {
+    return mapAparaturToPamong(dataPamongDesa);
   }
-  return data as Pamong;
+
+  // 3. Fallback to 'pamong'
+  const { data: dataLegacy, error: errorLegacy } = await supabase
+    .from("pamong")
+    .update(pamong)
+    .eq("pamong_id", id)
+    .select()
+    .maybeSingle();
+
+  if (!errorLegacy && dataLegacy) {
+    return mapAparaturToPamong(dataLegacy);
+  }
+
+  throw errorAparatur || errorPamongDesa || errorLegacy;
 }
 
-export async function deletePamong(id: number) {
+export async function deletePamong(id: number | string): Promise<boolean> {
   const supabase = createSupabaseBrowserClient();
-  const { error } = await supabase
+
+  // 1. Try 'aparatur_desa'
+  const { error: errorAparatur } = await supabase
+    .from("aparatur_desa")
+    .delete()
+    .eq("id", id);
+
+  if (!errorAparatur) {
+    return true;
+  }
+
+  // 2. Fallback to 'pamong_desa'
+  const { error: errorPamongDesa } = await supabase
     .from("pamong_desa")
     .delete()
     .eq("pamong_id", id);
 
-  if (error) {
-    console.error("Error deleting pamong:", error);
-    throw error;
+  if (!errorPamongDesa) {
+    return true;
   }
-  return true;
+
+  // 3. Fallback to 'pamong'
+  const { error: errorLegacy } = await supabase
+    .from("pamong")
+    .delete()
+    .eq("pamong_id", id);
+
+  if (!errorLegacy) {
+    return true;
+  }
+
+  throw errorAparatur || errorPamongDesa || errorLegacy;
 }
 
 export async function getSuratMasuk() {
