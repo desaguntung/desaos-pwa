@@ -344,7 +344,7 @@ export const Text = ({
         textAlign: textAlign as any, 
         fontWeight: fontWeight,
         color: color,
-        fontFamily: mode === 'preview' ? 'var(--font-sans)' : fontFamily,
+        fontFamily: fontFamily || 'Arial, "Times New Roman", sans-serif',
         lineHeight: lineHeight,
         letterSpacing: `${letterSpacing}px`,
         textDecoration: textDecoration,
@@ -363,8 +363,8 @@ export const Text = ({
         html={displayContent}
         disabled={!editable || mode === 'preview'}
         onChange={(e) => setProp((props: any) => (props.text = e.target.value))}
-        tagName="div"
-        className="focus:outline-none"
+        onBlur={() => setEditable(false)}
+        className="outline-none focus:outline-none"
       />
     </div>
   );
@@ -432,14 +432,17 @@ export const TextSettings = () => {
       <SettingsSection title="Typography" icon={Type}>
         {/* Font Family */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Font Family</label>
+          <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Font Family (Standar Dinas)</label>
           <select
-            value={props.fontFamily || "var(--font-sans)"}
+            value={props.fontFamily || "Arial, sans-serif"}
             onChange={(e) => handlePropChange("fontFamily", e.target.value)}
             className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="var(--font-sans)">Geist Sans</option>
-            <option value="var(--font-mono)">Geist Mono</option>
+            <option value="Arial, sans-serif">Arial (Standar Naskah Dinas)</option>
+            <option value='"Times New Roman", Times, serif'>Times New Roman (Formal Serif)</option>
+            <option value='"Bookman Old Style", Georgia, serif'>Bookman Old Style (Keputusan Resmi)</option>
+            <option value="Calibri, sans-serif">Calibri</option>
+            <option value="Georgia, serif">Georgia</option>
           </select>
         </div>
 

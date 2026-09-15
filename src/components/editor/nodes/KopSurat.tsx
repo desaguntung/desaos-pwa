@@ -317,9 +317,9 @@ export const KopSuratSettings = () => {
             </div>
             
             <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-500">Font Family</label>
+                <label className="text-xs font-medium text-gray-500">Font Family (Kop Surat)</label>
                 <select
-                  value={fontFamilyTitle || "var(--font-sans)"}
+                  value={fontFamilyTitle || "Arial, sans-serif"}
                   onChange={(e) => {
                     const val = e.target.value;
                     setProp((props: any) => (props.fontFamilyTitle = val));
@@ -327,9 +327,10 @@ export const KopSuratSettings = () => {
                   }}
                   className="w-full px-2 py-1 text-xs border rounded bg-white"
                 >
-                  <option value="var(--font-sans)">Sans (Geist Sans)</option>
-                  <option value="var(--font-mono)">Mono (Geist Mono)</option>
-                  <option value='"Times New Roman", Times, serif'>Serif (Times New Roman)</option>
+                  <option value="Arial, sans-serif">Arial (Standar Naskah Dinas)</option>
+                  <option value='"Times New Roman", Times, serif'>Times New Roman (Formal Serif)</option>
+                  <option value='"Bookman Old Style", Georgia, serif'>Bookman Old Style (Keputusan Resmi)</option>
+                  <option value="Calibri, sans-serif">Calibri</option>
                 </select>
             </div>
         </div>
@@ -377,7 +378,7 @@ KopSurat.craft = {
       showLogoRight: false,
       fontSizeTitle: "14",
       logoUrl: "",
-      fontFamilyTitle: "var(--font-sans)"
+      fontFamilyTitle: "Arial, sans-serif"
   },
   related: {
       settings: KopSuratSettings

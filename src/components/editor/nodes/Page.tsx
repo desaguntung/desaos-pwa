@@ -496,14 +496,15 @@ export const PageSettings = () => {
 
              <div className="space-y-1 mt-2">
                  <label className="text-[10px] uppercase text-zinc-400 font-semibold tracking-wider">Font Family</label>
-                 <select
-                   value={props.watermarkFontFamily}
-                   onChange={(e) => handlePropChange("watermarkFontFamily", e.target.value)}
-                   className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md bg-white"
-                 >
-                   <option value="var(--font-sans)">Geist Sans</option>
-                   <option value="var(--font-mono)">Geist Mono</option>
-                 </select>
+                  <select
+                    value={props.watermarkFontFamily || "Arial, sans-serif"}
+                    onChange={(e) => handlePropChange("watermarkFontFamily", e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs border border-zinc-200 rounded-md bg-white"
+                  >
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value='"Times New Roman", Times, serif'>Times New Roman</option>
+                    <option value='"Bookman Old Style", Georgia, serif'>Bookman Old Style</option>
+                  </select>
              </div>
 
             <div className="grid grid-cols-2 gap-2 mt-2">
@@ -578,7 +579,7 @@ Page.craft = {
     watermarkGapX: 40,
     watermarkGapY: 40,
     watermarkLetterSpacing: 0,
-    watermarkFontFamily: "var(--font-sans)",
+    watermarkFontFamily: "Arial, sans-serif",
     watermarkGridType: "grid"
   },
   related: {

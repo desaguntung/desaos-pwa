@@ -252,7 +252,7 @@ export const Signature = ({
                     <div className="border-t border-black w-3/4"></div>
                 </div>
                 <div className={`flex ${textAlign === 'center' ? 'justify-center' : textAlign === 'right' ? 'justify-end' : 'justify-start'} gap-1 mt-1`}>
-                    <span style={{ fontSize: `${fontSize}px`, fontFamily: 'var(--font-sans)' }}>NIP:</span>
+                    <span style={{ fontSize: `${fontSize}px`, fontFamily: 'inherit' }}>NIP:</span>
                     <Element id="sig_nip" is={Variable} name={rightNip} fontSize={fontSize} />
                 </div>
             </div>
