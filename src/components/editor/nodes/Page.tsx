@@ -137,7 +137,7 @@ export const Page = ({
   };
 
   return (
-    <div className="relative group/page-wrapper mb-16 mx-auto w-fit">
+    <div className={`relative group/page-wrapper ${enabled ? 'mb-16' : 'mb-0'} mx-auto w-fit`}>
         {/* Top Controls - Only show when enabled (editing mode) */}
         {enabled && (
         <div className="absolute -top-12 left-0 right-0 flex justify-center items-center gap-2 opacity-0 group-hover/page-wrapper:opacity-100 transition-opacity z-20">
@@ -157,7 +157,7 @@ export const Page = ({
 
         <div
           ref={(ref) => { if (ref) connect(drag(ref)); }}
-          className={`bg-white shadow-2xl transition-all relative font-surat ${selected ? "ring-2 ring-blue-500 ring-offset-4" : ""}`}
+          className={`bg-white ${enabled ? 'shadow-2xl' : 'shadow-lg border border-slate-200/80'} transition-all relative font-surat ${selected ? "ring-2 ring-blue-500 ring-offset-4" : ""}`}
           style={{
             width: width,
             minHeight: height,

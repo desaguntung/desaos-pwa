@@ -452,7 +452,7 @@ export default function CetakSuratPage() {
                       transformOrigin: "top center",
                       transition: "transform 0.15s ease-out"
                     }}
-                    className="shadow-md shadow-slate-300/40 dark:shadow-none border border-slate-200/90 dark:border-zinc-700 bg-white rounded-sm shrink-0 my-2"
+                    className="shrink-0 my-2 bg-transparent border-0 shadow-none"
                   >
                     <Editor
                       initialJson={selectedFormat?.template}
@@ -926,7 +926,7 @@ export default function CetakSuratPage() {
                 transformOrigin: "top center",
                 transition: "transform 0.15s ease-out"
               }}
-              className="shadow-2xl rounded-sm"
+              className="shrink-0 my-2 bg-transparent border-0 shadow-none"
             >
               <Editor
                 initialJson={selectedFormat.template}

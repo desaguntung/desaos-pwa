@@ -262,12 +262,12 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
 
           {/* Center: Canvas */}
           <div className={`flex-1 flex flex-col relative transition-all ${readOnly ? 'bg-transparent' : 'bg-zinc-100/50'}`}>
-            <div className={`flex-1 overflow-auto flex justify-center custom-scrollbar ${readOnly ? 'py-6 px-4' : 'p-8'}`}>
+            <div className={`flex-1 flex justify-center ${readOnly ? 'p-0 overflow-visible' : 'overflow-auto custom-scrollbar p-8'}`}>
                <div 
-                 className={`transition-transform duration-200 ease-out origin-top flex flex-col items-center ${readOnly ? 'pb-8' : 'pb-20'}`}
+                 className={`transition-transform duration-200 ease-out origin-top flex flex-col items-center ${readOnly ? 'p-0 pb-0' : 'pb-20'}`}
                  style={{ 
-                   transform: `scale(${zoom / 100})`,
-                   marginBottom: `${(zoom > 100 ? (zoom - 100) * 4 : 0)}mm` // Add extra space at bottom when zoomed in
+                   transform: !readOnly ? `scale(${zoom / 100})` : undefined,
+                   marginBottom: (!readOnly && zoom > 100) ? `${(zoom - 100) * 4}mm` : 0
                  }}
                >
                  <Frame />
