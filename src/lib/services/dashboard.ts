@@ -51,11 +51,19 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     .from("penduduk")
     .select("*", { count: "exact", head: true });
 
-  // 2. Total Keluarga (Count Kepala Keluarga)
-  const { count: totalKeluarga } = await supabase
+  // 2. Total Keluarga (Count Kepala Keluarga: kk_level = 1 or hubungan_keluarga_id = 1)
+  let { count: totalKeluarga } = await supabase
     .from("penduduk")
     .select("*", { count: "exact", head: true })
-    .ilike("hubungan_keluarga", "KEPALA KELUARGA");
+    .or("kk_level.eq.1,hubungan_keluarga_id.eq.1,hubungan_keluarga.ilike.KEPALA KELUARGA");
+
+  if (!totalKeluarga || totalKeluarga === 0) {
+    const { count: countKk } = await supabase
+      .from("penduduk")
+      .select("*", { count: "exact", head: true })
+      .not("no_kk", "is", null);
+    totalKeluarga = countKk || 0;
+  }
 
   // 3. Total Surat Masuk
   const { count: totalSuratMasuk } = await supabase
@@ -67,16 +75,16 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     .from("log_surat")
     .select("*", { count: "exact", head: true });
 
-  // 5. Gender Stats
-  const { count: laki } = await supabase
+  // 5. Gender Stats: check sex.eq.1, jenis_kelamin_id.eq.1, jenis_kelamin.ilike.LAKI-LAKI
+  let { count: laki } = await supabase
     .from("penduduk")
     .select("*", { count: "exact", head: true })
-    .eq("jenis_kelamin", "LAKI-LAKI");
+    .or("sex.eq.1,jenis_kelamin_id.eq.1,jenis_kelamin.ilike.LAKI-LAKI");
 
-  const { count: perempuan } = await supabase
+  let { count: perempuan } = await supabase
     .from("penduduk")
     .select("*", { count: "exact", head: true })
-    .eq("jenis_kelamin", "PEREMPUAN");
+    .or("sex.eq.2,jenis_kelamin_id.eq.2,jenis_kelamin.ilike.PEREMPUAN");
 
   // 6. Chart Data (Dummy/Simulated for now based on real totals or just static trend)
   // Since we don't have an easy way to aggregate by date without RPC or fetching all data,

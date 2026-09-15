@@ -1,25 +1,27 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
-  MagnifyingGlass as Search, 
+  Search, 
   MoreHorizontal,
-  GridSquare as LayoutGrid,
-  ListUnordered as ListIcon,
-  Location as MapPin,
+  LayoutGrid,
+  List as ListIcon,
+  MapPin,
   Users,
   BookOpen,
   Heart,
   Eye,
   Pencil,
-  Trash as Trash2,
+  Trash2,
   Check,
-  ChartActivity as Activity,
-} from "geist-icons";
-import { Plus, Filter } from "lucide-react";
-import { getResidents, Resident, deleteResident } from "@/lib/services/penduduk";
+  Activity,
+  Plus,
+  Filter
+} from "lucide-react";
+import { getPaginatedResidents, Resident, deleteResident } from "@/lib/services/penduduk";
+import { useReferenceData } from "@/lib/services/referensi";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -38,6 +40,7 @@ import { Input } from "@/components/ui/Input";
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
@@ -47,6 +50,7 @@ const formatDate = (dateString?: string) => {
 const calculateAge = (dateString?: string) => {
   if (!dateString) return "-";
   const birthDate = new Date(dateString);
+  if (isNaN(birthDate.getTime())) return "-";
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const m = today.getMonth() - birthDate.getMonth();
@@ -58,22 +62,23 @@ const calculateAge = (dateString?: string) => {
 
 export default function PendudukPage() {
   const router = useRouter();
+  const { dusun: dusunList, agama: agamaList, statusKawin: kawinList } = useReferenceData();
 
   // State
   const [residents, setResidents] = useState<Resident[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"Semua" | "Aktif" | "Pindah" | "Meninggal">("Semua");
   const [dusunFilter, setDusunFilter] = useState("Semua");
   const [genderFilter, setGenderFilter] = useState<"Semua" | "LAKI-LAKI" | "PEREMPUAN">("Semua");
   const [agamaFilter, setAgamaFilter] = useState("Semua");
   const [kawinFilter, setKawinFilter] = useState("Semua");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
-  // View Mode
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,22 +87,46 @@ export default function PendudukPage() {
   // Dropdown Accordion State
   const [openFilterCategory, setOpenFilterCategory] = useState<string | null>(null);
 
+  // Debounce search input (300ms)
   useEffect(() => {
-    fetchResidents();
-  }, []);
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  const fetchResidents = async () => {
+  const fetchResidents = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getResidents();
-      setResidents(data || []); 
+      const result = await getPaginatedResidents({
+        page: currentPage,
+        pageSize,
+        search: debouncedSearch,
+        statusFilter,
+        dusunFilter,
+        genderFilter,
+        agamaFilter,
+        kawinFilter,
+        sortDirection,
+        sortBy: "nama",
+      });
+      setResidents(result.data || []);
+      setTotalItems(result.total || 0);
+      setTotalPages(result.totalPages || 1);
     } catch (error) {
       console.error("Error fetching residents:", error);
       setResidents([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, debouncedSearch, statusFilter, dusunFilter, genderFilter, agamaFilter, kawinFilter, sortDirection]);
+
+  useEffect(() => {
+    fetchResidents();
+  }, [fetchResidents]);
 
   const handleDetail = (nik: string) => {
     router.push(`/penduduk/${nik}`);
@@ -116,92 +145,34 @@ export default function PendudukPage() {
     }
   };
 
-  // Derived Data: Options for Filters
-  const { dusunOptions, agamaOptions, kawinOptions } = useMemo(() => {
-    const dusuns = new Set<string>();
-    const agamas = new Set<string>();
-    const kawins = new Set<string>();
-
-    residents.forEach((r) => {
-      if (r.dusun) dusuns.add(r.dusun);
-      if (r.agama) agamas.add(r.agama);
-      if (r.status_kawin) kawins.add(r.status_kawin);
-    });
-
-    return {
-      dusunOptions: Array.from(dusuns).sort(),
-      agamaOptions: Array.from(agamas).sort(),
-      kawinOptions: Array.from(kawins).sort()
-    };
-  }, [residents]);
-
-  // Filter Logic
-  const filteredResidents = useMemo(() => {
-    let filtered = residents;
-
-    // Status Filter
-    if (statusFilter !== "Semua") {
-      filtered = filtered.filter((r) => {
-         const status = r.status_penduduk || "Aktif";
-         return status === statusFilter;
-      });
+  // Filter options derived from dynamic reference cache
+  const dusunOptions = useMemo(() => {
+    if (!dusunList || dusunList.length === 0) {
+      return ["DUSUN I", "DUSUN II", "DUSUN III", "DUSUN IV", "DUSUN V", "DUSUN VI", "DUSUN VII", "DUSUN VIII"];
     }
+    return dusunList.map((d: any) => d.nama || d.nama_dusun || `DUSUN ${d.id}`);
+  }, [dusunList]);
 
-    // Dusun Filter
-    if (dusunFilter !== "Semua") {
-      filtered = filtered.filter((r) => r.dusun === dusunFilter);
+  const agamaOptions = useMemo(() => {
+    if (!agamaList || agamaList.length === 0) {
+      return ["ISLAM", "KRISTEN", "KATHOLIK", "HINDU", "BUDHA", "KONGHUCU"];
     }
+    return agamaList.map((a: any) => a.nama || a.nama_agama || a.nama_resmi);
+  }, [agamaList]);
 
-    // Gender Filter
-    if (genderFilter !== "Semua") {
-      const targetChar = genderFilter === "LAKI-LAKI" ? "L" : "P";
-      filtered = filtered.filter((r) => 
-        r.jenis_kelamin && r.jenis_kelamin.toUpperCase().startsWith(targetChar)
-      );
+  const kawinOptions = useMemo(() => {
+    if (!kawinList || kawinList.length === 0) {
+      return ["BELUM KAWIN", "KAWIN", "CERAI HIDUP", "CERAI MATI"];
     }
-
-    // Agama Filter
-    if (agamaFilter !== "Semua") {
-      filtered = filtered.filter((r) => r.agama === agamaFilter);
-    }
-
-    // Status Kawin Filter
-    if (kawinFilter !== "Semua") {
-      filtered = filtered.filter((r) => r.status_kawin === kawinFilter);
-    }
-
-    // Search Filter
-    const searchLower = searchTerm.toLowerCase();
-    if (searchLower) {
-      filtered = filtered.filter((r) => 
-        r.nik.toLowerCase().includes(searchLower) ||
-        r.nama.toLowerCase().includes(searchLower) ||
-        (r.no_kk && r.no_kk.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Sort
-    return [...filtered].sort((a, b) => {
-      const valA = a.nama || "";
-      const valB = b.nama || "";
-      return sortDirection === "asc" 
-        ? valA.localeCompare(valB) 
-        : valB.localeCompare(valA);
-    });
-  }, [residents, statusFilter, dusunFilter, genderFilter, agamaFilter, kawinFilter, searchTerm, sortDirection]);
-
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredResidents.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentData = filteredResidents.slice(startIndex, endIndex);
+    return kawinList.map((k: any) => k.nama || k.status_kawin || k.nama_status);
+  }, [kawinList]);
 
   // Helper function for status badge color
   const getBadgeVariant = (status?: string | null): "success" | "error" | "info" | "default" => {
     if (!status) return "success";
     const s = status.toUpperCase();
     if (["MATI", "PINDAH", "HILANG", "MENINGGAL"].includes(s)) return "error";
-    if (["PENDATANG"].includes(s)) return "info";
+    if (["PENDATANG", "TIDAK TETAP"].includes(s)) return "info";
     return "success";
   };
 
@@ -211,9 +182,8 @@ export default function PendudukPage() {
       accessorKey: "id", 
       className: "text-center w-[50px]", 
       cell: (row) => {
-        // Find index in filteredResidents
-        const index = filteredResidents.findIndex(r => r.id === row.id);
-        return <span>{index + 1}</span>;
+        const index = residents.findIndex(r => (r.id && row.id ? r.id === row.id : r.nik === row.nik));
+        return <span>{(currentPage - 1) * pageSize + (index >= 0 ? index + 1 : 1)}</span>;
       }
     },
     { 
@@ -551,7 +521,7 @@ export default function PendudukPage() {
             className="w-full justify-start font-normal"
             onClick={() => setSortDirection('desc')}
           >
-            <span className="flex-1 pl-6.5 text-left">Activity</span>
+            <span className="flex-1 pl-6.5 text-left">Nama (Z-A)</span>
             {sortDirection === 'desc' && <Check className="ml-auto h-3.5 w-3.5 text-primary-text" />}
           </Button>
           <Button 
@@ -559,7 +529,7 @@ export default function PendudukPage() {
             className="w-full justify-start font-normal"
             onClick={() => setSortDirection('asc')}
           >
-            <span className="flex-1 pl-6.5 text-left">Name</span>
+            <span className="flex-1 pl-6.5 text-left">Nama (A-Z)</span>
             {sortDirection === 'asc' && <Check className="ml-auto h-3.5 w-3.5 text-primary-text" />}
           </Button>
         </div>
@@ -588,10 +558,7 @@ export default function PendudukPage() {
                       className="pl-9"
                       placeholder="Cari penduduk..."
                       value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1);
-                      }}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
 
@@ -630,7 +597,7 @@ export default function PendudukPage() {
       {/* DataTable */}
       <DataTable 
           columns={columns}
-          data={currentData}
+          data={residents}
           mobileConfig={mobileConfig}
           onRowClick={(row) => handleDetail(row.nik)}
           loading={loading}
@@ -641,11 +608,14 @@ export default function PendudukPage() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        totalItems={filteredResidents.length}
+        totalItems={totalItems}
         itemsPerPage={pageSize}
-        onItemsPerPageChange={setPageSize}
+        onItemsPerPageChange={(newSize) => {
+          setPageSize(newSize);
+          setCurrentPage(1);
+        }}
         sticky={true}
       />
     </div>
-  )
+  );
 }

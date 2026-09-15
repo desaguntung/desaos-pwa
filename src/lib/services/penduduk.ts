@@ -626,6 +626,136 @@ export function mapResidentToDb(resident: Partial<Resident>): any {
 
 const getClient = () => createSupabaseBrowserClient();
 
+export interface GetResidentsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  statusFilter?: string;
+  dusunFilter?: string;
+  genderFilter?: string;
+  agamaFilter?: string;
+  kawinFilter?: string;
+  sortDirection?: "asc" | "desc";
+  sortBy?: string;
+  rumahTanggaId?: string | null;
+}
+
+export interface PaginatedResidentsResult {
+  data: Resident[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export const getPaginatedResidents = async (
+  params: GetResidentsParams = {}
+): Promise<PaginatedResidentsResult> => {
+  const supabase = getClient();
+  const {
+    page = 1,
+    pageSize = 10,
+    search = "",
+    statusFilter = "Semua",
+    dusunFilter = "Semua",
+    genderFilter = "Semua",
+    agamaFilter = "Semua",
+    kawinFilter = "Semua",
+    sortDirection = "asc",
+    sortBy = "nama",
+    rumahTanggaId,
+  } = params;
+
+  let query = supabase.from("penduduk").select("*", { count: "exact" });
+
+  if (rumahTanggaId === null) {
+    query = query.is("rumah_tangga_id", null);
+  } else if (rumahTanggaId) {
+    query = query.eq("rumah_tangga_id", rumahTanggaId);
+  }
+
+  // Gender filter
+  if (genderFilter && genderFilter !== "Semua") {
+    const isMale = genderFilter.toUpperCase().startsWith("L");
+    query = query.or(`jenis_kelamin_id.eq.${isMale ? 1 : 2},sex.eq.${isMale ? 1 : 2},jenis_kelamin.ilike.${isMale ? "LAKI-LAKI" : "PEREMPUAN"}`);
+  }
+
+  // Dusun filter
+  if (dusunFilter && dusunFilter !== "Semua") {
+    const dusunUpper = dusunFilter.toUpperCase().replace("DUSUN ", "").trim();
+    const entry = Object.entries(DUSUN_MAP).find(([_, v]) => v.replace("DUSUN ", "").trim() === dusunUpper);
+    if (entry) {
+      query = query.eq("wilayah_dusun_id", Number(entry[0]));
+    }
+  }
+
+  // Status filter
+  if (statusFilter && statusFilter !== "Semua") {
+    const sUpper = statusFilter.toUpperCase();
+    if (sUpper === "AKTIF" || sUpper === "TETAP") {
+      query = query.or("status_dasar.eq.1,status_penduduk_id.eq.1,status_penduduk.ilike.%Aktif%,status_penduduk.ilike.%Tetap%");
+    } else if (sUpper === "MENINGGAL" || sUpper === "MATI") {
+      query = query.or("status_dasar.eq.2,status_penduduk_id.eq.2,status_penduduk.ilike.%Meninggal%,status_penduduk.ilike.%Mati%");
+    } else if (sUpper === "PINDAH") {
+      query = query.or("status_dasar.eq.3,status_penduduk_id.eq.3,status_penduduk.ilike.%Pindah%");
+    } else if (sUpper === "HILANG") {
+      query = query.or("status_dasar.eq.4,status_penduduk_id.eq.4,status_penduduk.ilike.%Hilang%");
+    }
+  }
+
+  // Agama filter
+  if (agamaFilter && agamaFilter !== "Semua") {
+    const entry = Object.entries(AGAMA_MAP).find(([_, v]) => v.toUpperCase() === agamaFilter.toUpperCase());
+    if (entry) {
+      query = query.or(`agama_id.eq.${entry[0]},agama.ilike.${agamaFilter}`);
+    } else {
+      query = query.ilike("agama", `%${agamaFilter}%`);
+    }
+  }
+
+  // Kawin filter
+  if (kawinFilter && kawinFilter !== "Semua") {
+    const entry = Object.entries(STATUS_KAWIN_MAP).find(([_, v]) => v.toUpperCase() === kawinFilter.toUpperCase());
+    if (entry) {
+      query = query.or(`status_kawin_id.eq.${entry[0]},status_kawin.ilike.${kawinFilter}`);
+    } else {
+      query = query.ilike("status_kawin", `%${kawinFilter}%`);
+    }
+  }
+
+  // Search by NIK or Nama or No KK
+  if (search && search.trim()) {
+    const s = search.trim();
+    query = query.or(`nik.ilike.%${s}%,nama.ilike.%${s}%,no_kk.ilike.%${s}%`);
+  }
+
+  // Sorting
+  query = query.order(sortBy === "nama" ? "nama" : "nik", { ascending: sortDirection === "asc" });
+
+  // Pagination Range
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  query = query.range(from, to);
+
+  const { data, count, error } = await query;
+  if (error) {
+    console.error("Error fetching paginated residents:", error);
+    throw error;
+  }
+
+  const mappedData = (data || []).map(mapResidentFromDb);
+  const total = count || 0;
+  const totalPages = Math.ceil(total / pageSize);
+
+  return {
+    data: mappedData,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
+};
+
 export const getResidents = async (options?: { rumahTanggaId?: string | null }): Promise<Resident[]> => {
   const supabase = getClient();
   const rumahTanggaId = options?.rumahTanggaId;
