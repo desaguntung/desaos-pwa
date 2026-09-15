@@ -2,9 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { 
-  MagnifyingGlass as Search,
-} from "geist-icons";
-import { 
+  Search,
   Archive, 
   ArrowDownToLine, 
   FileText, 
@@ -92,13 +90,13 @@ export default function ArsipLayananPage() {
     {
       header: "No. Surat",
       accessorKey: "nomor_surat",
-      className: "font-mono text-xs",
+      className: "font-mono text-xs font-semibold",
     },
     {
       header: "Tanggal Terima",
       accessorKey: "tanggal_penerimaan",
       cell: (row) => (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 text-xs text-secondary-text">
               <Calendar className="w-3.5 h-3.5 text-secondary-text/70" />
               <span>{formatDate(row.tanggal_penerimaan)}</span>
           </div>
@@ -107,13 +105,13 @@ export default function ArsipLayananPage() {
     {
       header: "Pengirim",
       accessorKey: "pengirim",
-      cell: (row) => <span className="capitalize">{row.pengirim.toLowerCase()}</span>
+      cell: (row) => <span className="capitalize text-primary-text font-medium">{(row.pengirim || "-").toLowerCase()}</span>
     },
     {
       header: "Perihal",
       accessorKey: "isi_singkat",
       className: "max-w-xs truncate",
-      cell: (row) => <span className="capitalize">{row.isi_singkat.toLowerCase()}</span>
+      cell: (row) => <span className="capitalize text-secondary-text">{(row.isi_singkat || "-").toLowerCase()}</span>
     },
     {
       header: "Berkas",
@@ -125,7 +123,7 @@ export default function ArsipLayananPage() {
                   href={`/storage/${row.berkas_scan}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors border border-border-color"
                   title="Download Berkas"
               >
                   <ArrowDownToLine className="w-4 h-4" />
@@ -139,14 +137,14 @@ export default function ArsipLayananPage() {
     {
       header: "No. Surat",
       accessorKey: "no_surat",
-      className: "font-mono text-xs",
+      className: "font-mono text-xs font-semibold",
       cell: (row) => row.no_surat || "-"
     },
     {
       header: "Tanggal",
       accessorKey: "tanggal",
       cell: (row) => (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 text-xs text-secondary-text">
               <Calendar className="w-3.5 h-3.5 text-secondary-text/70" />
               <span>{formatDate(row.tanggal)}</span>
           </div>
@@ -155,12 +153,12 @@ export default function ArsipLayananPage() {
     {
       header: "Jenis Surat",
       accessorKey: "nama_surat",
-      cell: (row) => <span className="capitalize">{(row.surat_formats?.nama || row.nama_surat || "Unknown").toLowerCase()}</span>
+      cell: (row) => <span className="capitalize font-medium text-primary-text">{(row.surat_formats?.nama || row.nama_surat || "Unknown").toLowerCase()}</span>
     },
     {
       header: "Penerima (Warga)",
       accessorKey: "nama_non_warga",
-      cell: (row) => <span className="capitalize">{(row.nama_non_warga ? row.nama_non_warga : (row.id_pend ? `Penduduk #${row.id_pend}` : "-")).toLowerCase()}</span>
+      cell: (row) => <span className="capitalize text-secondary-text">{(row.nama_non_warga ? row.nama_non_warga : (row.id_pend ? `Penduduk #${row.id_pend}` : "-")).toLowerCase()}</span>
     },
     {
       header: "Dokumen",
@@ -172,7 +170,7 @@ export default function ArsipLayananPage() {
                   href={row.url_surat} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors border border-border-color"
                   title="Download Surat"
               >
                   <ArrowDownToLine className="w-4 h-4" />
@@ -186,7 +184,7 @@ export default function ArsipLayananPage() {
     <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Arsip Layanan" 
-        subtitle="Layanan Surat / Arsip" 
+        subtitle="Kelola arsip surat masuk dan riwayat surat keluar desa" 
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
@@ -203,15 +201,20 @@ export default function ArsipLayananPage() {
 
         <Card className="p-4">
             <div className="w-full md:w-auto flex-1 max-w-sm">
-                <Input
-                    startIcon={<Search className="w-4 h-4" />}
-                    placeholder="Cari arsip..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                    }}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-secondary-text" />
+                  </div>
+                  <Input
+                      placeholder="Cari arsip..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="pl-9"
+                  />
+                </div>
             </div>
         </Card>
 

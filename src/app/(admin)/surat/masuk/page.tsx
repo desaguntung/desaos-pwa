@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
-  MagnifyingGlass as Search, 
+  Search, 
   MoreHorizontal,
-  ChevronDown
-} from "geist-icons";
-import {
+  ChevronDown,
   Pencil,
   Trash2,
   FileText,
@@ -90,9 +88,9 @@ export default function SuratMasukPage() {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       data = data.filter((s) => 
-        s.nomor_surat.toLowerCase().includes(term) ||
-        s.pengirim.toLowerCase().includes(term) ||
-        s.isi_singkat.toLowerCase().includes(term)
+        (s.nomor_surat || "").toLowerCase().includes(term) ||
+        (s.pengirim || "").toLowerCase().includes(term) ||
+        (s.isi_singkat || "").toLowerCase().includes(term)
       );
     }
 
@@ -136,7 +134,7 @@ export default function SuratMasukPage() {
             {row.nomor_surat}
           </span>
           <span className="text-xs text-secondary-text">
-            Kode: {row.kode_surat}
+            Kode: {row.kode_surat || "-"}
           </span>
         </div>
       )
@@ -146,7 +144,7 @@ export default function SuratMasukPage() {
       accessorKey: "pengirim",
       cell: (row) => (
         <span className="text-sm font-medium text-primary-text capitalize block">
-          {row.pengirim}
+          {(row.pengirim || "-").toLowerCase()}
         </span>
       )
     },
@@ -155,7 +153,7 @@ export default function SuratMasukPage() {
       accessorKey: "isi_singkat",
       cell: (row) => (
         <p className="text-sm text-secondary-text line-clamp-2 max-w-xs capitalize">
-          {row.isi_singkat.toLowerCase()}
+          {(row.isi_singkat || "-").toLowerCase()}
         </p>
       )
     },
@@ -197,8 +195,8 @@ export default function SuratMasukPage() {
   ], []);
 
   const mobileConfig: MobileConfig<SuratMasuk> = {
-    titleKey: "nomor_surat",
-    subtitleKey: "pengirim",
+    titleKey: (row) => row.nomor_surat,
+    subtitleKey: (row) => row.pengirim,
     statusKey: (row) => formatDate(row.tanggal_penerimaan),
     action: (row) => (
         <DropdownMenu>
@@ -236,7 +234,7 @@ export default function SuratMasukPage() {
     <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Surat Masuk" 
-        subtitle="Layanan Surat / Surat Masuk"
+        subtitle="Kelola dan arsipkan surat dinas masuk desa"
       />
 
       <Card className="p-4">
@@ -283,12 +281,10 @@ export default function SuratMasukPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link
-                href="/surat/masuk/tambah"
-              >
+              <Link href="/surat/masuk/tambah">
                 <Button className="gap-1.5 text-xs h-9">
                   <Plus className="w-4 h-4" />
-                  <span className="hidden md:inline">Tambah</span>
+                  <span className="hidden md:inline">Tambah Surat Masuk</span>
                 </Button>
               </Link>
             </div>

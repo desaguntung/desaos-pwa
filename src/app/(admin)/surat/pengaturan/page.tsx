@@ -4,11 +4,9 @@ import { Suspense, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { 
-  MagnifyingGlass as Search, 
+  Search, 
   Check,
-  Pencil
-} from "geist-icons";
-import { 
+  Pencil,
   Plus, 
   X, 
   FileText, 
@@ -89,9 +87,9 @@ function PengaturanSuratContent() {
       if (searchQuery) {
         const lower = searchQuery.toLowerCase();
         data = data.filter(item => 
-          item.kode.toLowerCase().includes(lower) || 
-          item.nama.toLowerCase().includes(lower) ||
-          item.uraian.toLowerCase().includes(lower)
+          (item.kode || "").toLowerCase().includes(lower) || 
+          (item.nama || "").toLowerCase().includes(lower) ||
+          (item.uraian || "").toLowerCase().includes(lower)
         );
       }
       return data;
@@ -101,7 +99,7 @@ function PengaturanSuratContent() {
         const lower = searchQuery.toLowerCase();
         data = data.filter(item => 
           (item.kode_surat || "").toLowerCase().includes(lower) || 
-          item.nama.toLowerCase().includes(lower)
+          (item.nama || "").toLowerCase().includes(lower)
         );
       }
       return data;
@@ -118,17 +116,18 @@ function PengaturanSuratContent() {
     {
       header: "Kode",
       accessorKey: "kode",
-      className: "text-center w-24 font-mono",
+      className: "text-center w-24 font-mono text-xs font-semibold",
     },
     {
       header: "Nama Klasifikasi",
       accessorKey: "nama",
-      cell: (row) => <span className="capitalize">{row.nama.toLowerCase()}</span>,
+      cell: (row) => <span className="capitalize font-medium text-primary-text">{(row.nama || "-").toLowerCase()}</span>,
     },
     {
       header: "Uraian",
       accessorKey: "uraian",
-      className: "max-w-xs truncate",
+      className: "max-w-xs truncate text-secondary-text",
+      cell: (row) => row.uraian || "-"
     },
     {
       header: "Status",
@@ -169,18 +168,19 @@ function PengaturanSuratContent() {
     {
       header: "Kode",
       accessorKey: "kode_surat",
-      className: "text-center w-24 font-mono",
+      className: "text-center w-24 font-mono text-xs font-semibold",
       cell: (row) => row.kode_surat || "-",
     },
     {
       header: "Nama Format",
       accessorKey: "nama",
-      cell: (row) => <span className="capitalize">{row.nama.toLowerCase()}</span>,
+      cell: (row) => <span className="capitalize font-medium text-primary-text">{(row.nama || "-").toLowerCase()}</span>,
     },
     {
       header: "URL / Kode Unik",
       accessorKey: "url_surat",
-      className: "font-mono text-xs",
+      className: "font-mono text-xs text-secondary-text",
+      cell: (row) => row.url_surat || "-"
     },
     {
       header: "Kunci",
@@ -221,7 +221,7 @@ function PengaturanSuratContent() {
     <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Pengaturan Surat" 
-        subtitle="Layanan Surat / Pengaturan" 
+        subtitle="Kelola klasifikasi nomor surat dan template format cetak" 
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -239,9 +239,12 @@ function PengaturanSuratContent() {
         <TabsContent value="klasifikasi" className="space-y-6">
           <Card className="p-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="w-full md:w-auto flex-1 max-w-sm">
+              <div className="w-full md:w-auto flex-1 max-w-sm relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-text pointer-events-none">
+                  <Search className="w-4 h-4" />
+                </div>
                 <Input
-                  startIcon={<Search className="w-4 h-4" />}
+                  className="pl-9"
                   placeholder="Cari Klasifikasi..."
                   value={searchQuery}
                   onChange={(e) => {
@@ -284,9 +287,12 @@ function PengaturanSuratContent() {
         <TabsContent value="format" className="space-y-6">
           <Card className="p-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="w-full md:w-auto flex-1 max-w-sm">
+              <div className="w-full md:w-auto flex-1 max-w-sm relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-text pointer-events-none">
+                  <Search className="w-4 h-4" />
+                </div>
                 <Input
-                  startIcon={<Search className="w-4 h-4" />}
+                  className="pl-9"
                   placeholder="Cari Format Surat..."
                   value={searchQuery}
                   onChange={(e) => {

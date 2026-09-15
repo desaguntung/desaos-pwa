@@ -1,23 +1,23 @@
 "use client";
 
 import { 
-  MagnifyingGlass as Search, 
+  Search, 
   MoreHorizontal,
   Home,
   Eye,
   Pencil,
-  Trash as Trash2,
+  Trash2,
   Check,
   Filter as FilterIcon,
-  Users
-} from "geist-icons";
-import { Plus, Filter } from "lucide-react";
+  Plus
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { RumahTangga, getRumahTanggaList, deleteRumahTangga } from "@/lib/services/rumah_tangga";
+import { useReferenceData } from "@/lib/services/referensi";
 import { PageHeader } from "@/components/layout/PageHeader";
 import {
   DropdownMenu,
@@ -37,7 +37,8 @@ import { Card } from "@/components/ui/Card";
 export default function RumahTanggaPage() {
   const router = useRouter();
   const resource: PermissionResource = "rumah_tangga";
-  const { canRead, canCreate, canUpdate, canDelete } = useRbac(resource);
+  const { canCreate, canUpdate, canDelete } = useRbac(resource);
+  const { dusun: dusunList } = useReferenceData();
 
   const [dataRumahTangga, setDataRumahTangga] = useState<RumahTangga[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,9 +61,10 @@ export default function RumahTanggaPage() {
     try {
       setIsLoading(true);
       const data = await getRumahTanggaList();
-      setDataRumahTangga(data);
+      setDataRumahTangga(data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setDataRumahTangga([]);
     } finally {
       setIsLoading(false);
     }
@@ -79,14 +81,17 @@ export default function RumahTanggaPage() {
     }
   };
 
-  // Extract Dusun Options
+  // Extract Dusun Options (from reference service with fallback)
   const dusunOptions = useMemo(() => {
+    if (dusunList && dusunList.length > 0) {
+      return dusunList.map((d: any) => d.nama || d.nama_dusun || `DUSUN ${d.id}`);
+    }
     const dusuns = new Set<string>();
     dataRumahTangga.forEach(item => {
       if (item.dusun) dusuns.add(item.dusun);
     });
     return Array.from(dusuns).sort();
-  }, [dataRumahTangga]);
+  }, [dusunList, dataRumahTangga]);
 
   const filteredRumahTangga = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -101,22 +106,22 @@ export default function RumahTanggaPage() {
 
     // Filter Dusun
     if (dusunFilter !== "Semua") {
-      data = data.filter(item => item.dusun === dusunFilter);
+      data = data.filter(item => item.dusun && item.dusun.toLowerCase().includes(dusunFilter.toLowerCase()));
     }
 
     // Filter Search
     if (term) {
       data = data.filter((item) => {
-        const nomor = item.no_rtm.toLowerCase();
-        const nama = item.kepala_rtm?.nama.toLowerCase() || "";
+        const nomor = (item.no_rtm || "").toLowerCase();
+        const nama = (item.kepala_rtm?.nama || "").toLowerCase();
         return nomor.includes(term) || nama.includes(term);
       });
     }
 
     // Sort
     const sorted = [...data].sort((a, b) => {
-      const left = a.no_rtm;
-      const right = b.no_rtm;
+      const left = a.no_rtm || "";
+      const right = b.no_rtm || "";
       const compare = left.localeCompare(right);
       return sortDirection === "asc" ? compare : -compare;
     });
@@ -138,8 +143,8 @@ export default function RumahTanggaPage() {
       accessorKey: "id",
       className: "w-14 text-center",
       cell: (row) => {
-        const index = filteredRumahTangga.findIndex(item => item.id === row.id);
-        return (currentPage - 1) * rowsPerPage + index + 1;
+        const index = paginatedRumahTangga.findIndex(item => item.id === row.id);
+        return (currentPage - 1) * rowsPerPage + (index >= 0 ? index + 1 : 1);
       }
     },
     {
@@ -147,9 +152,9 @@ export default function RumahTanggaPage() {
       accessorKey: "no_rtm",
       cell: (row) => (
         <div className="flex flex-col gap-1">
-          <span className="font-mono text-primary-text">{row.no_rtm}</span>
+          <span className="font-mono text-xs font-semibold text-primary-text">{row.no_rtm}</span>
           {row.bdt && row.bdt.length > 0 && (
-            <Badge variant="success" className="w-fit text-micro px-1.5 py-0.5">
+            <Badge variant="success" className="w-fit text-[10px] px-1.5 py-0.5">
               Bansos
             </Badge>
           )}
@@ -163,7 +168,7 @@ export default function RumahTanggaPage() {
         <div className="flex items-center gap-2">
           <Home className="w-4 h-4 text-secondary-text" />
           <span className="font-medium text-primary-text capitalize">
-            {row.kepala_rtm?.nama?.toLowerCase() || "-"}
+            {(row.kepala_rtm?.nama || "-").toLowerCase()}
           </span>
         </div>
       )
@@ -171,14 +176,14 @@ export default function RumahTanggaPage() {
     {
       header: "Alamat",
       accessorKey: "alamat",
-      cell: (row) => <span className="text-secondary-text truncate max-w-52" title={row.alamat || ""}>{row.alamat || "-"}</span>
+      cell: (row) => <span className="text-secondary-text truncate max-w-52 block" title={row.alamat || ""}>{row.alamat || "-"}</span>
     },
     {
       header: "Dusun / RW / RT",
       accessorKey: "dusun",
       cell: (row) => (
-        <span className="text-secondary-text">
-          {row.dusun || "-"} / {row.rw || "-"} / {row.rt || "-"}
+        <span className="text-secondary-text text-xs">
+          {row.dusun || "-"} / RW {row.rw || "-"} / RT {row.rt || "-"}
         </span>
       )
     },
@@ -189,7 +194,7 @@ export default function RumahTanggaPage() {
       cell: (row) => (
         <div className="flex justify-center">
           <Badge variant="info" className="w-fit px-2.5">
-            {row.jumlah_anggota || 0}
+            {row.jumlah_anggota || 0} Jiwa
           </Badge>
         </div>
       )
@@ -244,13 +249,13 @@ export default function RumahTanggaPage() {
 
   // Mobile Configuration for DataTable
   const mobileConfig: MobileConfig<RumahTangga> = {
-    titleKey: (row) => row.kepala_rtm?.nama?.toLowerCase() || "-",
+    titleKey: (row) => <span className="capitalize">{(row.kepala_rtm?.nama || "-").toLowerCase()}</span>,
     subtitleKey: (row) => `No. RTM: ${row.no_rtm}`,
     statusKey: (row) => (
       <div className="flex flex-col gap-1 items-end">
         <span className="text-xs text-secondary-text">{row.dusun}</span>
         {row.bdt && row.bdt.length > 0 && (
-          <Badge variant="success" className="text-micro px-1.5 py-0.5">
+          <Badge variant="success" className="text-[10px] px-1.5 py-0.5">
             Bansos
           </Badge>
         )}
@@ -301,7 +306,7 @@ export default function RumahTanggaPage() {
     <div className="flex h-full flex-col bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Data Rumah Tangga"
-        subtitle="Kependudukan / Rumah Tangga"
+        subtitle="Kelola data rumah tangga dan penerima bantuan sosial desa"
       />
 
       <Card className="p-4">
@@ -344,7 +349,10 @@ export default function RumahTanggaPage() {
                 {(["Semua", "Penerima", "Non-Bansos"] as const).map((status) => (
                   <DropdownMenuItem 
                     key={status} 
-                    onClick={() => setStatusFilter(status)}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setCurrentPage(1);
+                    }}
                     className="justify-between cursor-pointer"
                   >
                     {status}
@@ -367,17 +375,20 @@ export default function RumahTanggaPage() {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+              <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto custom-scrollbar">
                 <DropdownMenuLabel>Filter Dusun</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setDusunFilter("Semua")} className="justify-between cursor-pointer">
+                <DropdownMenuItem onClick={() => { setDusunFilter("Semua"); setCurrentPage(1); }} className="justify-between cursor-pointer">
                   Semua
                   {dusunFilter === "Semua" && <Check className="h-3.5 w-3.5 opacity-50" />}
                 </DropdownMenuItem>
                 {dusunOptions.map((dusun) => (
                   <DropdownMenuItem 
                     key={dusun} 
-                    onClick={() => setDusunFilter(dusun)}
+                    onClick={() => {
+                      setDusunFilter(dusun);
+                      setCurrentPage(1);
+                    }}
                     className="justify-between cursor-pointer"
                   >
                     {dusun}

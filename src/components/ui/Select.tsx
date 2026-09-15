@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown } from "geist-icons";
+import { Check, ChevronDown } from "lucide-react";
 
 interface SelectContextType {
   value: any;

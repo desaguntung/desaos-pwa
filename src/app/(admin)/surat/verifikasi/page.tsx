@@ -20,18 +20,16 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { 
-  CheckCircle as CheckCircle2, 
+  CheckCircle2, 
   Clock, 
   FileText, 
   Eye,
   User,
-  MagnifyingGlass as Search,
+  Search,
   Filter as FilterIcon,
   Check,
-  RefreshClockwise,
-  MoreHorizontal
-} from "geist-icons";
-import { 
+  RotateCw as RefreshClockwise,
+  MoreHorizontal,
   Send, 
   Upload, 
   Download,

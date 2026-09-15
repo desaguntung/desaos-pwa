@@ -4,20 +4,20 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
-  MagnifyingGlass as Search, 
+  Search, 
   MoreHorizontal, 
-  Trash as Trash2, 
-  Pencil as Edit, 
+  Trash2, 
+  Pencil, 
   Eye, 
   Filter as FilterIcon,
   Users,
-  Check
-} from "geist-icons";
-import { Plus } from "lucide-react";
+  Check,
+  Plus
+} from "lucide-react";
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { getKeluargaList, deleteKeluarga, Keluarga } from "@/lib/services/keluarga";
-import { Resident } from "@/lib/services/penduduk";
+import { useReferenceData } from "@/lib/services/referensi";
 
 // UI Components
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -49,7 +49,8 @@ import { cn } from "@/lib/utils";
 export default function KeluargaPage() {
   const router = useRouter();
   const resource: PermissionResource = "keluarga";
-  const { canRead, canCreate, canUpdate, canDelete } = useRbac(resource);
+  const { canCreate, canUpdate, canDelete } = useRbac(resource);
+  const { dusun: dusunList } = useReferenceData();
 
   // Data States
   const [data, setData] = useState<Keluarga[]>([]);
@@ -77,22 +78,26 @@ export default function KeluargaPage() {
     try {
       setLoading(true);
       const result = await getKeluargaList();
-      setData(result);
+      setData(result || []);
     } catch (error) {
       console.error("Error fetching keluarga:", error);
+      setData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Derived Data: Dusun Options
+  // Derived Data: Dusun Options (from reference hook with fallback to data)
   const dusunOptions = useMemo(() => {
+    if (dusunList && dusunList.length > 0) {
+      return dusunList.map((d: any) => d.nama || d.nama_dusun || `DUSUN ${d.id}`);
+    }
     const dusuns = new Set<string>();
     data.forEach((item) => {
       if (item.dusun) dusuns.add(item.dusun);
     });
     return Array.from(dusuns).sort();
-  }, [data]);
+  }, [dusunList, data]);
 
   // Filter Logic
   const filteredData = useMemo(() => {
@@ -102,15 +107,15 @@ export default function KeluargaPage() {
         item.headName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.headNik.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === "Semua" || item.status === statusFilter;
-      const matchesDusun = dusunFilter === "Semua" || item.dusun === dusunFilter;
+      const matchesStatus = statusFilter === "Semua" || item.status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesDusun = dusunFilter === "Semua" || (item.dusun && item.dusun.toLowerCase().includes(dusunFilter.toLowerCase()));
 
       return matchesSearch && matchesStatus && matchesDusun;
     });
   }, [data, searchTerm, statusFilter, dusunFilter]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
@@ -150,8 +155,8 @@ export default function KeluargaPage() {
             shape="circle"
           />
           <div className="flex flex-col">
-            <span className="font-medium text-primary-text">{row.headName}</span>
-            <span className="text-xs text-secondary-text">NIK: {row.headNik}</span>
+            <span className="font-medium text-primary-text capitalize">{(row.headName || "").toLowerCase()}</span>
+            <span className="text-xs font-mono text-secondary-text">NIK: {row.headNik}</span>
           </div>
         </div>
       ),
@@ -162,12 +167,12 @@ export default function KeluargaPage() {
       className: "font-medium font-mono text-xs",
     },
     {
-      header: "Alamat",
+      header: "Alamat & Wilayah",
       accessorKey: "addressLine",
       cell: (row) => (
-        <div className="flex flex-col max-w-[200px]">
-          <span className="truncate" title={row.addressLine}>{row.addressLine || "-"}</span>
-          <span className="text-xs text-secondary-text truncate">{row.dusunRwRt}</span>
+        <div className="flex flex-col max-w-[240px]">
+          <span className="truncate text-sm text-primary-text" title={row.addressLine}>{row.addressLine || "-"}</span>
+          <span className="text-xs text-secondary-text truncate">{row.dusunRwRt || "-"}</span>
         </div>
       ),
     },
@@ -175,9 +180,9 @@ export default function KeluargaPage() {
       header: "Anggota",
       accessorKey: "totalMembers",
       cell: (row) => (
-        <Badge variant="outline" className="gap-1">
-          <Users className="w-3 h-3" />
-          {row.totalMembers}
+        <Badge variant="outline" className="gap-1 px-2.5 py-0.5">
+          <Users className="w-3 h-3 text-secondary-text" />
+          <span>{row.totalMembers} Jiwa</span>
         </Badge>
       ),
     },
@@ -208,12 +213,10 @@ export default function KeluargaPage() {
               Lihat Anggota
             </DropdownMenuItem>
             {canUpdate && (
-              <Link href={`/keluarga/${row.nomorKK}/edit`}>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Edit className="mr-2 h-4 w-4 text-secondary-text" />
-                  Ubah
-                </DropdownMenuItem>
-              </Link>
+              <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
+                <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
+                Ubah
+              </DropdownMenuItem>
             )}
             {canDelete && (
               <DropdownMenuItem 
@@ -232,8 +235,8 @@ export default function KeluargaPage() {
   ];
 
   const mobileConfig: MobileConfig<Keluarga> = {
-    titleKey: "headName",
-    subtitleKey: "nomorKK",
+    titleKey: (row) => <span className="capitalize">{(row.headName || "").toLowerCase()}</span>,
+    subtitleKey: (row) => `No. KK: ${row.nomorKK}`,
     statusKey: (row) => (
       <Badge variant={row.statusVariant} className="text-[10px] px-1.5 h-5">
         {row.status}
@@ -252,12 +255,10 @@ export default function KeluargaPage() {
               Lihat Anggota
             </DropdownMenuItem>
             {canUpdate && (
-              <Link href={`/keluarga/${row.nomorKK}/edit`}>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Edit className="mr-2 h-4 w-4 text-secondary-text" />
-                  Ubah
-                </DropdownMenuItem>
-              </Link>
+              <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
+                <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
+                Ubah
+              </DropdownMenuItem>
             )}
             {canDelete && (
               <DropdownMenuItem 
@@ -278,7 +279,7 @@ export default function KeluargaPage() {
     <div className="flex flex-col h-full bg-body-bg space-y-6 p-6 md:p-8">
       <PageHeader 
         title="Data Keluarga"
-        subtitle="Kependudukan / Keluarga"
+        subtitle="Kelola kartu keluarga dan susunan anggota rumah tangga"
       />
 
       {/* Toolbar */}
@@ -320,7 +321,10 @@ export default function KeluargaPage() {
                 {["Semua", "Aktif", "Pindah", "Meninggal"].map((status) => (
                   <DropdownMenuItem 
                     key={status} 
-                    onClick={() => setStatusFilter(status)}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setCurrentPage(1);
+                    }}
                     className="justify-between cursor-pointer"
                   >
                     {status}
@@ -346,14 +350,17 @@ export default function KeluargaPage() {
               <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto custom-scrollbar">
                 <DropdownMenuLabel>Filter Dusun</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setDusunFilter("Semua")} className="justify-between cursor-pointer">
+                <DropdownMenuItem onClick={() => { setDusunFilter("Semua"); setCurrentPage(1); }} className="justify-between cursor-pointer">
                   Semua
                   {dusunFilter === "Semua" && <Check className="h-3.5 w-3.5 opacity-50" />}
                 </DropdownMenuItem>
                 {dusunOptions.map((dusun) => (
                   <DropdownMenuItem 
                     key={dusun} 
-                    onClick={() => setDusunFilter(dusun)}
+                    onClick={() => {
+                      setDusunFilter(dusun);
+                      setCurrentPage(1);
+                    }}
                     className="justify-between cursor-pointer"
                   >
                     {dusun}
@@ -400,7 +407,7 @@ export default function KeluargaPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detail Keluarga</DialogTitle>
+            <DialogTitle>Detail Kartu Keluarga</DialogTitle>
             <DialogDescription>
               Nomor KK: <span className="font-mono font-medium text-primary-text">{selectedKeluarga?.nomorKK}</span>
             </DialogDescription>
@@ -409,16 +416,16 @@ export default function KeluargaPage() {
           {selectedKeluarga && (
             <div className="space-y-6">
               {/* Header Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-body-bg p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-body-bg p-4 rounded-xl border border-border-color">
                 <div>
                   <label className="text-xs text-secondary-text block mb-1">Kepala Keluarga</label>
-                  <div className="font-medium text-primary-text">{selectedKeluarga.headName}</div>
-                  <div className="text-sm text-secondary-text">{selectedKeluarga.headNik}</div>
+                  <div className="font-medium text-primary-text capitalize">{(selectedKeluarga.headName || "").toLowerCase()}</div>
+                  <div className="text-xs font-mono text-secondary-text">{selectedKeluarga.headNik}</div>
                 </div>
                 <div>
-                  <label className="text-xs text-secondary-text block mb-1">Alamat</label>
-                  <div className="text-sm text-primary-text">{selectedKeluarga.addressLine}</div>
-                  <div className="text-xs text-secondary-text">{selectedKeluarga.dusunRwRt}</div>
+                  <label className="text-xs text-secondary-text block mb-1">Alamat Domisili</label>
+                  <div className="text-sm text-primary-text">{selectedKeluarga.addressLine || "-"}</div>
+                  <div className="text-xs text-secondary-text">{selectedKeluarga.dusunRwRt || "-"}</div>
                 </div>
               </div>
 
@@ -426,9 +433,9 @@ export default function KeluargaPage() {
               <div>
                 <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
                   <Users className="w-4 h-4 text-primary-text" />
-                  Daftar Anggota Keluarga ({selectedKeluarga.members.length})
+                  Daftar Anggota Keluarga ({selectedKeluarga.members.length} Orang)
                 </h4>
-                <div className="border border-border-color rounded-lg overflow-hidden">
+                <div className="border border-border-color rounded-xl overflow-hidden">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-body-bg text-secondary-text font-medium text-xs uppercase">
                       <tr>
@@ -440,12 +447,12 @@ export default function KeluargaPage() {
                     </thead>
                     <tbody className="divide-y divide-border-color">
                       {selectedKeluarga.members.map((member) => (
-                        <tr key={member.id} className="hover:bg-body-bg/50">
-                          <td className="px-4 py-3 font-medium">{member.nama}</td>
+                        <tr key={member.id || member.nik} className="hover:bg-body-bg/50">
+                          <td className="px-4 py-3 font-medium capitalize">{(member.nama || "").toLowerCase()}</td>
                           <td className="px-4 py-3 font-mono text-xs">{member.nik}</td>
                           <td className="px-4 py-3">
                             <Badge variant="outline" className="text-[10px] h-5">
-                              {member.hubungan_keluarga}
+                              {member.hubungan_keluarga || "ANGGOTA"}
                             </Badge>
                           </td>
                           <td className="px-4 py-3">
