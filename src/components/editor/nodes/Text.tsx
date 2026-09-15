@@ -344,7 +344,7 @@ export const Text = ({
         textAlign: textAlign as any, 
         fontWeight: fontWeight,
         color: color,
-        fontFamily: fontFamily || 'Arial, "Times New Roman", sans-serif',
+        fontFamily: fontFamily || 'Arial, "Helvetica Neue", Helvetica, sans-serif',
         lineHeight: lineHeight,
         letterSpacing: `${letterSpacing}px`,
         textDecoration: textDecoration,
