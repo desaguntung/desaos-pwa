@@ -42,6 +42,9 @@ const VARIABLE_OPTIONS = [
 export const Variable = ({ 
   name = "penduduk.nama",
   fontSize = "12",
+  fontWeight = "normal",
+  textDecoration = "none",
+  textTransform = "none",
   color = "#374151", // gray-700
   backgroundColor = "#f3f4f6", // gray-100
   paddingX = "6", // 1.5 * 4
@@ -50,6 +53,9 @@ export const Variable = ({
 }: { 
   name?: string;
   fontSize?: string;
+  fontWeight?: string;
+  textDecoration?: string;
+  textTransform?: string;
   color?: string;
   backgroundColor?: string;
   paddingX?: string;
@@ -188,7 +194,16 @@ export const Variable = ({
   if (mode === 'preview') {
     const value = getValue(data, name || "");
     return (
-      <span style={{ fontSize: `${fontSize}px`, color: "#000000", fontFamily: 'Arial, sans-serif' }}>
+      <span 
+        style={{ 
+          fontSize: `${fontSize}px`, 
+          fontWeight: fontWeight as any,
+          textDecoration: textDecoration,
+          textTransform: textTransform as any,
+          color: "#000000", 
+          fontFamily: 'Arial, sans-serif' 
+        }}
+      >
         {value || "-"}
       </span>
     );

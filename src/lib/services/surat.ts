@@ -766,6 +766,26 @@ export function buildSuratPreviewData({
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
   };
 
+  // Helper to clean duplicate prefixes like "Kabupaten Kabupaten", "Kecamatan Kecamatan", "Desa Desa"
+  const cleanPrefix = (str: string, prefix: string) => {
+    if (!str) return "";
+    const trimmed = str.trim();
+    const reg = new RegExp(`^${prefix}\\s+`, 'i');
+    return trimmed.replace(reg, '').trim();
+  };
+
+  const rawKab = identitasDesa?.nama_kabupaten || "";
+  const sebutanKab = identitasDesa?.sebutan_kabupaten || "KABUPATEN";
+  const cleanKab = cleanPrefix(rawKab, sebutanKab);
+
+  const rawKec = identitasDesa?.nama_kecamatan || "";
+  const sebutanKec = identitasDesa?.sebutan_kecamatan || "KECAMATAN";
+  const cleanKec = cleanPrefix(rawKec, sebutanKec);
+
+  const rawDes = identitasDesa?.nama_desa || "";
+  const sebutanDes = identitasDesa?.sebutan_desa || "DESA";
+  const cleanDes = cleanPrefix(rawDes, sebutanDes);
+
   // 1. Format Surat Data
   const tglSuratRaw = surat?.tanggal_surat || surat?.tanggal || new Date();
   const tglSuratFormatted = formatDateIndo(tglSuratRaw);
@@ -786,21 +806,21 @@ export function buildSuratPreviewData({
     kode_surat: surat?.kode || surat?.kode_surat || "",
   };
 
-  // 2. Format Desa Data
+  // 2. Format Desa Data (Cleaned and legally structured)
   const desaObj = {
     id: identitasDesa?.id,
-    nama: identitasDesa?.nama_desa || "",
-    nama_desa: identitasDesa?.nama_desa || "",
+    nama: cleanDes || rawDes,
+    nama_desa: cleanDes || rawDes,
     kode_desa: identitasDesa?.kode_desa || "",
-    sebutan_desa: identitasDesa?.sebutan_desa || "DESA",
-    kecamatan: identitasDesa?.nama_kecamatan || "",
-    nama_kecamatan: identitasDesa?.nama_kecamatan || "",
+    sebutan_desa: sebutanDes,
+    kecamatan: cleanKec || rawKec,
+    nama_kecamatan: cleanKec || rawKec,
     kode_kecamatan: identitasDesa?.kode_kecamatan || "",
-    sebutan_kecamatan: identitasDesa?.sebutan_kecamatan || "KECAMATAN",
-    kabupaten: identitasDesa?.nama_kabupaten || "",
-    nama_kabupaten: identitasDesa?.nama_kabupaten || "",
+    sebutan_kecamatan: sebutanKec,
+    kabupaten: cleanKab || rawKab,
+    nama_kabupaten: cleanKab || rawKab,
     kode_kabupaten: identitasDesa?.kode_kabupaten || "",
-    sebutan_kabupaten: identitasDesa?.sebutan_kabupaten || "KABUPATEN",
+    sebutan_kabupaten: sebutanKab,
     provinsi: identitasDesa?.nama_provinsi || "",
     nama_provinsi: identitasDesa?.nama_provinsi || "",
     kode_provinsi: identitasDesa?.kode_provinsi || "",
@@ -859,9 +879,9 @@ export function buildSuratPreviewData({
       jalan && jalan !== "-" ? jalan : "",
       dusun,
       rt && rw ? `${rt} / ${rw}` : (rt || rw),
-      identitasDesa?.nama_desa ? `${identitasDesa.sebutan_desa || "Desa"} ${identitasDesa.nama_desa}` : "",
-      identitasDesa?.nama_kecamatan ? `Kec. ${identitasDesa.nama_kecamatan}` : "",
-      identitasDesa?.nama_kabupaten ? `${identitasDesa.sebutan_kabupaten || "Kab."} ${identitasDesa.nama_kabupaten}` : "",
+      desaObj.nama ? `${desaObj.sebutan_desa || "Desa"} ${desaObj.nama}` : "",
+      desaObj.kecamatan ? `Kec. ${desaObj.kecamatan}` : "",
+      desaObj.kabupaten ? `${desaObj.sebutan_kabupaten || "Kab."} ${desaObj.kabupaten}` : "",
     ].filter(Boolean);
 
     const fullAddress = addressParts.length > 0 
@@ -907,12 +927,24 @@ export function buildSuratPreviewData({
     };
   }
 
+  // 5. Build Normalized Form Data Aliases
+  const normalizedFormData: Record<string, any> = { ...(formData || {}) };
+  if (formData && typeof formData === 'object') {
+    Object.entries(formData).forEach(([k, v]) => {
+      const lower = k.toLowerCase();
+      const snake = lower.replace(/[\s\-_/]+/g, '_');
+      normalizedFormData[lower] = v;
+      normalizedFormData[snake] = v;
+      normalizedFormData[k.trim()] = v;
+    });
+  }
+
   return {
     surat: suratObj,
     desa: desaObj,
     pamong: pamongObj,
     penduduk: residentObj,
-    form_data: formData,
+    form_data: normalizedFormData,
     signature: signature,
   };
 }

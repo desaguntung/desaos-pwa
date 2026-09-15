@@ -116,7 +116,11 @@ export default function CetakSuratPage() {
   // Parse template and generate number when format changes
   useEffect(() => {
     if (selectedFormat) {
-      const fields = extractFieldsFromTemplate(selectedFormat.template || "", selectedFormat.url_surat || selectedFormat.nama);
+      const fields = extractFieldsFromTemplate(
+        selectedFormat.template || "", 
+        selectedFormat.url_surat || selectedFormat.nama,
+        selectedFormat.form_isian
+      );
       setDynamicFields(fields);
       
       // Initialize values

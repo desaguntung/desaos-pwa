@@ -307,31 +307,44 @@ export const Text = ({
       variables['nama_ibu'] = getValue(['ibu', 'nama_ibu']);
     }
 
+    // Register all custom form_data variables
+    if (data.form_data && typeof data.form_data === 'object') {
+      Object.entries(data.form_data).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") {
+          const valStr = String(v);
+          const cleanK = k.trim();
+          variables[cleanK] = valStr;
+          variables[cleanK.toLowerCase()] = valStr;
+          variables[cleanK.toLowerCase().replace(/[\s\-_/]+/g, '_')] = valStr;
+        }
+      });
+    }
+
     // Replacer function using Regex to capture key and respect casing
     // Pattern: [key] - Allow alphanumeric, underscore, dash, space, AND SLASH
     processedText = processedText.replace(/\[([a-zA-Z0-9_\-\s\/]+)\]/g, (match: string, key: string) => {
-        const lowerKey = key.toLowerCase().replace(/[\s\/]+/g, '_'); // Convert spaces/slashes to underscores
-        const value = variables[lowerKey] || variables[key.toLowerCase()]; // Try converted key first, then raw lowercase
+        const lowerKey = key.toLowerCase().replace(/[\s\/]+/g, '_');
+        const rawKey = key.trim();
+        const value = variables[rawKey] || variables[lowerKey] || variables[key.toLowerCase()] || variables[key.trim().toLowerCase()];
         
-        if (value === undefined) return match; // Keep placeholder if variable not found
+        if (value === undefined || value === null) return match; // Keep placeholder if variable not found
 
-        // 1. ALL CAPS ([NAMA_DESA]) -> UPPERCASE
+        // 1. ALL CAPS ([NAMA_DESA] or [KEPERLUAN]) -> UPPERCASE
         if (key === key.toUpperCase() && key !== key.toLowerCase()) {
             return value.toUpperCase();
         }
 
         // 2. all lowercase ([nama_desa]) -> lowercase
-        // Note: Check length > 0 to avoid empty string issues
         if (key === key.toLowerCase() && key !== key.toUpperCase()) {
             return value.toLowerCase();
         }
 
-        // 3. Title Case ([Nama_Desa] or [Nama_desa]) -> Title Case
+        // 3. Title Case ([Nama_Desa] or [Nama Usaha]) -> Title Case
         if (key[0] === key[0].toUpperCase()) {
             return toTitleCase(value);
         }
 
-        // Default fallback (should be covered by above, but just in case)
+        // Default
         return value;
     });
 

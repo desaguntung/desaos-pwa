@@ -139,7 +139,7 @@ export const Signature = ({
              <div className="h-4"></div> {/* Spacer for date alignment */}
              <Element id="sig_left_title" is={Text} text={leftTitle} fontSize={fontSize} textAlign={textAlign} />
              <div className="h-20"></div>
-             <Element id="sig_left_name" is={Variable} name={leftName} fontSize={fontSize} />
+             <Element id="sig_left_name" is={Variable} name={leftName} fontSize={fontSize} fontWeight="bold" textTransform="uppercase" textDecoration="underline" />
           </div>
       )}
 
@@ -164,7 +164,7 @@ export const Signature = ({
             <div className="h-20"></div>
         )}
 
-        <Element id="sig_nama" is={Variable} name={rightName} fontSize={fontSize} />
+        <Element id="sig_nama" is={Variable} name={rightName} fontSize={fontSize} fontWeight="bold" textTransform="uppercase" textDecoration="underline" />
         <div className="h-1"></div>
         
         {/* Line for NIP */}
