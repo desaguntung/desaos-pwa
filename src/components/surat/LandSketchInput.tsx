@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Move, Ruler, RotateCcw, Save, X, Scissors, Trash2, User, Map as MapIcon, SplitSquareHorizontal, Waves, Anchor, Sunset } from "lucide-react";
+import React, { useState } from 'react';
+import { Move, Ruler, RotateCcw, Save, X, Trash2, User, Map as MapIcon, SplitSquareHorizontal, Waves, Anchor, Sunset } from "lucide-react";
 import { LandSketchCanvas } from "../shared/LandSketchCanvas";
 
 interface LandSketchInputProps {
@@ -188,14 +188,13 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
      }
      
      // Remove the END point of the selected edge (p2)
-     // This merges edge(i) and edge(i+1) into a new edge(i)
      const indexToRemove = (selectedEdgeIndex + 1) % points.length;
      
      const newPoints = [...points];
      newPoints.splice(indexToRemove, 1);
      
      const newLabels = labels
-         .filter((l: any) => l.edgeIndex !== indexToRemove) // Remove label attached to the deleted edge
+         .filter((l: any) => l.edgeIndex !== indexToRemove)
          .map((l: any) => {
              if (l.edgeIndex > indexToRemove) return { ...l, edgeIndex: l.edgeIndex - 1 };
              return l;
@@ -205,19 +204,11 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
      setSelectedEdgeIndex(null);
   };
 
-  // Auto-apply changes when form values change (optional, but requested UX was "isi ... dan terapkan", so maybe button is better? 
-  // User said: "untuk mengisi Jenis Sisi, Nama tetangga, Panjang Sisi Meter dan terapkan" -> Implies explicit action or immediate effect.
-  // Immediate effect is cleaner for "editor" feel. Let's try immediate effect for text/type, but length might need debounce or Enter key.
-  // Actually, let's provide a clear "Update" button or just auto-update on blur/change. 
-  // Given the "terapkan" keyword, I'll add a button or just make it reactive. 
-  // Let's make it reactive for better UX, but maybe add a small "Terapkan" button if length is tricky.
-  // For now, I will add a "Terapkan Perubahan" button to be safe and explicit as requested.
-  
   return (
-    <div className="flex flex-col md:flex-row gap-4 border border-zinc-200 rounded-lg bg-white p-4">
+    <div className="flex flex-col md:flex-row gap-4 border border-border-color rounded-xl bg-card-bg p-4 shadow-xs">
       {/* Canvas Area */}
       <div className="flex-1 flex flex-col gap-2">
-         <div className="border border-zinc-200 rounded-md overflow-hidden relative h-[500px] bg-zinc-50/50">
+         <div className="border border-border-color rounded-xl overflow-hidden relative h-[500px] bg-body-bg">
             <LandSketchCanvas
                 points={points}
                 labels={labels}
@@ -232,104 +223,59 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                 selectedEdgeIndex={selectedEdgeIndex}
             />
          </div>
-         <p className="text-[10px] text-zinc-400 flex items-center gap-1">
-            <Move size={12} /> Klik garis untuk edit properti. Alt+Drag untuk geser view.
+         <p className="text-[11px] text-secondary-text flex items-center gap-1.5">
+            <Move size={13} className="text-secondary-text/70" /> Klik garis untuk edit properti perbatasan. Alt + Drag untuk menggeser kanvas.
          </p>
       </div>
 
       {/* Sidebar Controls (Property & Settings) */}
-      <div className="w-full md:w-72 flex flex-col gap-6 border-l border-zinc-100 pl-4 overflow-y-auto max-h-[500px] pr-2">
+      <div className="w-full md:w-80 flex flex-col gap-5 border-t md:border-t-0 md:border-l border-border-color pt-4 md:pt-0 md:pl-4 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
           
           {/* Section: Properties */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-semibold text-zinc-900 uppercase tracking-wide flex items-center gap-2 border-b border-zinc-100 pb-2">
-                <Ruler size={14} className="text-zinc-500" /> Detail Sisi
+            <h4 className="text-xs font-semibold text-primary-text uppercase tracking-wide flex items-center gap-2 border-b border-border-color pb-2">
+                <Ruler size={14} className="text-secondary-text" /> Detail Sisi Batas Tanah
             </h4>
 
             {selectedEdgeIndex !== null ? (
                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
                     
                     {/* Header Info */}
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                    <div className="flex items-center justify-between text-xs text-secondary-text">
                         <span>Sisi Terpilih</span>
-                        <span className="font-mono font-bold text-zinc-900 bg-zinc-100 px-2 py-0.5 rounded">#{selectedEdgeIndex + 1}</span>
+                        <span className="font-mono font-bold text-primary-text bg-body-bg border border-border-color px-2 py-0.5 rounded">#{selectedEdgeIndex + 1}</span>
                     </div>
 
                     {/* Type Selector (Segmented Control) */}
-                    <div className="bg-zinc-100 p-1.5 rounded-lg grid grid-cols-2 gap-1.5">
-                        <button
+                    <div className="bg-body-bg border border-border-color p-1.5 rounded-xl grid grid-cols-2 gap-1.5">
+                        {[
+                          { key: 'person', label: 'Tetangga', icon: <User size={13} /> },
+                          { key: 'road', label: 'Jalan', icon: <MapIcon size={13} /> },
+                          { key: 'ditch', label: 'Parit', icon: <Waves size={13} className="rotate-90" /> },
+                          { key: 'river', label: 'Sungai', icon: <Waves size={13} /> },
+                          { key: 'coast', label: 'Pantai', icon: <Sunset size={13} /> },
+                          { key: 'sea', label: 'Laut', icon: <Anchor size={13} /> },
+                        ].map(({ key, label, icon }) => (
+                          <button
+                            key={key}
                             type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'person'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'person' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
+                            onClick={() => setEdgeForm({...edgeForm, type: key})}
+                            className={`flex items-center justify-start px-2.5 gap-2 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                                edgeForm.type === key 
+                                ? 'bg-card-bg text-primary-text shadow-xs border border-border-color font-semibold' 
+                                : 'text-secondary-text hover:text-primary-text hover:bg-hover-bg'
                             }`}
-                        >
-                            <User size={14} /> Tetangga
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'road'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'road' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
-                            }`}
-                        >
-                            <MapIcon size={14} /> Jalan
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'ditch'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'ditch' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
-                            }`}
-                        >
-                            <Waves size={14} className="rotate-90" /> Parit
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'river'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'river' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
-                            }`}
-                        >
-                            <Waves size={14} /> Sungai
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'coast'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'coast' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
-                            }`}
-                        >
-                            <Sunset size={14} /> Pantai
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setEdgeForm({...edgeForm, type: 'sea'})}
-                            className={`flex items-center justify-start px-3 gap-2 py-2 text-xs font-medium rounded-md transition-all ${
-                                edgeForm.type === 'sea' 
-                                ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-black/5' 
-                                : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
-                            }`}
-                        >
-                            <Anchor size={14} /> Laut
-                        </button>
+                          >
+                            {icon} {label}
+                          </button>
+                        ))}
                     </div>
 
                     {/* Inputs */}
                     <div className="space-y-3">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-medium text-zinc-500 uppercase">
-                                {edgeForm.type === 'person' ? 'Nama Tetangga' : 
+                            <label className="text-[10px] font-medium text-secondary-text uppercase">
+                                {edgeForm.type === 'person' ? 'Nama Tetangga / Pemilik' : 
                                  edgeForm.type === 'road' ? 'Nama Jalan' :
                                  edgeForm.type === 'ditch' ? 'Nama Parit' :
                                  edgeForm.type === 'river' ? 'Nama Sungai' :
@@ -346,27 +292,27 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                                     edgeForm.type === 'river' ? 'Contoh: Sungai Brantas' :
                                     'Contoh: Laut Jawa'
                                 }
-                                className="w-full text-xs border border-zinc-200 rounded px-2 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-all"
+                                className="w-full text-xs border border-border-color bg-body-bg text-primary-text rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                             />
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[10px] font-medium text-zinc-500 uppercase">Panjang (Meter)</label>
+                            <label className="text-[10px] font-medium text-secondary-text uppercase">Panjang (Meter)</label>
                             <div className="flex items-center gap-2">
                                 <input 
                                     type="number" 
                                     value={edgeForm.length}
                                     onChange={(e) => setEdgeForm({...edgeForm, length: e.target.value})}
-                                    className="flex-1 text-xs border border-zinc-200 rounded px-2 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-all"
+                                    className="flex-1 text-xs border border-border-color bg-body-bg text-primary-text rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                                 />
-                                <span className="text-xs text-zinc-500 font-medium">m</span>
+                                <span className="text-xs text-secondary-text font-medium">m</span>
                             </div>
                         </div>
 
                         {edgeForm.type !== 'person' && (
-                            <div className="space-y-3 pt-2 border-t border-dashed border-zinc-200">
+                            <div className="space-y-3 pt-2 border-t border-dashed border-border-color">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-medium text-zinc-500 uppercase">
+                                    <label className="text-[10px] font-medium text-secondary-text uppercase">
                                         Lebar {
                                             edgeForm.type === 'road' ? 'Jalan' : 
                                             edgeForm.type === 'ditch' ? 'Parit' : 
@@ -378,16 +324,16 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                                         type="number" 
                                         value={edgeForm.roadWidth}
                                         onChange={(e) => setEdgeForm({...edgeForm, roadWidth: e.target.value})}
-                                        className="w-full text-xs border border-zinc-200 rounded px-2 py-1.5"
+                                        className="w-full text-xs border border-border-color bg-body-bg text-primary-text rounded-lg px-2.5 py-2"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-medium text-zinc-500 uppercase">Ujung Awal</label>
+                                        <label className="text-[10px] font-medium text-secondary-text uppercase">Ujung Awal</label>
                                         <select 
                                             value={edgeForm.startType}
                                             onChange={(e) => setEdgeForm({...edgeForm, startType: e.target.value})}
-                                            className="w-full text-xs border border-zinc-200 rounded px-2 py-1.5 bg-white"
+                                            className="w-full text-xs border border-border-color rounded-lg px-2 py-2 bg-body-bg text-primary-text"
                                         >
                                             <option value="auto">Auto</option>
                                             <option value="through">Terus</option>
@@ -395,11 +341,11 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                                         </select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-medium text-zinc-500 uppercase">Ujung Akhir</label>
+                                        <label className="text-[10px] font-medium text-secondary-text uppercase">Ujung Akhir</label>
                                         <select 
                                             value={edgeForm.endType}
                                             onChange={(e) => setEdgeForm({...edgeForm, endType: e.target.value})}
-                                            className="w-full text-xs border border-zinc-200 rounded px-2 py-1.5 bg-white"
+                                            className="w-full text-xs border border-border-color rounded-lg px-2 py-2 bg-body-bg text-primary-text"
                                         >
                                             <option value="auto">Auto</option>
                                             <option value="through">Terus</option>
@@ -414,34 +360,34 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                     <button 
                         type="button"
                         onClick={applyPropertyChanges}
-                        className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-colors shadow-sm active:scale-[0.98]"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-semibold text-white bg-accent hover:opacity-90 rounded-lg transition-all shadow-xs active:scale-[0.98] cursor-pointer"
                     >
                         <Save size={14} />
                         Simpan Perubahan
                     </button>
                     
-                    <hr className="border-zinc-100 my-1" />
+                    <hr className="border-border-color my-1" />
                     
                     {/* Geometry Actions */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-medium text-zinc-400 uppercase">Aksi Geometri</label>
+                        <label className="text-[10px] font-medium text-secondary-text uppercase">Aksi Geometri</label>
                         <div className="grid grid-cols-2 gap-2">
                             <button 
                                 type="button"
                                 onClick={splitEdge}
-                                className="flex flex-col items-center gap-1.5 p-2 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-md transition-all active:scale-[0.98]"
+                                className="flex flex-col items-center gap-1.5 p-2.5 text-xs font-medium text-primary-text bg-body-bg border border-border-color hover:bg-hover-bg rounded-lg transition-all active:scale-[0.98] cursor-pointer"
                                 title="Bagi sisi ini menjadi dua bagian sama panjang"
                             >
-                                <SplitSquareHorizontal size={16} className="text-zinc-500" />
+                                <SplitSquareHorizontal size={16} className="text-secondary-text" />
                                 <span>Bagi Sisi</span>
                             </button>
                             <button 
                                 type="button"
                                 onClick={deleteVertex}
-                                className="flex flex-col items-center gap-1.5 p-2 text-xs font-medium text-red-700 bg-white border border-zinc-200 hover:bg-red-50 hover:border-red-200 rounded-md transition-all active:scale-[0.98]"
+                                className="flex flex-col items-center gap-1.5 p-2.5 text-xs font-medium text-error-text bg-body-bg border border-border-color hover:bg-error-bg/10 hover:border-error-border rounded-lg transition-all active:scale-[0.98] cursor-pointer"
                                 title="Hapus titik sudut dan gabungkan sisi"
                             >
-                                <Trash2 size={16} className="text-red-500" />
+                                <Trash2 size={16} className="text-error-text" />
                                 <span>Hapus Titik</span>
                             </button>
                         </div>
@@ -450,30 +396,30 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                     <button 
                         type="button"
                         onClick={() => setSelectedEdgeIndex(null)}
-                        className="mt-2 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 transition-colors"
+                        className="mt-1 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-secondary-text hover:text-primary-text transition-colors cursor-pointer"
                     >
                         <X size={14} />
                         Batalkan Seleksi
                     </button>
                 </div>
             ) : (
-                <div className="text-center py-12 text-zinc-400 text-xs italic border border-dashed border-zinc-200 rounded bg-zinc-50/50 flex flex-col items-center gap-2">
-                    <Move size={24} className="opacity-20" />
-                    <p>Klik garis pada sketsa<br/>untuk mengedit properti.</p>
+                <div className="text-center py-12 text-secondary-text text-xs italic border border-dashed border-border-color rounded-xl bg-body-bg/50 flex flex-col items-center gap-2">
+                    <Move size={24} className="opacity-30" />
+                    <p>Klik garis pada sketsa<br/>untuk mengedit properti batas.</p>
                 </div>
             )}
           </div>
 
-          <hr className="border-zinc-100" />
+          <hr className="border-border-color" />
 
           {/* General Settings */}
           <div className="flex flex-col gap-3">
-             <h4 className="text-xs font-semibold text-zinc-900 uppercase tracking-wide">Pengaturan Umum</h4>
+             <h4 className="text-xs font-semibold text-primary-text uppercase tracking-wide">Pengaturan Skala</h4>
              
-             <div className="space-y-1">
-                <label className="text-[10px] font-medium text-zinc-500 uppercase flex justify-between">
+             <div className="space-y-1.5">
+                <label className="text-[10px] font-medium text-secondary-text uppercase flex justify-between">
                     <span>Skala Dasar</span>
-                    <span className="font-mono text-zinc-700">{scale}px/m</span>
+                    <span className="font-mono text-primary-text font-semibold">{scale}px/m</span>
                 </label>
                 <input 
                     type="range" 
@@ -482,14 +428,14 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                     step="1"
                     value={scale}
                     onChange={(e) => updateScale(parseInt(e.target.value))}
-                    className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-zinc-900"
+                    className="w-full h-1.5 bg-body-bg rounded-lg appearance-none cursor-pointer accent-accent"
                 />
              </div>
 
              <button 
                 type="button"
                 onClick={resetShape}
-                className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-zinc-600 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-md transition-colors mt-2"
+                className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-secondary-text hover:text-primary-text bg-body-bg hover:bg-hover-bg border border-border-color rounded-lg transition-colors mt-2 cursor-pointer"
             >
                 <RotateCcw size={14} />
                 Reset Bentuk Awal
