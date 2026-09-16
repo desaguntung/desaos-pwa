@@ -36,10 +36,11 @@ type EditorProps = {
   letterType?: string;
   letterName?: string;
   id?: string;
-  onSave?: (json: string) => void;
+  onSave?: (json: string) => void | Promise<void>;
   previewData?: any;
   readOnly?: boolean;
   hideHeaderNavigation?: boolean;
+  hideHeader?: boolean;
 };
 
 export const templates = [
@@ -151,7 +152,17 @@ export const getTemplateKeyFromType = (type?: string, name?: string): string => 
   return "standard";
 };
 
-const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previewData, readOnly, hideHeaderNavigation }: EditorProps) => {
+const EditorContent = ({ 
+  initialJson, 
+  letterType, 
+  letterName, 
+  id, 
+  onSave, 
+  previewData, 
+  readOnly, 
+  hideHeaderNavigation,
+  hideHeader
+}: EditorProps) => {
   const { actions, query, enabled } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
@@ -249,10 +260,12 @@ const EditorContent = ({ initialJson, letterType, letterName, id, onSave, previe
     }
   }, [initialJson, letterType, letterName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const showHeader = !hideHeader && !(readOnly && hideHeaderNavigation);
+
   return (
     <SuratContext.Provider value={contextValue}>
       <div className={`h-full flex flex-col overflow-hidden ${readOnly ? 'bg-transparent' : 'bg-zinc-50'}`}>
-        {!hideHeaderNavigation && (
+        {showHeader && (
           <Header onSave={onSave} zoom={zoom} setZoom={setZoom} readOnly={readOnly} hideNavigation={hideHeaderNavigation} />
         )}
         
