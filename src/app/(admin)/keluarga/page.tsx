@@ -20,7 +20,7 @@ import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { getKeluargaList, deleteKeluarga, Keluarga } from "@/lib/services/keluarga";
 import { useReferenceData } from "@/lib/services/referensi";
-import { getIdentitasDesa, IdentitasDesa } from "@/lib/services/surat";
+import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong } from "@/lib/services/surat";
 
 // UI Components
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -59,6 +59,7 @@ export default function KeluargaPage() {
   const [data, setData] = useState<Keluarga[]>([]);
   const [loading, setLoading] = useState(true);
   const [identitasDesa, setIdentitasDesa] = useState<IdentitasDesa | null>(null);
+  const [pamongList, setPamongList] = useState<Pamong[]>([]);
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,7 +77,7 @@ export default function KeluargaPage() {
   // Initial Data Fetch
   useEffect(() => {
     fetchData();
-    fetchIdentitas();
+    fetchIdentitasAndPamong();
   }, []);
 
   const fetchData = async () => {
@@ -92,12 +93,16 @@ export default function KeluargaPage() {
     }
   };
 
-  const fetchIdentitas = async () => {
+  const fetchIdentitasAndPamong = async () => {
     try {
-      const idDesa = await getIdentitasDesa();
+      const [idDesa, pamongs] = await Promise.all([
+        getIdentitasDesa(),
+        getPamong()
+      ]);
       if (idDesa) setIdentitasDesa(idDesa);
+      if (pamongs) setPamongList(pamongs);
     } catch (e) {
-      console.error("Error fetching identitas desa:", e);
+      console.error("Error fetching identitas/pamong:", e);
     }
   };
 
@@ -660,17 +665,39 @@ export default function KeluargaPage() {
               </div>
 
               {/* KK Footer / Tanda Tangan */}
-              <div className="grid grid-cols-2 gap-4 text-xs pt-4 text-center">
-                <div>
-                  <p className="font-semibold uppercase mb-16">KEPALA KELUARGA</p>
-                  <p className="font-bold uppercase underline tracking-wider">{selectedKeluarga.headName}</p>
-                </div>
-                <div>
-                  <p className="mb-0.5">Dikeluarkan Tanggal: {formatDateIndo(new Date().toISOString())}</p>
-                  <p className="font-semibold uppercase mb-16">KEPALA DESA {identitasDesa?.nama_desa || "GUNTUNG"}</p>
-                  <p className="font-bold uppercase underline tracking-wider">{identitasDesa?.nama_kepala_desa || "KEPALA DESA"}</p>
-                </div>
-              </div>
+              {(() => {
+                const kadesPamong = pamongList.find(p => {
+                  const jab = (p.jabatan || "").toUpperCase();
+                  return jab.includes("KEPALA DESA") || jab.includes("KADES") || p.jabatan_id === 1 || p.jabatan_id === 13 || p.pamong_ttd === 1;
+                });
+                const namaKades = kadesPamong?.pamong_nama || identitasDesa?.nama_kepala_desa || "";
+
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 text-xs pt-4 text-center">
+                      <div>
+                        <p className="font-semibold uppercase mb-16">KEPALA KELUARGA</p>
+                        <p className="font-bold uppercase underline tracking-wider">{selectedKeluarga.headName}</p>
+                      </div>
+                      <div>
+                        <p className="mb-0.5">Dikeluarkan Tanggal: {formatDateIndo(new Date().toISOString())}</p>
+                        <p className="font-semibold uppercase mb-16">KEPALA DESA {identitasDesa?.nama_desa || "GUNTUNG"}</p>
+                        <p className="font-bold uppercase underline tracking-wider">
+                          {namaKades || "( .................................... )"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Disclaimer / Catatan Sistem */}
+                    <div className="mt-8 pt-3 border-t border-dashed border-zinc-300 text-[10px] text-zinc-500 text-center leading-relaxed">
+                      <p className="font-bold text-zinc-600 uppercase tracking-wider mb-0.5">PEMBERITAHUAN / CATATAN SISTEM</p>
+                      <p className="italic">
+                        Dokumen Salinan Kartu Keluarga ini bukan merupakan dokumen resmi yang diterbitkan oleh Dinas Kependudukan dan Pencatatan Sipil (Disdukcapil), melainkan data salinan kependudukan yang dikeluarkan oleh sistem informasi desa untuk keperluan administrasi internal.
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
