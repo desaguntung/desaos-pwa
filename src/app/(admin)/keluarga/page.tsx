@@ -460,7 +460,53 @@ export default function KeluargaPage() {
 
       {/* Official Indonesian Kartu Keluarga Preview Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+        <DialogContent className="max-w-[96vw] xl:max-w-7xl w-full max-h-[94vh] overflow-y-auto p-4 sm:p-6 md:p-8 custom-scrollbar">
+          {/* A4 Landscape Print Styles */}
+          <style jsx global>{`
+            @media print {
+              @page {
+                size: A4 landscape;
+                margin: 8mm 10mm 8mm 10mm;
+              }
+              html, body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              body * {
+                visibility: hidden;
+              }
+              #kk-official-print,
+              #kk-official-print * {
+                visibility: visible;
+              }
+              #kk-official-print {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+              }
+              #kk-official-print table {
+                border-color: #000000 !important;
+              }
+              #kk-official-print table th,
+              #kk-official-print table td {
+                border-color: #000000 !important;
+                color: #000000 !important;
+              }
+            }
+          `}</style>
+
           <DialogHeader className="flex flex-row items-center justify-between border-b border-border-color pb-3 print:hidden">
             <div>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
