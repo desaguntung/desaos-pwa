@@ -16,13 +16,9 @@ import {
   Printer,
   FileText,
   Users,
-  ShieldAlert,
-  ShieldCheck,
   RotateCcw,
   ExternalLink,
-  MapPin,
-  Calendar,
-  Sparkles
+  MapPin
 } from "lucide-react";
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
@@ -670,9 +666,8 @@ export default function RumahTanggaPage() {
               {row.no_rtm}
             </span>
             {hasBansos ? (
-              <Badge variant="success" className="gap-1 text-[10px] px-1.5 py-0.2 font-medium">
-                <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>BDT: {row.bdt}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 font-mono">
+                BDT: {row.bdt}
               </Badge>
             ) : (
               <span className="text-[11px] text-secondary-text">Non-Bansos</span>
@@ -854,57 +849,6 @@ export default function RumahTanggaPage() {
           )
         }
       />
-
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 flex items-center gap-3.5 border-border-color shadow-xs hover:border-primary/40 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <Home className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-secondary-text font-medium">Total RTM</p>
-            <p className="text-lg sm:text-xl font-bold text-primary-text font-mono mt-0.5">
-              {stats.totalRtm.toLocaleString("id-ID")}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="p-4 flex items-center gap-3.5 border-border-color shadow-xs hover:border-blue-500/40 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-secondary-text font-medium">Total Jiwa Terdata</p>
-            <p className="text-lg sm:text-xl font-bold text-primary-text font-mono mt-0.5">
-              {stats.totalJiwa.toLocaleString("id-ID")}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="p-4 flex items-center gap-3.5 border-border-color shadow-xs hover:border-emerald-500/40 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-secondary-text font-medium">Penerima BDT / Bansos</p>
-            <p className="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
-              {stats.totalBansos.toLocaleString("id-ID")}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="p-4 flex items-center gap-3.5 border-border-color shadow-xs hover:border-purple-500/40 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-secondary-text font-medium">Rata-rata Jiwa / RTM</p>
-            <p className="text-lg sm:text-xl font-bold text-primary-text font-mono mt-0.5">
-              {stats.avgJiwa} <span className="text-xs font-normal text-secondary-text">Jiwa</span>
-            </p>
-          </div>
-        </Card>
-      </div>
 
       {/* Toolbar / Filters */}
       <Card className="p-4 border-border-color">

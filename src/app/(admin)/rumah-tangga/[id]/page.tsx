@@ -10,15 +10,11 @@ import {
   Users,
   Printer,
   Pencil,
-  ShieldCheck,
   MapPin,
   Calendar,
   FileText,
   Copy,
   Check,
-  Sparkles,
-  Phone,
-  Mail,
   ExternalLink
 } from "lucide-react";
 import { useRbac } from "@/useRbac";
@@ -581,9 +577,8 @@ function DetailRumahTanggaPageInner() {
                     {(kepala?.nama || "Kepala Belum Diatur").toLowerCase()}
                   </h2>
                   {data.bdt && data.bdt.trim().length > 0 ? (
-                    <Badge variant="success" className="gap-1 text-xs px-2 py-0.5 font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>BDT: {data.bdt}</span>
+                    <Badge variant="outline" className="font-mono text-xs px-2 py-0.5">
+                      BDT: {data.bdt}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="text-xs px-2 py-0.5">
@@ -600,7 +595,7 @@ function DetailRumahTanggaPageInner() {
                       className="text-secondary-text hover:text-primary-text p-0.5"
                       title="Salin No RTM"
                     >
-                      {copiedField === "rtm" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      {copiedField === "rtm" ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
                     </button>
                   </span>
                   {kepala?.nik && (
@@ -612,7 +607,7 @@ function DetailRumahTanggaPageInner() {
                         className="text-secondary-text hover:text-primary-text p-0.5"
                         title="Salin NIK Kepala"
                       >
-                        {copiedField === "nik" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        {copiedField === "nik" ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
                       </button>
                     </span>
                   )}
@@ -702,7 +697,7 @@ function DetailRumahTanggaPageInner() {
           {/* Demographic Breakdown Card */}
           <Card className="p-5 border-border-color shadow-xs bg-card-bg space-y-4">
             <div className="flex items-center gap-2 border-b border-border-color pb-3">
-              <Sparkles className="w-4 h-4 text-primary" />
+              <Users className="w-4 h-4 text-secondary-text" />
               <h3 className="text-sm font-bold text-primary-text">
                 Komposisi Rumah Tangga
               </h3>
@@ -715,16 +710,16 @@ function DetailRumahTanggaPageInner() {
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-body-bg border border-border-color">
                 <span className="text-secondary-text">Laki-laki:</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400 font-mono">{totalLaki} Jiwa</span>
+                <span className="font-semibold text-primary-text font-mono">{totalLaki} Jiwa</span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-body-bg border border-border-color">
                 <span className="text-secondary-text">Perempuan:</span>
-                <span className="font-semibold text-rose-600 dark:text-rose-400 font-mono">{totalPerempuan} Jiwa</span>
+                <span className="font-semibold text-primary-text font-mono">{totalPerempuan} Jiwa</span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-body-bg border border-border-color">
                 <span className="text-secondary-text">Status Bantuan:</span>
                 <span className="font-semibold text-primary-text">
-                  {data.bdt ? "Penerima BDT/Bansos" : "Non-Bansos"}
+                  {data.bdt ? "Penerima BDT" : "Non-Bansos"}
                 </span>
               </div>
             </div>
