@@ -175,6 +175,406 @@ export default function KeluargaPage() {
     }
   };
 
+  const handlePrintKK = () => {
+    if (!selectedKeluarga) return;
+
+    const headRes = selectedKeluarga.members.find(
+      (m) => (m.hubungan_keluarga || "").toUpperCase() === "KEPALA KELUARGA"
+    ) || selectedKeluarga.members[0];
+
+    const rtVal = (headRes?.rt || "").toString().trim();
+    const rwVal = (headRes?.rw || "").toString().trim();
+    const rtFormatted = rtVal ? (rtVal.length === 1 ? `0${rtVal}` : rtVal) : "00";
+    const rwFormatted = rwVal ? (rwVal.length === 1 ? `0${rwVal}` : rwVal) : "00";
+    const rtRwDisplay = `${rtFormatted}/${rwFormatted}`;
+
+    const kadesPamong = pamongList.find((p) => {
+      const jab = (p.jabatan || "").toUpperCase();
+      return (
+        jab.includes("KEPALA DESA") ||
+        jab.includes("KADES") ||
+        p.jabatan_id === 1 ||
+        p.jabatan_id === 13 ||
+        p.pamong_ttd === 1
+      );
+    });
+    const namaKades = kadesPamong?.pamong_nama || identitasDesa?.nama_kepala_desa || "";
+    const namaDesa = identitasDesa?.nama_desa || headRes?.nama_desa || "GUNTUNG";
+    const namaKecamatan = identitasDesa?.nama_kecamatan || headRes?.nama_kecamatan || "-";
+    const namaKabupaten = identitasDesa?.nama_kabupaten || headRes?.nama_kabupaten || "-";
+    const kodePos = identitasDesa?.kode_pos || headRes?.kode_pos || "-";
+    const namaProvinsi = identitasDesa?.nama_provinsi || headRes?.nama_provinsi || "-";
+    const alamatKeluarga = selectedKeluarga.addressLine || headRes?.alamat_saat_ini || selectedKeluarga.dusun || "-";
+
+    const membersTable1Rows = selectedKeluarga.members
+      .map(
+        (m, idx) => `
+        <tr>
+          <td style="text-align:center; padding: 4px 2px;">${idx + 1}</td>
+          <td style="font-weight:bold; text-transform:uppercase; padding: 4px 6px;">${m.nama || "-"}</td>
+          <td style="font-family:monospace; text-align:center; padding: 4px 4px;">${m.nik || "-"}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 2px;">${m.jenis_kelamin || "-"}</td>
+          <td style="text-transform:uppercase; padding: 4px 4px;">${m.tempat_lahir || "-"}</td>
+          <td style="text-align:center; font-family:monospace; padding: 4px 4px;">${formatDateIndo(m.tanggal_lahir)}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 4px;">${m.agama || "-"}</td>
+          <td style="text-transform:uppercase; padding: 4px 4px;">${m.pendidikan_kk || m.pendidikan_saat_ini || "-"}</td>
+          <td style="text-transform:uppercase; padding: 4px 4px;">${m.pekerjaan || "-"}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 2px;">${m.golongan_darah || "-"}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const membersTable2Rows = selectedKeluarga.members
+      .map(
+        (m, idx) => `
+        <tr>
+          <td style="text-align:center; padding: 4px 2px;">${idx + 1}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 4px;">${m.status_kawin || "-"}</td>
+          <td style="text-align:center; font-family:monospace; padding: 4px 4px;">${formatDateIndo(m.tanggal_perkawinan)}</td>
+          <td style="font-weight:600; text-align:center; text-transform:uppercase; padding: 4px 4px;">${m.hubungan_keluarga || (idx === 0 ? "KEPALA KELUARGA" : "ANGGOTA")}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 2px;">${m.kewarganegaraan || "WNI"}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 4px;">${m.no_paspor || "-"}</td>
+          <td style="text-align:center; text-transform:uppercase; padding: 4px 4px;">${m.no_kitas || m.no_kitap || "-"}</td>
+          <td style="text-transform:uppercase; padding: 4px 6px;">${m.nama_ayah || "-"}</td>
+          <td style="text-transform:uppercase; padding: 4px 6px;">${m.nama_ibu || "-"}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="utf-8">
+        <title>Salinan Kartu Keluarga - ${selectedKeluarga.nomorKK}</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 8mm 10mm 8mm 10mm;
+          }
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+            line-height: 1.25;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+          }
+          .header h1 {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            margin: 0;
+            text-transform: uppercase;
+          }
+          .header p {
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: bold;
+            margin: 2px 0 0 0;
+            letter-spacing: 1px;
+          }
+          .meta-table {
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 11px;
+          }
+          .meta-table td {
+            vertical-align: top;
+            padding: 1.5px 0;
+          }
+          .meta-label {
+            font-weight: 600;
+            text-transform: uppercase;
+            width: 140px;
+          }
+          .meta-sep {
+            width: 12px;
+          }
+          .meta-val {
+            text-transform: uppercase;
+          }
+          .meta-val.bold {
+            font-weight: bold;
+          }
+          .meta-val.mono {
+            font-family: monospace;
+          }
+          table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-bottom: 12px;
+            font-size: 10px;
+          }
+          table.data-table th, table.data-table td {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            vertical-align: middle;
+          }
+          table.data-table th {
+            background-color: #f4f4f5 !important;
+            font-weight: bold;
+            text-align: center;
+          }
+          table.data-table th.subnum {
+            background-color: #fafafa !important;
+            font-size: 8.5px;
+            color: #555;
+            padding: 1px 2px;
+          }
+          .footer-table {
+            width: 100%;
+            margin-top: 8px;
+            text-align: center;
+            font-size: 11px;
+          }
+          .footer-table td {
+            vertical-align: top;
+            width: 50%;
+            padding: 4px;
+          }
+          .sign-title {
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 52px;
+          }
+          .sign-name {
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+          }
+          .disclaimer {
+            margin-top: 12px;
+            padding-top: 6px;
+            border-top: 1px dashed #777;
+            text-align: center;
+            font-size: 9px;
+            color: #555;
+            line-height: 1.3;
+          }
+          .disclaimer-title {
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+          }
+          .disclaimer-body {
+            font-style: italic;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>KARTU KELUARGA</h1>
+          <p>No. ${selectedKeluarga.nomorKK}</p>
+        </div>
+
+        <table class="meta-table">
+          <tr>
+            <td style="width: 50%; padding-right: 15px;">
+              <table style="width: 100%;">
+                <tr>
+                  <td class="meta-label">Nama Kepala Keluarga</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val bold">${selectedKeluarga.headName || "-"}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Alamat</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val">${alamatKeluarga}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">RT / RW</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val mono">${rtRwDisplay}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Desa / Kelurahan</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val">${namaDesa}</td>
+                </tr>
+              </table>
+            </td>
+            <td style="width: 50%; padding-left: 15px;">
+              <table style="width: 100%;">
+                <tr>
+                  <td class="meta-label">Kecamatan</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val">${namaKecamatan}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Kabupaten / Kota</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val">${namaKabupaten}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Kode Pos</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val mono">${kodePos}</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Provinsi</td>
+                  <td class="meta-sep">:</td>
+                  <td class="meta-val">${namaProvinsi}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- TABEL I -->
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 25px;">No</th>
+              <th style="min-width: 140px;">Nama Lengkap</th>
+              <th style="min-width: 120px;">NIK</th>
+              <th style="width: 75px;">Jenis Kelamin</th>
+              <th style="min-width: 90px;">Tempat Lahir</th>
+              <th style="width: 75px;">Tgl Lahir</th>
+              <th style="width: 65px;">Agama</th>
+              <th style="min-width: 100px;">Pendidikan</th>
+              <th style="min-width: 110px;">Jenis Pekerjaan</th>
+              <th style="width: 40px;">Gol. Darah</th>
+            </tr>
+            <tr>
+              <th class="subnum">(1)</th>
+              <th class="subnum">(2)</th>
+              <th class="subnum">(3)</th>
+              <th class="subnum">(4)</th>
+              <th class="subnum">(5)</th>
+              <th class="subnum">(6)</th>
+              <th class="subnum">(7)</th>
+              <th class="subnum">(8)</th>
+              <th class="subnum">(9)</th>
+              <th class="subnum">(10)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${membersTable1Rows}
+          </tbody>
+        </table>
+
+        <!-- TABEL II -->
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 25px;" rowspan="2">No</th>
+              <th style="min-width: 95px;" rowspan="2">Status Perkawinan</th>
+              <th style="width: 75px;" rowspan="2">Tgl Perkawinan</th>
+              <th style="min-width: 120px;" rowspan="2">Status Hubungan Dalam Keluarga</th>
+              <th style="width: 75px;" rowspan="2">Kewarganegaraan</th>
+              <th colspan="2">Dokumen Imigrasi</th>
+              <th colspan="2">Nama Orang Tua</th>
+            </tr>
+            <tr>
+              <th style="min-width: 80px;">No. Paspor</th>
+              <th style="min-width: 80px;">No. KITAS/KITAP</th>
+              <th style="min-width: 110px;">Ayah</th>
+              <th style="min-width: 110px;">Ibu</th>
+            </tr>
+            <tr>
+              <th class="subnum">(1)</th>
+              <th class="subnum">(11)</th>
+              <th class="subnum">(12)</th>
+              <th class="subnum">(13)</th>
+              <th class="subnum">(14)</th>
+              <th class="subnum">(15)</th>
+              <th class="subnum">(16)</th>
+              <th class="subnum">(17)</th>
+              <th class="subnum">(18)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${membersTable2Rows}
+          </tbody>
+        </table>
+
+        <!-- TANDA TANGAN -->
+        <table class="footer-table">
+          <tr>
+            <td>
+              <div class="sign-title">KEPALA KELUARGA</div>
+              <div class="sign-name">${selectedKeluarga.headName || "-"}</div>
+            </td>
+            <td>
+              <div style="margin-bottom: 2px; font-size: 10.5px;">Dikeluarkan Tanggal: ${formatDateIndo(new Date().toISOString())}</div>
+              <div class="sign-title">KEPALA DESA ${namaDesa}</div>
+              <div class="sign-name">${namaKades || "( .................................... )"}</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+          <div class="disclaimer-title">PEMBERITAHUAN / CATATAN SISTEM</div>
+          <div class="disclaimer-body">
+            Dokumen Salinan Kartu Keluarga ini bukan merupakan dokumen resmi yang diterbitkan oleh Dinas Kependudukan dan Pencatatan Sipil (Disdukcapil), melainkan data salinan kependudukan yang dikeluarkan oleh sistem informasi desa untuk keperluan administrasi internal.
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Remove any previous print iframe
+    const existingIframe = document.getElementById("print-kk-iframe");
+    if (existingIframe && existingIframe.parentNode) {
+      existingIframe.parentNode.removeChild(existingIframe);
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "print-kk-iframe";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!iframeDoc) return;
+
+    iframeDoc.open();
+    iframeDoc.write(printHtml);
+    iframeDoc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.error("Print error:", err);
+      } finally {
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 1500);
+      }
+    }, 300);
+  };
+
   // Columns Configuration
   const columns: Column<Keluarga>[] = [
     {
@@ -461,53 +861,7 @@ export default function KeluargaPage() {
       {/* Official Indonesian Kartu Keluarga Preview Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-[96vw] xl:max-w-7xl w-full max-h-[94vh] overflow-y-auto p-4 sm:p-6 md:p-8 custom-scrollbar">
-          {/* A4 Landscape Print Styles */}
-          <style jsx global>{`
-            @media print {
-              @page {
-                size: A4 landscape;
-                margin: 8mm 10mm 8mm 10mm;
-              }
-              html, body {
-                background: #ffffff !important;
-                color: #000000 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-              body * {
-                visibility: hidden;
-              }
-              #kk-official-print,
-              #kk-official-print * {
-                visibility: visible;
-              }
-              #kk-official-print {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
-                background: #ffffff !important;
-                color: #000000 !important;
-              }
-              #kk-official-print table {
-                border-color: #000000 !important;
-              }
-              #kk-official-print table th,
-              #kk-official-print table td {
-                border-color: #000000 !important;
-                color: #000000 !important;
-              }
-            }
-          `}</style>
-
-          <DialogHeader className="flex flex-row items-center justify-between border-b border-border-color pb-3 print:hidden">
+          <DialogHeader className="flex flex-row items-center justify-between border-b border-border-color pb-3">
             <div>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
@@ -518,7 +872,7 @@ export default function KeluargaPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.print()}
+                onClick={handlePrintKK}
                 className="gap-1.5 h-8 text-xs font-semibold"
               >
                 <Printer className="w-3.5 h-3.5" />
