@@ -501,9 +501,11 @@ export default function KeluargaPage() {
               {/* KK Metadata (2 Columns) */}
               {(() => {
                 const headRes = selectedKeluarga.members.find(m => (m.hubungan_keluarga || "").toUpperCase() === "KEPALA KELUARGA") || selectedKeluarga.members[0];
-                const rtVal = headRes?.rt || "";
-                const rwVal = headRes?.rw || "";
-                const rtRwDisplay = (rtVal || rwVal) ? `${rtVal || "-"} / ${rwVal || "-"}` : (selectedKeluarga.dusun || "-");
+                const rtVal = (headRes?.rt || "").toString().trim();
+                const rwVal = (headRes?.rw || "").toString().trim();
+                const rtFormatted = rtVal ? (rtVal.length === 1 ? `0${rtVal}` : rtVal) : "00";
+                const rwFormatted = rwVal ? (rwVal.length === 1 ? `0${rwVal}` : rwVal) : "00";
+                const rtRwDisplay = `${rtFormatted}/${rwFormatted}`;
 
                 return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs mb-6 text-zinc-800">
@@ -517,12 +519,12 @@ export default function KeluargaPage() {
                       <div className="grid grid-cols-[140px_12px_1fr]">
                         <span className="font-semibold uppercase">Alamat</span>
                         <span>:</span>
-                        <span className="uppercase">{selectedKeluarga.addressLine || "-"}</span>
+                        <span className="uppercase">{selectedKeluarga.addressLine || headRes?.alamat_saat_ini || selectedKeluarga.dusun || "-"}</span>
                       </div>
                       <div className="grid grid-cols-[140px_12px_1fr]">
                         <span className="font-semibold uppercase">RT / RW</span>
                         <span>:</span>
-                        <span className="uppercase">{rtRwDisplay}</span>
+                        <span className="uppercase font-mono">{rtRwDisplay}</span>
                       </div>
                       <div className="grid grid-cols-[140px_12px_1fr]">
                         <span className="font-semibold uppercase">Desa / Kelurahan</span>
