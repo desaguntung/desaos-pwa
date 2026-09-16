@@ -25,6 +25,7 @@ import { PermissionResource } from "@/config/permissions";
 import { RumahTangga, getRumahTanggaList, deleteRumahTangga, sortRtmMembers } from "@/lib/services/rumah_tangga";
 import { useReferenceData } from "@/lib/services/referensi";
 import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong } from "@/lib/services/surat";
+import { formatDusunName } from "@/lib/services/penduduk";
 
 // UI Components
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -683,7 +684,7 @@ export default function RumahTanggaPage() {
         const rtVal = (row.rt || "").toString().trim();
         const rwVal = (row.rw || "").toString().trim();
         const rtRw = `RT ${rtVal ? (rtVal.length === 1 ? `0${rtVal}` : rtVal) : "00"} / RW ${rwVal ? (rwVal.length === 1 ? `0${rwVal}` : rwVal) : "00"}`;
-        const dusunName = row.dusun ? (row.dusun.toUpperCase().startsWith("DUSUN") ? row.dusun : `Dusun ${row.dusun}`) : "-";
+        const dusunName = row.dusun ? formatDusunName(row.dusun) : "-";
 
         return (
           <div className="flex flex-col max-w-[240px]">

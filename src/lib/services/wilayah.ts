@@ -17,6 +17,35 @@ export type Rt = {
   nomor_rt: number;
 };
 
+/**
+ * Formats a dusun string into a clean "Dusun X" representation.
+ * Handles inputs like "DUSUN I", "Dusun I", "I", "Dusun DUSUN I", "Tanpa Dusun", "-", etc.
+ */
+export function formatDusunName(dusun?: string | null): string {
+  if (!dusun || dusun === "-" || dusun.trim() === "") return "Tanpa Dusun";
+  const trimmed = dusun.trim();
+  if (trimmed.toLowerCase() === "tanpa dusun" || trimmed.toLowerCase() === "tanpa_dusun") {
+    return "Tanpa Dusun";
+  }
+  // Remove repeated "dusun" or "DUSUN" prefixes (e.g., "Dusun DUSUN VIII" -> "VIII", "DUSUN I" -> "I")
+  let clean = trimmed.replace(/^(dusun\s+)+/i, "").trim();
+  if (!clean || clean.toLowerCase() === "tanpa dusun") return "Tanpa Dusun";
+  return `Dusun ${clean}`;
+}
+
+/**
+ * Normalizes dusun string for case-insensitive and prefix-insensitive comparisons / keys.
+ */
+export function normalizeDusunKey(dusun?: string | null): string {
+  if (!dusun || dusun === "-" || dusun.trim() === "") return "tanpa_dusun";
+  const trimmed = dusun.trim();
+  if (trimmed.toLowerCase() === "tanpa dusun" || trimmed.toLowerCase() === "tanpa_dusun") {
+    return "tanpa_dusun";
+  }
+  const clean = trimmed.replace(/^(dusun\s+)+/i, "").trim().toUpperCase();
+  return clean || "tanpa_dusun";
+}
+
 export async function getWilayahData() {
   const supabase = createSupabaseBrowserClient();
   
@@ -36,3 +65,4 @@ export async function getWilayahData() {
     rtList: rtResult.data as Rt[]
   };
 }
+

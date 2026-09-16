@@ -1,5 +1,5 @@
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { Resident, getResidents, updateResident, mapResidentFromDb } from "./penduduk";
+import { Resident, getResidents, updateResident, mapResidentFromDb, formatDusunName } from "./penduduk";
 
 export interface Keluarga {
   nomorKK: string;
@@ -102,7 +102,8 @@ export async function getFamilyByNoKK(noKK: string): Promise<Keluarga | null> {
   const rt = head.rt || "";
   const wilayahParts: string[] = [];
   if (dusun) {
-    wilayahParts.push(dusun.toUpperCase().startsWith("DUSUN") ? dusun : `Dusun ${dusun}`);
+    const formatted = formatDusunName(dusun);
+    if (formatted !== "Tanpa Dusun") wilayahParts.push(formatted);
   }
   if (rw) {
     wilayahParts.push(`RW ${rw}`);
@@ -176,7 +177,8 @@ export async function getKeluargaList(): Promise<Keluarga[]> {
     const rt = head.rt || "";
     const wilayahParts: string[] = [];
     if (dusun) {
-      wilayahParts.push(dusun.toUpperCase().startsWith("DUSUN") ? dusun : `Dusun ${dusun}`);
+      const formatted = formatDusunName(dusun);
+      if (formatted !== "Tanpa Dusun") wilayahParts.push(formatted);
     }
     if (rw) {
       wilayahParts.push(`RW ${rw}`);

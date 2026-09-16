@@ -14,7 +14,7 @@ import {
   Users,
   HeartHandshake,
 } from "lucide-react";
-import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS } from "@/lib/services/penduduk";
+import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS, formatDusunName } from "@/lib/services/penduduk";
 import { useReferenceData } from "@/lib/services/referensi";
 
 // New Standard Components
@@ -359,7 +359,7 @@ export default function ResidentForm({
               label="Dusun"
               value={formData.dusun}
               onValueChange={handleDusunChange}
-              options={dusun.map((d) => ({ label: `Dusun ${d.nama}`, value: d.nama }))}
+              options={dusun.map((d) => ({ label: formatDusunName(d.nama), value: d.nama }))}
            />
 
            <div className="grid grid-cols-2 gap-4">

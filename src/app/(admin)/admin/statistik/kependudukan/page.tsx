@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Resident, getPekerjaanList, getAgamaList, getPendidikanList, getResidents, getDusunList } from "@/lib/services/penduduk";
+import { Resident, getPekerjaanList, getAgamaList, getPendidikanList, getResidents, getDusunList, formatDusunName, normalizeDusunKey } from "@/lib/services/penduduk";
 import { Check, ChevronRight, Menu, X, Search, MapPin, User, Calendar, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -114,7 +114,7 @@ const getResidentCategoryData = (r: Resident, category: StatCategory): { key: st
 
     switch (category) {
         case "Statistik Penduduk": 
-            return { key: r.dusun || "Tanpa Dusun", label: `Dusun ${r.dusun || "-"}` };
+            return { key: normalizeDusunKey(r.dusun), label: formatDusunName(r.dusun) };
         case "Status Penduduk":
             return { key: r.status_penduduk || "Tidak Diketahui", label: r.status_penduduk || "Tidak Diketahui" };
         case "Rentang Umur":
@@ -329,9 +329,9 @@ function StatContent({
         // Add pre-filled 0 counts for Dusun if needed
         if (category === "Statistik Penduduk" && dusunOptions.length > 0) {
             dusunOptions.forEach(dusun => {
-                 // Note: key from getResidentCategoryData for Dusun is r.dusun.
-                 // We assume r.dusun matches the name in dusunOptions.
-                 if (!rows[dusun]) rows[dusun] = { label: `Dusun ${dusun}`, male: 0, female: 0, key: dusun };
+                 const key = normalizeDusunKey(dusun);
+                 const label = formatDusunName(dusun);
+                 if (!rows[key]) rows[key] = { label, male: 0, female: 0, key };
             });
         }
 
@@ -363,15 +363,15 @@ function StatContent({
         
         // Sort by DB Order for Dusun
         if (category === "Statistik Penduduk" && dusunOptions.length > 0) {
+             const orderMap = new Map<string, number>();
+             dusunOptions.forEach((d, idx) => {
+                 orderMap.set(normalizeDusunKey(d), idx);
+             });
              return result.sort((a, b) => {
-                 const idxA = dusunOptions.indexOf(a.key);
-                 const idxB = dusunOptions.indexOf(b.key);
-                 // If both found, sort by index
-                 if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                 // If one not found, put at end?
-                 if (idxA === -1) return 1;
-                 if (idxB === -1) return -1;
-                 return 0;
+                 const idxA = orderMap.has(a.key) ? orderMap.get(a.key)! : 999;
+                 const idxB = orderMap.has(b.key) ? orderMap.get(b.key)! : 999;
+                 if (idxA !== idxB) return idxA - idxB;
+                 return a.label.localeCompare(b.label, undefined, { numeric: true });
              });
         }
 
@@ -631,11 +631,27 @@ export default function StatistikKependudukanPage() {
         init();
     }, []);
 
+    // Clean unique dusun filter options
+    const cleanDusunOptions = useMemo(() => {
+        const map = new Map<string, { key: string; label: string }>();
+        dusunOptions.forEach(d => {
+            const key = normalizeDusunKey(d);
+            if (!map.has(key)) map.set(key, { key, label: formatDusunName(d) });
+        });
+        residents.forEach(r => {
+            if (r.dusun) {
+                const key = normalizeDusunKey(r.dusun);
+                if (!map.has(key)) map.set(key, { key, label: formatDusunName(r.dusun) });
+            }
+        });
+        return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+    }, [dusunOptions, residents]);
+
     // Memoized Filter Options
     const rwOptions = useMemo(() => {
         let relevantResidents = residents;
         if (selectedDusun !== "all") {
-            relevantResidents = residents.filter(r => r.dusun === selectedDusun);
+            relevantResidents = residents.filter(r => normalizeDusunKey(r.dusun) === selectedDusun);
         }
         const rws = new Set(relevantResidents.map(r => r.rw).filter(Boolean));
         return Array.from(rws).sort();
@@ -644,7 +660,7 @@ export default function StatistikKependudukanPage() {
     const rtOptions = useMemo(() => {
         let relevantResidents = residents;
         if (selectedDusun !== "all") {
-            relevantResidents = relevantResidents.filter(r => r.dusun === selectedDusun);
+            relevantResidents = residents.filter(r => normalizeDusunKey(r.dusun) === selectedDusun);
         }
         if (selectedRW !== "all") {
             relevantResidents = relevantResidents.filter(r => r.rw === selectedRW);
@@ -656,7 +672,7 @@ export default function StatistikKependudukanPage() {
     // Filtered Residents
     const filteredResidents = useMemo(() => {
         return residents.filter(r => {
-            if (selectedDusun !== "all" && r.dusun !== selectedDusun) return false;
+            if (selectedDusun !== "all" && normalizeDusunKey(r.dusun) !== selectedDusun) return false;
             if (selectedRW !== "all" && r.rw !== selectedRW) return false;
             if (selectedRT !== "all" && r.rt !== selectedRT) return false;
             return true;
@@ -709,7 +725,7 @@ export default function StatistikKependudukanPage() {
                                             className="w-full text-xs bg-card-bg border border-border-color rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-text/10 text-primary-text"
                                         >
                                             <option value="all">Semua</option>
-                                            {dusunOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                                            {cleanDusunOptions.map(d => <option key={d.key} value={d.key}>{d.label}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-1">

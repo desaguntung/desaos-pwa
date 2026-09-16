@@ -1,6 +1,9 @@
 "use client";
 
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
+import { formatDusunName, normalizeDusunKey } from "./wilayah";
+
+export { formatDusunName, normalizeDusunKey };
 
 export interface Resident {
   id?: string;
@@ -463,14 +466,14 @@ export const GOLONGAN_DARAH_MAP: Record<number, string> = {
 };
 
 export const DUSUN_MAP: Record<number, string> = {
-  1: "DUSUN I",
-  2: "DUSUN II",
-  3: "DUSUN III",
-  4: "DUSUN IV",
-  5: "DUSUN V",
-  6: "DUSUN VI",
-  7: "DUSUN VII",
-  8: "DUSUN VIII",
+  1: "Dusun I",
+  2: "Dusun II",
+  3: "Dusun III",
+  4: "Dusun IV",
+  5: "Dusun V",
+  6: "Dusun VI",
+  7: "Dusun VII",
+  8: "Dusun VIII",
 };
 
 export const PENDIDIKAN_KK_MAP: Record<number, string> = {
@@ -582,10 +585,11 @@ export function mapResidentFromDb(row: any): Resident {
   if (!row) return row;
 
   const dusunId = row.wilayah_dusun_id ? Number(row.wilayah_dusun_id) : undefined;
-  const dusunName = row.dusun || (dusunId ? DUSUN_MAP[dusunId] || `DUSUN ${dusunId}` : undefined);
+  const rawDusun = row.dusun || (dusunId ? DUSUN_MAP[dusunId] || `Dusun ${dusunId}` : undefined);
+  const dusunName = rawDusun ? formatDusunName(rawDusun) : undefined;
 
   let alamat = row.alamat_saat_ini || row.alamat_rt || row.alamat_sebelumnya;
-  if (!alamat && dusunName) {
+  if (!alamat && dusunName && dusunName !== "Tanpa Dusun") {
     const parts = [dusunName];
     if (row.rt || row.wilayah_rt_id) parts.push(`RT ${row.rt || row.wilayah_rt_id}`);
     if (row.rw || row.wilayah_rw_id) parts.push(`RW ${row.rw || row.wilayah_rw_id}`);
@@ -621,9 +625,12 @@ export function mapResidentToDb(resident: Partial<Resident>): any {
   }
   
   if (resident.dusun) {
-    const dUpper = resident.dusun.toUpperCase().replace("DUSUN ", "").trim();
-    const foundEntry = Object.entries(DUSUN_MAP).find(([_, v]) => v.replace("DUSUN ", "").trim() === dUpper);
-    if (foundEntry) payload.wilayah_dusun_id = Number(foundEntry[0]);
+    const norm = normalizeDusunKey(resident.dusun);
+    const foundEntry = Object.entries(DUSUN_MAP).find(([_, v]) => normalizeDusunKey(v) === norm);
+    if (foundEntry) {
+      payload.wilayah_dusun_id = Number(foundEntry[0]);
+    }
+    payload.dusun = formatDusunName(resident.dusun);
   }
   
   return payload;
@@ -686,11 +693,13 @@ export const getPaginatedResidents = async (
   }
 
   // Dusun filter
-  if (dusunFilter && dusunFilter !== "Semua") {
-    const dusunUpper = dusunFilter.toUpperCase().replace("DUSUN ", "").trim();
-    const entry = Object.entries(DUSUN_MAP).find(([_, v]) => v.replace("DUSUN ", "").trim() === dusunUpper);
+  if (dusunFilter && dusunFilter !== "Semua" && dusunFilter !== "all") {
+    const norm = normalizeDusunKey(dusunFilter);
+    const entry = Object.entries(DUSUN_MAP).find(([_, v]) => normalizeDusunKey(v) === norm);
     if (entry) {
-      query = query.eq("wilayah_dusun_id", Number(entry[0]));
+      query = query.or(`wilayah_dusun_id.eq.${entry[0]},dusun.ilike.%${formatDusunName(dusunFilter)}%,dusun.ilike.%${norm}%`);
+    } else {
+      query = query.ilike("dusun", `%${dusunFilter}%`);
     }
   }
 

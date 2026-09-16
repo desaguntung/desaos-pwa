@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { getResidents, Resident } from "@/lib/services/penduduk";
+import { getResidents, Resident, formatDusunName, normalizeDusunKey } from "@/lib/services/penduduk";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -168,15 +168,15 @@ export default function WilayahAdministratifPage() {
 
       const dusunResidentsMap = new Map<string, Resident[]>();
       residentList.forEach(r => {
-        const key = r.dusun ?? "";
-        if (!key) return;
+        const key = normalizeDusunKey(r.dusun);
+        if (!key || key === "tanpa_dusun") return;
         const existing = dusunResidentsMap.get(key) ?? [];
         existing.push(r);
         dusunResidentsMap.set(key, existing);
       });
 
       const dusunWithStats: DusunWithStats[] = dusunData.map((dusun) => {
-        const residentsForDusun = dusunResidentsMap.get(dusun.nama) ?? [];
+        const residentsForDusun = dusunResidentsMap.get(normalizeDusunKey(dusun.nama)) ?? [];
         const kkSet = new Set(residentsForDusun.map(r => r.no_kk).filter(Boolean));
         
         const rwForDusun = rwData.filter(rw => rw.dusun_id === dusun.id);
@@ -370,7 +370,8 @@ export default function WilayahAdministratifPage() {
     { 
       header: "Nama Dusun", 
       accessorKey: "nama",
-      className: "text-sm font-medium text-primary-text"
+      className: "text-sm font-medium text-primary-text",
+      cell: (row) => formatDusunName(row.nama)
     },
     { 
       header: "Kepala Dusun", 
