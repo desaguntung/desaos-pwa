@@ -77,6 +77,8 @@ export interface Resident {
   no_kitap?: string;
   keluarga_id?: string | null;
   rumah_tangga_id?: string | null;
+  id_rtm?: string | null;
+  rtm_level_id?: number | null;
   status_dalam_keluarga?: string | null;
   status_dalam_rumah_tangga?: string | null;
   status_kepemilikan_identitas?: string;

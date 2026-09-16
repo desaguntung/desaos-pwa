@@ -7,19 +7,26 @@ import {
   UserPlus, 
   Home, 
   Search, 
-  X
+  X,
+  ShieldCheck,
+  MapPin,
+  Calendar,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { updateResident, Resident } from "@/lib/services/penduduk";
+import { Resident, mapResidentFromDb } from "@/lib/services/penduduk";
 import { getWilayahData, Dusun, Rw, Rt } from "@/lib/services/wilayah";
+import { sortRtmMembers } from "@/lib/services/rumah_tangga";
 import { Button } from "@/components/ui/Button";
 import { InputField, TextAreaField, DatePickerField } from "@/components/ui/FormFields";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { FormSection } from "@/components/ui/FormSection";
 import { FormLayout } from "@/components/layout/FormLayout";
 import { FormSidebarNav } from "@/components/layout/FormSidebarNav";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import ResidentPickerModal from "@/components/ResidentPickerModal";
 
 interface RumahTanggaFormProps {
@@ -28,8 +35,8 @@ interface RumahTanggaFormProps {
     no_rtm?: string;
     tgl_daftar?: string;
     kelas_sosial?: number;
-    bdt?: string; // BDT ID
-    dtks?: string; // DTKS ID
+    bdt?: string;
+    dtks?: string;
     alamat?: string;
     dusun?: string;
     rw?: string;
@@ -60,7 +67,6 @@ export default function RumahTanggaForm({
   const [tglDaftar, setTglDaftar] = useState(initialData?.tgl_daftar || new Date().toISOString().split('T')[0]);
   const [kelasSosial, setKelasSosial] = useState<string>(initialData?.kelas_sosial ? String(initialData.kelas_sosial) : "");
   const [bdt, setBdt] = useState(initialData?.bdt || "");
-  const [dtks, setDtks] = useState(initialData?.dtks || "");
   const [alamat, setAlamat] = useState(initialData?.alamat || "");
   const [dusun, setDusun] = useState(initialData?.dusun || "");
   const [rw, setRw] = useState(initialData?.rw || "");
@@ -69,7 +75,7 @@ export default function RumahTanggaForm({
   
   const [selectedHead, setSelectedHead] = useState<Resident | null>(initialData?.head || null);
   const [members, setMembers] = useState<Resident[]>(initialData?.members || []);
-  const [originalMembers, setOriginalMembers] = useState<Resident[]>(initialData?.members || []); // To track removals
+  const [originalMembers, setOriginalMembers] = useState<Resident[]>(initialData?.members || []);
   const [rtmId, setRtmId] = useState<string | null>(initialData?.id || null);
 
   // UI State
@@ -86,7 +92,7 @@ export default function RumahTanggaForm({
   const [rwList, setRwList] = useState<Rw[]>([]);
   const [rtList, setRtList] = useState<Rt[]>([]);
   
-  // Layout Refs
+  // Layout Navigation
   const sections = [
     { id: "kepala-rtm", title: "Kepala Rumah Tangga", icon: Users, description: "Pilih Kepala Rumah Tangga" },
     { id: "informasi-rtm", title: "Informasi RTM", icon: Home, description: "Data Rumah Tangga" },
@@ -108,8 +114,8 @@ export default function RumahTanggaForm({
         setRtList(wilayah.rtList);
 
         if (!editId) {
-            setLoading(false);
-            return;
+          setLoading(false);
+          return;
         }
 
         setFetchingRtm(true);
@@ -117,47 +123,53 @@ export default function RumahTanggaForm({
         
         // 1. Fetch RTM Data
         const { data: rtm, error: rtmError } = await supabase
-            .from("rumah_tangga")
-            .select("*")
-            .eq("id", editId)
-            .single();
+          .from("rumah_tangga")
+          .select("*, kepala_rtm:penduduk!fk_rumah_tangga_kepala(*)")
+          .eq("id", editId)
+          .single();
 
         if (rtmError) throw rtmError;
 
         if (rtm) {
-            setRtmId(rtm.id);
-            setNoRtm(rtm.no_rtm || "");
-            setTglDaftar(rtm.tgl_daftar || "");
-            setKelasSosial(rtm.kelas_sosial ? String(rtm.kelas_sosial) : "");
-            setBdt(rtm.bdt || rtm.bdt_id || "");
-            setDtks(rtm.dtks_id || "");
-            setAlamat(rtm.alamat || "");
-            setDusun(rtm.dusun || "");
-            setRw(rtm.rw || "");
-            setRt(rtm.rt || "");
-            setKeterangan(rtm.keterangan || "");
+          setRtmId(rtm.id);
+          setNoRtm(rtm.no_rtm || "");
+          setTglDaftar(rtm.tgl_daftar ? rtm.tgl_daftar.split("T")[0] : new Date().toISOString().split('T')[0]);
+          setKelasSosial(rtm.kelas_sosial ? String(rtm.kelas_sosial) : "");
+          setBdt(rtm.bdt || "");
+          setAlamat(rtm.alamat || "");
+          setDusun(rtm.dusun || "");
+          setRw(rtm.rw || "");
+          setRt(rtm.rt || "");
+          setKeterangan(rtm.keterangan || "");
 
-            // 2. Fetch Members for this RTM
-            const { data: rtmMembers, error: membersError } = await supabase
-                .from("penduduk")
-                .select("*")
-                .eq("rumah_tangga_id", editId);
-            
-            if (membersError) throw membersError;
+          if (rtm.kepala_rtm) {
+            setSelectedHead(mapResidentFromDb(rtm.kepala_rtm));
+          }
 
-            if (rtmMembers) {
-                const head = rtmMembers.find((m: Resident) => m.nik === rtm.nik_kepala);
-                const otherMembers = rtmMembers.filter((m: Resident) => m.nik !== rtm.nik_kepala);
-
-                if (head) setSelectedHead(head);
-                setMembers(otherMembers);
-                setOriginalMembers(otherMembers);
+          // 2. Fetch Members for this RTM
+          const { data: rtmMembers, error: membersError } = await supabase
+            .from("penduduk")
+            .select("*")
+            .eq("rumah_tangga_id", editId);
+          
+          if (!membersError && rtmMembers) {
+            const mappedMembers = rtmMembers.map(mapResidentFromDb);
+            const headFromList = mappedMembers.find((m: Resident) => m.id === rtm.kepala_rtm_id || m.rtm_level_id === 1);
+            if (!rtm.kepala_rtm && headFromList) {
+              setSelectedHead(headFromList);
             }
+
+            const headId = rtm.kepala_rtm_id || headFromList?.id;
+            const otherMembers = mappedMembers.filter((m: Resident) => m.id !== headId);
+            const sortedOthers = sortRtmMembers(otherMembers);
+            setMembers(sortedOthers);
+            setOriginalMembers(sortedOthers);
+          }
         }
         setFetchingRtm(false);
       } catch (error) {
         console.error("Error initializing form:", error);
-        toast.error("Gagal memuat data");
+        toast.error("Gagal memuat data rumah tangga");
       } finally {
         setLoading(false);
       }
@@ -179,16 +191,9 @@ export default function RumahTanggaForm({
 
   const filteredRtList = rw ? (() => {
     const selectedDusunId = dusunList.find(d => d.nama === dusun)?.id;
-    // We match RW by number AND dusun_id because RW numbers repeat across Dusuns
-    // BUT wait, in the form RW is just stored as string (number).
-    // If user selects RW '01', we need to find WHICH '01' it is (the one in current Dusun).
     if (!selectedDusunId) return [];
-    
-    // rw is stored as formatted string e.g. "01" or "1".
-    // rwList has nomor_rw as number.
     const rwNum = parseInt(rw);
     const selectedRwId = rwList.find(r => r.dusun_id === selectedDusunId && r.nomor_rw === rwNum)?.id;
-    
     if (!selectedRwId) return [];
     return rtList.filter(r => r.rw_id === selectedRwId);
   })() : [];
@@ -226,7 +231,6 @@ export default function RumahTanggaForm({
     
     if (element && container) {
       const offset = 24;
-      // Calculate position relative to container
       const elementRect = element.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       const relativeTop = elementRect.top - containerRect.top;
@@ -243,8 +247,9 @@ export default function RumahTanggaForm({
     setSelectedHead(resident);
     
     // Auto-fill address info if empty
-    if (!alamat && resident.alamat_saat_ini) setAlamat(resident.alamat_saat_ini);
-    else if (!alamat && resident.dusun) setAlamat(resident.dusun); // Fallback
+    if (!alamat && resident.alamat_saat_ini && resident.alamat_saat_ini !== "-") {
+      setAlamat(resident.alamat_saat_ini);
+    }
     
     if (!dusun && resident.dusun) setDusun(resident.dusun);
     if (!rw && resident.rw) setRw(resident.rw);
@@ -265,7 +270,8 @@ export default function RumahTanggaForm({
       toast.error("Penduduk sudah ada dalam daftar anggota");
       return;
     }
-    setMembers(prev => [...prev, resident]);
+    const updated = [...members, resident];
+    setMembers(sortRtmMembers(updated));
     setPickerMode(null);
   };
 
@@ -275,15 +281,13 @@ export default function RumahTanggaForm({
 
   const handleSubmit = async () => {
     if (!selectedHead) {
-      toast.error("Mohon pilih Kepala Rumah Tangga");
+      toast.error("Mohon pilih Kepala Rumah Tangga terlebih dahulu");
       return;
     }
-    // No RTM is optional in some contexts but usually required. Let's make it required if user enters it, 
-    // but looking at existing code it seems important.
-    // If empty, maybe auto-generate? But for now let's warn if empty.
-    if (!noRtm) {
-        toast.error("Nomor Rumah Tangga (RTM) wajib diisi");
-        return;
+
+    if (!noRtm.trim()) {
+      toast.error("Nomor Rumah Tangga (RTM) wajib diisi");
+      return;
     }
 
     try {
@@ -292,22 +296,20 @@ export default function RumahTanggaForm({
       let targetRtmId = rtmId;
 
       const payload: any = {
-        no_rtm: noRtm,
-        nik_kepala: selectedHead.nik,
+        no_rtm: noRtm.trim(),
+        kepala_rtm_id: selectedHead.id,
         tgl_daftar: tglDaftar,
         kelas_sosial: kelasSosial ? Number(kelasSosial) : null,
-        bdt_id: bdt || null, // Mapping to bdt_id as seen in insert
-        bdt: bdt || null,    // Also map to bdt for compatibility
-        dtks_id: dtks || null,
-        alamat: alamat || null,
+        bdt: bdt.trim() || null,
+        alamat: alamat.trim() || null,
         dusun: dusun || null,
         rw: rw || null,
         rt: rt || null,
-        keterangan: keterangan || null,
+        keterangan: keterangan.trim() || null,
       };
 
       if (targetRtmId) {
-        // UPDATE
+        // UPDATE RTM
         const { error: updateError } = await supabase
           .from("rumah_tangga")
           .update(payload)
@@ -317,26 +319,27 @@ export default function RumahTanggaForm({
         
         // Handle removed members
         const removedMembers = originalMembers.filter(
-          om => !members.some(m => m.id === om.id)
+          om => !members.some(m => m.id === om.id) && om.id !== selectedHead.id
         );
         
         for (const removed of removedMembers) {
-           if (removed.id) {
-             await updateResident(removed.id, {
-               status_dalam_rumah_tangga: null,
-               rumah_tangga_id: null
-             });
-           }
+          if (removed.id) {
+            await supabase
+              .from("penduduk")
+              .update({
+                rumah_tangga_id: null,
+                id_rtm: null,
+                rtm_level_id: null,
+                status_dalam_rumah_tangga: null
+              })
+              .eq("id", removed.id);
+          }
         }
-
       } else {
-        // CREATE
-        // Ensure default fields for create
-        payload.program_bantuan = [];
-        
+        // CREATE RTM
         const { data: rtmData, error: rtmError } = await supabase
           .from("rumah_tangga")
-          .insert(payload)
+          .insert([payload])
           .select()
           .single();
 
@@ -344,27 +347,37 @@ export default function RumahTanggaForm({
         targetRtmId = rtmData.id;
       }
 
-      // Update Head
+      // Update Head in penduduk
       if (selectedHead.id && targetRtmId) {
-        await updateResident(selectedHead.id, {
-          status_dalam_rumah_tangga: "KEPALA RUMAH TANGGA",
-          rumah_tangga_id: targetRtmId,
-        });
+        await supabase
+          .from("penduduk")
+          .update({
+            rumah_tangga_id: targetRtmId,
+            id_rtm: noRtm.trim(),
+            rtm_level_id: 1,
+            status_dalam_rumah_tangga: "KEPALA RUMAH TANGGA"
+          })
+          .eq("id", selectedHead.id);
       }
 
-      // Update Members
+      // Update Members in penduduk
       if (targetRtmId) {
         for (const member of members) {
-            if (member.id) {
-            await updateResident(member.id, {
-                status_dalam_rumah_tangga: member.status_dalam_rumah_tangga || "ANGGOTA",
+          if (member.id) {
+            await supabase
+              .from("penduduk")
+              .update({
                 rumah_tangga_id: targetRtmId,
-            });
-            }
+                id_rtm: noRtm.trim(),
+                rtm_level_id: 2,
+                status_dalam_rumah_tangga: member.status_dalam_rumah_tangga || "ANGGOTA"
+              })
+              .eq("id", member.id);
+          }
         }
       }
 
-      toast.success(editId ? "Rumah Tangga berhasil diperbarui" : "Rumah Tangga berhasil ditambahkan");
+      toast.success(editId ? "Data Rumah Tangga berhasil diperbarui" : "Rumah Tangga berhasil ditambahkan");
       router.push("/rumah-tangga");
       router.refresh();
     } catch (error: any) {
@@ -388,35 +401,47 @@ export default function RumahTanggaForm({
     variant?: "default" | "selected" 
   }) => (
     <div className={cn(
-      "flex items-center justify-between p-3 rounded-lg border transition-all duration-200",
+      "flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200",
       variant === "selected" 
-        ? "bg-card-bg border-border-color" 
+        ? "bg-card-bg border-primary/40 shadow-xs" 
         : "bg-card-bg border-border-color hover:border-primary-text/30"
     )}>
-      <div className="min-w-0 flex-1 mr-3">
-        <p className="text-sm font-semibold text-primary-text truncate">
-          {resident.nama.toUpperCase()}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-secondary-text font-mono">
-            {resident.nik}
-          </span>
-          <span className="text-xs border border-border-color px-1.5 py-0.5 rounded-full text-secondary-text">
-            {resident.jenis_kelamin}
-          </span>
+      <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
+        <Avatar 
+          alt={resident.nama}
+          fallback={resident.nama} 
+          className="w-10 h-10 text-xs font-bold ring-1 ring-border-color shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-primary-text uppercase truncate">
+            {resident.nama}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-secondary-text">
+            <span className="font-mono">NIK: {resident.nik}</span>
+            <span>•</span>
+            <span>{resident.jenis_kelamin || "-"}</span>
+            {resident.hubungan_keluarga && (
+              <>
+                <span>•</span>
+                <span className="capitalize">{resident.hubungan_keluarga.toLowerCase()}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           action();
         }}
         className={cn(
-          "flex items-center justify-center w-8 h-8 rounded-full transition-colors",
+          "flex items-center justify-center w-8 h-8 rounded-full transition-colors shrink-0",
           variant === "selected"
-            ? "text-error-text hover:bg-error-bg border-error-border"
+            ? "text-error-text hover:bg-error-bg border border-error-border"
             : "bg-body-bg text-secondary-text hover:bg-border-color"
         )}
+        title="Hapus / Batal"
       >
         <Icon className="w-4 h-4" />
       </button>
@@ -426,6 +451,7 @@ export default function RumahTanggaForm({
   const formActions = (
     <div className="flex items-center gap-2">
       <Button
+        type="button"
         variant="ghost"
         onClick={() => router.push(backButtonHref)}
         className="text-secondary-text hover:text-primary-text"
@@ -434,6 +460,7 @@ export default function RumahTanggaForm({
         Batal
       </Button>
       <Button
+        type="button"
         onClick={handleSubmit}
         disabled={isSubmitting || !selectedHead}
         variant="primary"
@@ -446,7 +473,7 @@ export default function RumahTanggaForm({
   return (
     <FormLayout
       title={title || (mode === "create" ? "Tambah Rumah Tangga" : "Edit Rumah Tangga")}
-      subtitle={subtitle || (mode === "create" ? "Tambahkan data rumah tangga baru." : "Perbarui data rumah tangga.")}
+      subtitle={subtitle || (mode === "create" ? "Tambahkan data rumah tangga baru ke sistem." : "Perbarui data rumah tangga dan anggotanya.")}
       backButtonHref={backButtonHref}
       actions={formActions}
       sidebar={
@@ -463,12 +490,12 @@ export default function RumahTanggaForm({
           id="kepala-rtm"
           ref={(el) => { sectionRefs.current["kepala-rtm"] = el; }}
           title="Kepala Rumah Tangga"
-          description="Pilih Kepala Rumah Tangga dari daftar penduduk."
+          description="Pilih Kepala Rumah Tangga dari daftar penduduk yang terdaftar."
           icon={Users}
         >
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-secondary-text">Kepala Rumah Tangga</label>
+              <label className="text-[13px] font-semibold text-primary-text">Kepala Rumah Tangga</label>
               {selectedHead ? (
                 <ResidentItem 
                   resident={selectedHead} 
@@ -478,12 +505,13 @@ export default function RumahTanggaForm({
                 />
               ) : (
                 <Button
+                  type="button"
                   variant="outline"
-                  className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12"
+                  className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-14 rounded-xl gap-2 hover:border-primary hover:text-primary"
                   onClick={() => setPickerMode("head")}
                 >
-                  <Search className="w-4 h-4 mr-2" />
-                  Cari Kepala Rumah Tangga...
+                  <Search className="w-4 h-4 text-secondary-text" />
+                  <span>Cari & Pilih Kepala Rumah Tangga...</span>
                 </Button>
               )}
             </div>
@@ -495,129 +523,120 @@ export default function RumahTanggaForm({
           id="informasi-rtm"
           ref={(el) => { sectionRefs.current["informasi-rtm"] = el; }}
           title="Informasi Rumah Tangga"
-          description="Data detail rumah tangga."
+          description="Nomor RTM, tanggal pendaftaran, klasifikasi sosial, dan alamat domisili."
           icon={Home}
         >
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField
               label="Nomor Rumah Tangga (RTM)"
-              placeholder="Contoh: 001"
+              placeholder="Contoh: 121906200200001"
               value={noRtm}
               onChange={(e) => setNoRtm(e.target.value)}
               required
             />
             <DatePickerField
-              label="Tanggal Daftar"
+              label="Tanggal Pendaftaran"
               value={tglDaftar}
               onChange={(e) => setTglDaftar(e.target.value)}
             />
             <InputField
-              label="Kelas Sosial"
-              placeholder="Contoh: 1"
+              label="Nomor BDT / DTKS"
+              placeholder="Masukkan nomor BDT / DTKS"
+              value={bdt}
+              onChange={(e) => setBdt(e.target.value)}
+              description="Biarkan kosong jika bukan penerima bantuan"
+            />
+            <InputField
+              label="Klasifikasi / Kelas Sosial"
+              placeholder="Contoh: 1 (Desil 1 / Sangat Miskin)"
               type="number"
               value={kelasSosial}
               onChange={(e) => setKelasSosial(e.target.value)}
             />
-            <div className="hidden md:block"></div>
-
-            <InputField
-              label="Nomor BDT"
-              placeholder="Masukkan nomor BDT"
-              value={bdt}
-              onChange={(e) => setBdt(e.target.value)}
-              description="Biarkan kosong jika tidak ada"
-            />
-            <InputField
-              label="Nomor DTKS"
-              placeholder="Masukkan nomor DTKS"
-              value={dtks}
-              onChange={(e) => setDtks(e.target.value)}
-              description="Biarkan kosong jika tidak ada"
-            />
 
             <div className="md:col-span-2">
-                <TextAreaField
-                    label="Alamat Rumah Tangga"
-                    placeholder="Alamat lengkap..."
-                    value={alamat}
-                    onChange={(e) => setAlamat(e.target.value)}
-                />
+              <TextAreaField
+                label="Alamat Rumah Tangga"
+                placeholder="Alamat lengkap jalan, nomor rumah, atau gang..."
+                value={alamat}
+                onChange={(e) => setAlamat(e.target.value)}
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
+              <div className="space-y-2">
+                <label className="text-[13px] font-semibold text-primary-text">Dusun</label>
+                <Select
+                  value={dusun}
+                  onValueChange={(val) => {
+                    setDusun(val);
+                    setRw("");
+                    setRt("");
+                  }}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Pilih Dusun" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dusunList.map((d) => (
+                      <SelectItem key={d.id} value={d.nama}>
+                        {d.nama}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <label className="text-[13px] font-medium text-secondary-text">Dusun</label>
-                    <Select
-                        value={dusun}
-                        onValueChange={(val) => {
-                            setDusun(val);
-                            setRw(""); // Reset RW when Dusun changes
-                            setRt(""); // Reset RT when Dusun changes
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Dusun" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {dusunList.map((d) => (
-                                <SelectItem key={d.id} value={d.nama}>
-                                    {d.nama}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                  <label className="text-[13px] font-semibold text-primary-text">RW</label>
+                  <Select
+                    value={rw}
+                    onValueChange={(val) => {
+                      setRw(val);
+                      setRt("");
+                    }}
+                  >
+                    <SelectTrigger className="h-10" disabled={!dusun}>
+                      <SelectValue placeholder="Pilih RW" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredRwList.map((r) => (
+                        <SelectItem key={r.id} value={formatNumberCode(r.nomor_rw)}>
+                          {formatNumberCode(r.nomor_rw)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-secondary-text">RW</label>
-                        <Select
-                            value={rw}
-                            onValueChange={(val) => {
-                                setRw(val);
-                                setRt(""); // Reset RT when RW changes
-                            }}
-                        >
-                            <SelectTrigger disabled={!dusun}>
-                                <SelectValue placeholder="Pilih RW" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {filteredRwList.map((r) => (
-                                    <SelectItem key={r.id} value={formatNumberCode(r.nomor_rw)}>
-                                        {formatNumberCode(r.nomor_rw)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-secondary-text">RT</label>
-                        <Select
-                            value={rt}
-                            onValueChange={(val) => setRt(val)}
-                        >
-                            <SelectTrigger disabled={!rw}>
-                                <SelectValue placeholder="Pilih RT" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {filteredRtList.map((r) => (
-                                    <SelectItem key={r.id} value={formatNumberCode(r.nomor_rt)}>
-                                        {formatNumberCode(r.nomor_rt)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-semibold text-primary-text">RT</label>
+                  <Select
+                    value={rt}
+                    onValueChange={(val) => setRt(val)}
+                  >
+                    <SelectTrigger className="h-10" disabled={!rw}>
+                      <SelectValue placeholder="Pilih RT" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredRtList.map((r) => (
+                        <SelectItem key={r.id} value={formatNumberCode(r.nomor_rt)}>
+                          {formatNumberCode(r.nomor_rt)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
             </div>
 
             <div className="md:col-span-2">
-                <TextAreaField
-                    label="Keterangan Tambahan"
-                    placeholder="Catatan tambahan..."
-                    value={keterangan}
-                    onChange={(e) => setKeterangan(e.target.value)}
-                />
+              <TextAreaField
+                label="Keterangan Tambahan"
+                placeholder="Catatan tambahan mengenai rumah tangga..."
+                value={keterangan}
+                onChange={(e) => setKeterangan(e.target.value)}
+              />
             </div>
           </div>
         </FormSection>
@@ -627,29 +646,30 @@ export default function RumahTanggaForm({
           id="anggota-rtm"
           ref={(el) => { sectionRefs.current["anggota-rtm"] = el; }}
           title="Anggota Rumah Tangga"
-          description="Tambahkan anggota rumah tangga lainnya."
+          description="Tambahkan anggota keluarga lain yang tinggal dalam rumah tangga ini."
           icon={UserPlus}
         >
           <div className="space-y-6">
-            {/* Search Member */}
+            {/* Add Member Button */}
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-secondary-text">Tambah Anggota</label>
+              <label className="text-[13px] font-semibold text-primary-text">Tambah Anggota</label>
               <Button
+                type="button"
                 variant="outline"
-                className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12"
+                className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12 rounded-xl gap-2 hover:border-primary hover:text-primary"
                 onClick={() => setPickerMode("member")}
               >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Cari & Tambah Anggota Rumah Tangga...
+                <UserPlus className="w-4 h-4" />
+                <span>Cari & Tambah Anggota Rumah Tangga...</span>
               </Button>
             </div>
 
             {/* List Members */}
             <div className="space-y-3">
               {members.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-border-color rounded-lg bg-body-bg/50">
+                <div className="text-center py-8 border border-dashed border-border-color rounded-xl bg-body-bg/50">
                   <UserPlus className="w-8 h-8 text-secondary-text mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-secondary-text">Belum ada anggota rumah tangga yang ditambahkan.</p>
+                  <p className="text-sm text-secondary-text">Belum ada anggota rumah tangga lain yang ditambahkan.</p>
                 </div>
               ) : (
                 members.map((member) => (
