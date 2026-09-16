@@ -14,8 +14,11 @@ export interface Resident {
   gelar_belakang?: string;
   no_kk: string;
   hubungan_keluarga: string;
+  hubungan_keluarga_id?: number | null;
   jenis_kelamin: string;
+  jenis_kelamin_id?: number | null;
   agama?: string;
+  agama_id?: number | null;
   status_penduduk?: string;
   tempat_lahir?: string;
   tanggal_lahir?: string;
