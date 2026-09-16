@@ -499,55 +499,64 @@ export default function KeluargaPage() {
               </div>
 
               {/* KK Metadata (2 Columns) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs mb-6 text-zinc-800">
-                {/* Left Column */}
-                <div className="space-y-1">
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Nama Kepala Keluarga</span>
-                    <span>:</span>
-                    <span className="font-bold uppercase">{selectedKeluarga.headName || "-"}</span>
-                  </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Alamat</span>
-                    <span>:</span>
-                    <span className="uppercase">{selectedKeluarga.addressLine || "-"}</span>
-                  </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">RT / RW</span>
-                    <span>:</span>
-                    <span className="uppercase">{selectedKeluarga.dusunRwRt || "-"}</span>
-                  </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Desa / Kelurahan</span>
-                    <span>:</span>
-                    <span className="uppercase">{identitasDesa?.nama_desa || selectedKeluarga.members[0]?.nama_desa || "GUNTUNG"}</span>
-                  </div>
-                </div>
+              {(() => {
+                const headRes = selectedKeluarga.members.find(m => (m.hubungan_keluarga || "").toUpperCase() === "KEPALA KELUARGA") || selectedKeluarga.members[0];
+                const rtVal = headRes?.rt || "";
+                const rwVal = headRes?.rw || "";
+                const rtRwDisplay = (rtVal || rwVal) ? `${rtVal || "-"} / ${rwVal || "-"}` : (selectedKeluarga.dusun || "-");
 
-                {/* Right Column */}
-                <div className="space-y-1">
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Kecamatan</span>
-                    <span>:</span>
-                    <span className="uppercase">{identitasDesa?.nama_kecamatan || selectedKeluarga.members[0]?.nama_kecamatan || "LIMA PULUH PESISIR"}</span>
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs mb-6 text-zinc-800">
+                    {/* Left Column */}
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Nama Kepala Keluarga</span>
+                        <span>:</span>
+                        <span className="font-bold uppercase">{selectedKeluarga.headName || "-"}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Alamat</span>
+                        <span>:</span>
+                        <span className="uppercase">{selectedKeluarga.addressLine || "-"}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">RT / RW</span>
+                        <span>:</span>
+                        <span className="uppercase">{rtRwDisplay}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Desa / Kelurahan</span>
+                        <span>:</span>
+                        <span className="uppercase">{identitasDesa?.nama_desa || headRes?.nama_desa || "-"}</span>
+                      </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Kecamatan</span>
+                        <span>:</span>
+                        <span className="uppercase">{identitasDesa?.nama_kecamatan || headRes?.nama_kecamatan || "-"}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Kabupaten / Kota</span>
+                        <span>:</span>
+                        <span className="uppercase">{identitasDesa?.nama_kabupaten || headRes?.nama_kabupaten || "-"}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Kode Pos</span>
+                        <span>:</span>
+                        <span className="font-mono">{identitasDesa?.kode_pos || headRes?.kode_pos || "-"}</span>
+                      </div>
+                      <div className="grid grid-cols-[140px_12px_1fr]">
+                        <span className="font-semibold uppercase">Provinsi</span>
+                        <span>:</span>
+                        <span className="uppercase">{identitasDesa?.nama_provinsi || headRes?.nama_provinsi || "-"}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Kabupaten / Kota</span>
-                    <span>:</span>
-                    <span className="uppercase">{identitasDesa?.nama_kabupaten || selectedKeluarga.members[0]?.nama_kabupaten || "BATU BARA"}</span>
-                  </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Kode Pos</span>
-                    <span>:</span>
-                    <span className="font-mono">{identitasDesa?.kode_pos || selectedKeluarga.members[0]?.kode_pos || "21255"}</span>
-                  </div>
-                  <div className="grid grid-cols-[140px_12px_1fr]">
-                    <span className="font-semibold uppercase">Provinsi</span>
-                    <span>:</span>
-                    <span className="uppercase">{identitasDesa?.nama_provinsi || selectedKeluarga.members[0]?.nama_provinsi || "SUMATERA UTARA"}</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* TABEL I: Data Anggota Keluarga (Identitas Pribadi & Kelahiran) */}
               <div className="mb-6 overflow-x-auto">

@@ -101,10 +101,17 @@ export async function getFamilyByNoKK(noKK: string): Promise<Keluarga | null> {
   const rw = head.rw || "";
   const rt = head.rt || "";
   const wilayahParts: string[] = [];
-  if (dusun) wilayahParts.push(`Dusun ${dusun}`);
-  if (rw) wilayahParts.push(`RW ${rw}`);
-  if (rt) wilayahParts.push(`RT ${rt}`);
-  const dusunRwRt = wilayahParts.length > 0 ? wilayahParts.join(" / ") : "";
+  if (dusun) {
+    wilayahParts.push(dusun.toUpperCase().startsWith("DUSUN") ? dusun : `Dusun ${dusun}`);
+  }
+  if (rw) {
+    wilayahParts.push(`RW ${rw}`);
+  }
+  if (rt) {
+    wilayahParts.push(`RT ${rt}`);
+  }
+  const dusunRwRt =
+    wilayahParts.length > 0 ? wilayahParts.join(" / ") : "";
 
   const addressLine =
     head.alamat_saat_ini ||
@@ -169,7 +176,7 @@ export async function getKeluargaList(): Promise<Keluarga[]> {
     const rt = head.rt || "";
     const wilayahParts: string[] = [];
     if (dusun) {
-      wilayahParts.push(`Dusun ${dusun}`);
+      wilayahParts.push(dusun.toUpperCase().startsWith("DUSUN") ? dusun : `Dusun ${dusun}`);
     }
     if (rw) {
       wilayahParts.push(`RW ${rw}`);
