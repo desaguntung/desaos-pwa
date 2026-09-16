@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Users, 
   UserPlus, 
   CreditCard, 
   Search, 
-  Check, 
   X,
-  User
+  User,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { getResidents, updateResident, Resident } from "@/lib/services/penduduk";
+import { updateResident, Resident, HUBUNGAN_KELUARGA_OPTIONS } from "@/lib/services/penduduk";
+import { getFamilyByNoKK, sortFamilyMembers } from "@/lib/services/keluarga";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/FormFields";
 import { FormSection } from "@/components/ui/FormSection";
@@ -24,7 +24,6 @@ import ResidentPickerModal from "@/components/ResidentPickerModal";
 
 interface FamilyFormProps {
   initialData?: {
-    familyId?: string;
     noKK?: string;
     head?: Resident;
     members?: Resident[];
@@ -51,7 +50,6 @@ export default function FamilyForm({
   const [selectedHead, setSelectedHead] = useState<Resident | null>(initialData?.head || null);
   const [members, setMembers] = useState<Resident[]>(initialData?.members || []);
   const [originalMembers, setOriginalMembers] = useState<Resident[]>(initialData?.members || []); // To track removals
-  const [familyId, setFamilyId] = useState<string | null>(initialData?.familyId || null);
 
   // UI State
   const [loading, setLoading] = useState(true);
@@ -76,42 +74,26 @@ export default function FamilyForm({
       try {
         setLoading(true);
 
-        // If editNoKK provided, fetch family data
         if (editNoKK) {
-            setFetchingFamily(true);
-            const supabase = createSupabaseBrowserClient();
+          setFetchingFamily(true);
+          const family = await getFamilyByNoKK(editNoKK);
+
+          if (family && family.members.length > 0) {
+            setNoKK(family.nomorKK);
             
-            // Fetch family details
-            const { data: family, error: familyError } = await supabase
-                .from("keluarga")
-                .select("*")
-                .eq("no_kk", editNoKK)
-                .single();
+            const head = family.members.find(
+              m => (m.hubungan_keluarga || "").toUpperCase() === "KEPALA KELUARGA" || (m as any).hubungan_keluarga_id === 1
+            ) || family.members[0];
 
-            if (familyError) throw familyError;
+            const otherMembers = family.members.filter(m => m.nik !== head.nik);
 
-            if (family) {
-                setFamilyId(family.id);
-                setNoKK(family.no_kk);
-
-                // Fetch residents related to this family
-                const { data: familyMembers, error: membersError } = await supabase
-                  .from("penduduk")
-                  .select("*")
-                  .eq("no_kk", editNoKK);
-                  
-                if (membersError) throw membersError;
-
-                if (familyMembers) {
-                  const head = familyMembers.find(m => m.nik === family.nik_kepala);
-                  const otherMembers = familyMembers.filter(m => m.nik !== family.nik_kepala);
-
-                  if (head) setSelectedHead(head);
-                  setMembers(otherMembers);
-                  setOriginalMembers(otherMembers); 
-                }
-            }
-            setFetchingFamily(false);
+            setSelectedHead(head);
+            setMembers(sortFamilyMembers(otherMembers));
+            setOriginalMembers(sortFamilyMembers(otherMembers));
+          } else {
+            toast.error("Data keluarga tidak ditemukan");
+          }
+          setFetchingFamily(false);
         }
       } catch (error) {
         console.error("Error initializing form:", error);
@@ -129,10 +111,9 @@ export default function FamilyForm({
       if (initialData.noKK) setNoKK(initialData.noKK);
       if (initialData.head) setSelectedHead(initialData.head);
       if (initialData.members) {
-        setMembers(initialData.members);
-        setOriginalMembers(initialData.members);
+        setMembers(sortFamilyMembers(initialData.members));
+        setOriginalMembers(sortFamilyMembers(initialData.members));
       }
-      if (initialData.familyId) setFamilyId(initialData.familyId);
     }
   }, [initialData]);
 
@@ -160,7 +141,7 @@ export default function FamilyForm({
     });
 
     return () => observer.disconnect();
-  }, [loading]); // Re-run when loading finishes and refs are populated
+  }, [loading]);
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -169,7 +150,6 @@ export default function FamilyForm({
     
     if (element && container) {
       const offset = 24;
-      // Calculate position relative to container
       const elementRect = element.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       const relativeTop = elementRect.top - containerRect.top;
@@ -186,117 +166,85 @@ export default function FamilyForm({
     setSelectedHead(resident);
     if (resident.no_kk && !noKK) setNoKK(resident.no_kk);
     // If head was in members, remove from members
-    setMembers(prev => prev.filter(m => m.id !== resident.id));
+    setMembers(prev => prev.filter(m => m.nik !== resident.nik));
     setPickerMode(null);
   };
 
   const handleAddMember = (resident: Resident) => {
-    // Check if already head
-    if (selectedHead?.id === resident.id) {
-        toast.error("Penduduk sudah terpilih sebagai Kepala Keluarga");
-        return;
+    if (selectedHead?.nik === resident.nik) {
+      toast.error("Penduduk sudah terpilih sebagai Kepala Keluarga");
+      return;
     }
 
-    // Check if already in members
-    if (members.some(m => m.id === resident.id)) {
+    if (members.some(m => m.nik === resident.nik)) {
       toast.error("Penduduk sudah ada dalam daftar anggota");
       return;
     }
-    setMembers(prev => [...prev, resident]);
+    
+    const newMember: Resident = {
+      ...resident,
+      hubungan_keluarga: resident.hubungan_keluarga || "ANAK"
+    };
+    
+    setMembers(prev => sortFamilyMembers([...prev, newMember]));
     setPickerMode(null);
   };
 
-  const handleRemoveMember = (residentId: string) => {
-    setMembers(prev => prev.filter(m => m.id !== residentId));
+  const handleRemoveMember = (nik: string) => {
+    setMembers(prev => prev.filter(m => m.nik !== nik));
+  };
+
+  const handleMemberRelationshipChange = (nik: string, hubungan: string) => {
+    setMembers(prev => {
+      const updated = prev.map(m => m.nik === nik ? { ...m, hubungan_keluarga: hubungan } : m);
+      return sortFamilyMembers(updated);
+    });
   };
 
   const handleSubmit = async () => {
-    if (!selectedHead || !noKK) {
-      toast.error("Mohon lengkapi data kepala keluarga dan nomor KK");
+    if (!selectedHead || !noKK.trim()) {
+      toast.error("Mohon lengkapi data kepala keluarga dan nomor KK (16 digit)");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const supabase = createSupabaseBrowserClient();
-      let targetFamilyId = initialData?.familyId;
+      const cleanNoKK = noKK.trim();
 
-      if (targetFamilyId) {
-        // UPDATE
-        const { error: updateError } = await supabase
-          .from("keluarga")
-          .update({
-            no_kk: noKK,
-            nik_kepala: selectedHead.nik,
-            alamat: selectedHead.alamat_saat_ini || selectedHead.dusun || "-",
-            dusun: selectedHead.dusun || "-",
-            rw: selectedHead.rw || "-",
-            rt: selectedHead.rt || "-",
-          })
-          .eq("id", targetFamilyId);
+      // 1. Update Head
+      const headTargetId = selectedHead.id ? String(selectedHead.id) : selectedHead.nik;
+      await updateResident(headTargetId, {
+        no_kk: cleanNoKK,
+        hubungan_keluarga: "KEPALA KELUARGA",
+        hubungan_keluarga_id: 1,
+        status_dalam_keluarga: "KEPALA KELUARGA"
+      });
 
-        if (updateError) throw updateError;
-        
-        // Handle removed members
-        const removedMembers = originalMembers.filter(
-          om => !members.some(m => m.id === om.id)
-        );
-        
-        for (const removed of removedMembers) {
-           if (removed.id) {
-             await updateResident(removed.id, {
-               no_kk: "",
-               status_dalam_keluarga: null,
-               keluarga_id: null
-             });
-           }
-        }
-
-      } else {
-        // CREATE
-        const { data: keluargaData, error: keluargaError } = await supabase
-          .from("keluarga")
-          .insert({
-            no_kk: noKK,
-            nik_kepala: selectedHead.nik,
-            alamat: selectedHead.alamat_saat_ini || selectedHead.dusun || "-",
-            dusun: selectedHead.dusun || "-",
-            rw: selectedHead.rw || "-",
-            rt: selectedHead.rt || "-",
-            kode_pos: "00000",
-            desa_kelurahan: "Desa",
-            kecamatan: "Kecamatan",
-            kabupaten_kota: "Kabupaten",
-            provinsi: "Provinsi",
-          })
-          .select()
-          .single();
-
-        if (keluargaError) throw keluargaError;
-        targetFamilyId = keluargaData.id;
-      }
-
-      // Update Head
-      if (selectedHead.id) {
-        await updateResident(selectedHead.id, {
-          no_kk: noKK,
-          status_dalam_keluarga: "KEPALA KELUARGA",
-          keluarga_id: targetFamilyId,
+      // 2. Update Members
+      for (const member of members) {
+        const memberTargetId = member.id ? String(member.id) : member.nik;
+        await updateResident(memberTargetId, {
+          no_kk: cleanNoKK,
+          hubungan_keluarga: member.hubungan_keluarga || "ANAK",
+          status_dalam_keluarga: member.hubungan_keluarga || "ANAK",
         });
       }
 
-      // Update Members
-      for (const member of members) {
-        if (member.id) {
-          await updateResident(member.id, {
-            no_kk: noKK,
-            status_dalam_keluarga: member.status_dalam_keluarga || "ANAK",
-            keluarga_id: targetFamilyId,
-          });
-        }
+      // 3. Handle removed members
+      const removedMembers = originalMembers.filter(
+        om => om.nik !== selectedHead.nik && !members.some(m => m.nik === om.nik)
+      );
+
+      for (const removed of removedMembers) {
+        const removedTargetId = removed.id ? String(removed.id) : removed.nik;
+        await updateResident(removedTargetId, {
+          no_kk: "",
+          hubungan_keluarga: "",
+          status_dalam_keluarga: null,
+        });
       }
 
-      toast.success(initialData?.familyId ? "Keluarga berhasil diperbarui" : "Keluarga berhasil ditambahkan");
+      toast.success(mode === "edit" || editNoKK ? "Data keluarga berhasil diperbarui" : "Data keluarga berhasil ditambahkan");
       router.push("/keluarga");
       router.refresh();
     } catch (error: any) {
@@ -306,54 +254,6 @@ export default function FamilyForm({
       setIsSubmitting(false);
     }
   };
-
-  // Render Helpers
-  const ResidentItem = ({ 
-    resident, 
-    action, 
-    actionIcon: Icon, 
-    variant = "default" 
-  }: { 
-    resident: Resident; 
-    action: () => void; 
-    actionIcon: any; 
-    variant?: "default" | "selected" 
-  }) => (
-    <div className={cn(
-      "flex items-center justify-between p-3 rounded-lg border transition-all duration-200",
-      variant === "selected" 
-        ? "bg-card-bg border-border-color" 
-        : "bg-card-bg border-border-color hover:border-primary-text/30"
-    )}>
-      <div className="min-w-0 flex-1 mr-3">
-        <p className="text-sm font-semibold text-primary-text truncate">
-          {resident.nama.toUpperCase()}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-secondary-text font-mono">
-            {resident.nik}
-          </span>
-          <span className="text-xs border border-border-color px-1.5 py-0.5 rounded-full text-secondary-text">
-            {resident.jenis_kelamin}
-          </span>
-        </div>
-      </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          action();
-        }}
-        className={cn(
-          "flex items-center justify-center w-8 h-8 rounded-full transition-colors",
-          variant === "selected"
-            ? "text-error-text hover:bg-error-bg border-error-border"
-            : "bg-body-bg text-secondary-text hover:bg-border-color"
-        )}
-      >
-        <Icon className="w-4 h-4" />
-      </button>
-    </div>
-  );
 
   const formActions = (
     <div className="flex items-center gap-2">
@@ -367,7 +267,7 @@ export default function FamilyForm({
       </Button>
       <Button
         onClick={handleSubmit}
-        disabled={isSubmitting || !selectedHead || !noKK}
+        disabled={isSubmitting || !selectedHead || !noKK.trim()}
         className="w-full sm:w-auto"
       >
         {isSubmitting ? "Menyimpan..." : "Simpan Data"}
@@ -403,19 +303,38 @@ export default function FamilyForm({
             <div className="space-y-2">
               <label className="text-[13px] font-medium text-secondary-text">Kepala Keluarga</label>
               {selectedHead ? (
-                <ResidentItem 
-                  resident={selectedHead} 
-                  action={() => {
-                    setSelectedHead(null);
-                    setNoKK("");
-                  }} 
-                  actionIcon={X}
-                  variant="selected"
-                />
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-border-color bg-card-bg">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                      {selectedHead.nama.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-primary-text truncate uppercase">
+                        {selectedHead.nama}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-secondary-text">
+                        <span className="font-mono">NIK: {selectedHead.nik}</span>
+                        <span>•</span>
+                        <span>{selectedHead.jenis_kelamin || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedHead(null);
+                    }}
+                    className="text-secondary-text hover:text-error-text"
+                    title="Ganti Kepala Keluarga"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               ) : (
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12"
+                  className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12 rounded-xl"
                   onClick={() => setPickerMode("head")}
                 >
                   <Search className="w-4 h-4 mr-2" />
@@ -436,8 +355,8 @@ export default function FamilyForm({
               icon={<CreditCard className="h-4 w-4 text-secondary-text" />}
               maxLength={16}
             />
-            <p className="text-xs text-secondary-text text-right -mt-4">
-                {noKK.length}/16 digit
+            <p className="text-xs text-secondary-text text-right -mt-4 font-mono">
+              {noKK.length}/16 digit
             </p>
           </div>
         </FormSection>
@@ -447,7 +366,7 @@ export default function FamilyForm({
           id="anggota-keluarga"
           ref={(el) => { sectionRefs.current["anggota-keluarga"] = el; }}
           title="Anggota Keluarga"
-          description="Tambahkan anggota keluarga lainnya."
+          description="Tambahkan anggota keluarga lainnya serta tentukan status hubungannya."
           icon={Users}
         >
           <div className="space-y-6">
@@ -456,7 +375,7 @@ export default function FamilyForm({
               <label className="text-[13px] font-medium text-secondary-text">Tambah Anggota</label>
               <Button
                 variant="outline"
-                className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12"
+                className="w-full justify-start text-left font-normal text-secondary-text border-dashed h-12 rounded-xl"
                 onClick={() => setPickerMode("member")}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
@@ -467,18 +386,54 @@ export default function FamilyForm({
             {/* List Members */}
             <div className="space-y-3">
               {members.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-border-color rounded-lg bg-body-bg/50">
-                  <Users className="w-8 h-8 text-secondary-text mx-auto mb-2 opacity-50" />
+                <div className="text-center py-8 border border-dashed border-border-color rounded-xl bg-body-bg/50">
+                  <Users className="w-8 h-8 text-secondary-text mx-auto mb-2 opacity-40" />
                   <p className="text-sm text-secondary-text">Belum ada anggota keluarga yang ditambahkan.</p>
                 </div>
               ) : (
-                members.map((member) => (
-                  <ResidentItem 
-                    key={member.id}
-                    resident={member} 
-                    action={() => handleRemoveMember(member.id!)} 
-                    actionIcon={X}
-                  />
+                members.map((member, index) => (
+                  <div 
+                    key={member.nik || index}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-border-color bg-card-bg gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 text-secondary-text flex items-center justify-center font-bold text-xs shrink-0">
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-primary-text truncate uppercase">
+                          {member.nama}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-secondary-text">
+                          <span className="font-mono">NIK: {member.nik}</span>
+                          <span>•</span>
+                          <span>{member.jenis_kelamin || "-"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <select
+                        value={(member.hubungan_keluarga || "ANAK").toUpperCase()}
+                        onChange={(e) => handleMemberRelationshipChange(member.nik, e.target.value)}
+                        className="h-8 px-2.5 text-xs font-medium rounded-lg border border-border-color bg-body-bg text-primary-text focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        {HUBUNGAN_KELUARGA_OPTIONS.filter(opt => opt !== "KEPALA KELUARGA").map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveMember(member.nik)}
+                        className="h-8 w-8 text-secondary-text hover:text-error-text"
+                        title="Hapus dari KK"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))
               )}
             </div>

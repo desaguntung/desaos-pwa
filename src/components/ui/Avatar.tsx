@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
+import { User } from 'lucide-react';
 
 interface AvatarProps {
   src?: string | null;
@@ -35,21 +36,43 @@ export function Avatar({
     rounded: 'rounded-lg',
   };
 
-  const finalSrc = error || !src 
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(fallback || alt)}&background=random`
-    : src;
+  const initials = (fallback || alt || "")
+    .trim()
+    .split(/\s+/)
+    .map(word => word[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  if (src && !error) {
+    return (
+      <img 
+        src={src}
+        alt={alt}
+        className={cn(
+          "object-cover border border-border-color shrink-0",
+          sizeClasses[size],
+          shapeClasses[shape],
+          className
+        )}
+        onError={() => setError(true)}
+      />
+    );
+  }
 
   return (
-    <img 
-      src={finalSrc}
-      alt={alt}
+    <div
       className={cn(
-        "object-cover border border-border-color",
+        "flex items-center justify-center bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold border border-border-color shrink-0 select-none uppercase tracking-wider",
         sizeClasses[size],
         shapeClasses[shape],
         className
       )}
-      onError={() => setError(true)}
-    />
+      aria-label={alt}
+    >
+      {initials ? initials : <User className="w-4 h-4 opacity-70" />}
+    </div>
   );
 }
+

@@ -12,12 +12,15 @@ import {
   Filter as FilterIcon,
   Users,
   Check,
-  Plus
+  Plus,
+  Printer,
+  FileText
 } from "lucide-react";
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { getKeluargaList, deleteKeluarga, Keluarga } from "@/lib/services/keluarga";
 import { useReferenceData } from "@/lib/services/referensi";
+import { getIdentitasDesa, IdentitasDesa } from "@/lib/services/surat";
 
 // UI Components
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -39,7 +42,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -56,6 +58,7 @@ export default function KeluargaPage() {
   // Data States
   const [data, setData] = useState<Keluarga[]>([]);
   const [loading, setLoading] = useState(true);
+  const [identitasDesa, setIdentitasDesa] = useState<IdentitasDesa | null>(null);
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,6 +76,7 @@ export default function KeluargaPage() {
   // Initial Data Fetch
   useEffect(() => {
     fetchData();
+    fetchIdentitas();
   }, []);
 
   const fetchData = async () => {
@@ -88,7 +92,16 @@ export default function KeluargaPage() {
     }
   };
 
-  // Derived Data: Dusun Options (from reference hook with fallback to data)
+  const fetchIdentitas = async () => {
+    try {
+      const idDesa = await getIdentitasDesa();
+      if (idDesa) setIdentitasDesa(idDesa);
+    } catch (e) {
+      console.error("Error fetching identitas desa:", e);
+    }
+  };
+
+  // Derived Data: Dusun Options
   const dusunOptions = useMemo(() => {
     if (dusunList && dusunList.length > 0) {
       return dusunList.map((d: any) => d.nama || d.nama_dusun || `DUSUN ${d.id}`);
@@ -130,7 +143,7 @@ export default function KeluargaPage() {
       try {
         await deleteKeluarga(keluarga.nomorKK, keluarga.members);
         toast.success(`Data KK ${keluarga.nomorKK} berhasil dihapus`);
-        await fetchData(); // Refresh data
+        await fetchData();
       } catch (error) {
         console.error("Failed to delete keluarga", error);
         toast.error("Gagal menghapus data keluarga.");
@@ -143,13 +156,34 @@ export default function KeluargaPage() {
     setDetailOpen(true);
   };
 
+  const formatDateIndo = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
   // Columns Configuration
   const columns: Column<Keluarga>[] = [
     {
       header: "Kepala Keluarga",
       accessorKey: "headName",
       cell: (row) => (
-        <div className="flex items-center gap-3">
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewDetail(row);
+          }}
+          className="flex items-center gap-3 cursor-pointer group"
+          title="Klik untuk melihat Salinan Kartu Keluarga"
+        >
           <Avatar 
             alt={row.headName} 
             fallback={row.headName.substring(0, 2).toUpperCase()}
@@ -157,7 +191,9 @@ export default function KeluargaPage() {
             shape="circle"
           />
           <div className="flex flex-col">
-            <span className="font-medium text-primary-text capitalize">{(row.headName || "").toLowerCase()}</span>
+            <span className="font-semibold text-primary-text group-hover:text-primary transition-colors capitalize">
+              {(row.headName || "").toLowerCase()}
+            </span>
             <span className="text-xs font-mono text-secondary-text">NIK: {row.headNik}</span>
           </div>
         </div>
@@ -201,6 +237,60 @@ export default function KeluargaPage() {
       header: "Aksi",
       accessorKey: "id",
       cell: (row) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary-text hover:text-primary-text">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleViewDetail(row)} className="cursor-pointer">
+                <Eye className="mr-2 h-4 w-4 text-secondary-text" />
+                Lihat Kartu Keluarga
+              </DropdownMenuItem>
+              {canUpdate && (
+                <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
+                  <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
+                  Ubah Data KK
+                </DropdownMenuItem>
+              )}
+              {canDelete && (
+                <DropdownMenuItem 
+                  variant="destructive"
+                  className="cursor-pointer"
+                  onClick={() => handleDelete(row)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Hapus
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
+  ];
+
+  const mobileConfig: MobileConfig<Keluarga> = {
+    titleKey: (row) => (
+      <span 
+        onClick={() => handleViewDetail(row)}
+        className="capitalize font-semibold cursor-pointer text-primary"
+      >
+        {(row.headName || "").toLowerCase()}
+      </span>
+    ),
+    subtitleKey: (row) => `No. KK: ${row.nomorKK}`,
+    statusKey: (row) => (
+      <Badge variant={row.statusVariant} className="text-[10px] px-1.5 h-5">
+        {row.status}
+      </Badge>
+    ),
+    action: (row) => (
+      <div onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary-text hover:text-primary-text">
@@ -208,16 +298,14 @@ export default function KeluargaPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleViewDetail(row)} className="cursor-pointer">
               <Eye className="mr-2 h-4 w-4 text-secondary-text" />
-              Lihat Anggota
+              Lihat Kartu Keluarga
             </DropdownMenuItem>
             {canUpdate && (
               <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
                 <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
-                Ubah
+                Ubah Data KK
               </DropdownMenuItem>
             )}
             {canDelete && (
@@ -232,48 +320,7 @@ export default function KeluargaPage() {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-      ),
-    },
-  ];
-
-  const mobileConfig: MobileConfig<Keluarga> = {
-    titleKey: (row) => <span className="capitalize">{(row.headName || "").toLowerCase()}</span>,
-    subtitleKey: (row) => `No. KK: ${row.nomorKK}`,
-    statusKey: (row) => (
-      <Badge variant={row.statusVariant} className="text-[10px] px-1.5 h-5">
-        {row.status}
-      </Badge>
-    ),
-    action: (row) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary-text hover:text-primary-text">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-           <DropdownMenuItem onClick={() => handleViewDetail(row)} className="cursor-pointer">
-              <Eye className="mr-2 h-4 w-4 text-secondary-text" />
-              Lihat Anggota
-            </DropdownMenuItem>
-            {canUpdate && (
-              <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
-                <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
-                Ubah
-              </DropdownMenuItem>
-            )}
-            {canDelete && (
-              <DropdownMenuItem 
-                variant="destructive"
-                className="cursor-pointer"
-                onClick={() => handleDelete(row)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Hapus
-              </DropdownMenuItem>
-            )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      </div>
     ),
   };
 
@@ -386,12 +433,13 @@ export default function KeluargaPage() {
         </div>
       </Card>
 
-      {/* DataTable */}
+      {/* DataTable with onRowClick */}
       <DataTable
         columns={columns}
         data={currentData}
         mobileConfig={mobileConfig}
         loading={loading}
+        onRowClick={handleViewDetail}
       />
 
       {/* Pagination */}
@@ -405,78 +453,217 @@ export default function KeluargaPage() {
         sticky={true}
       />
 
-      {/* Detail Dialog */}
+      {/* Official Indonesian Kartu Keluarga Preview Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detail Kartu Keluarga</DialogTitle>
-            <DialogDescription>
-              Nomor KK: <span className="font-mono font-medium text-primary-text">{selectedKeluarga?.nomorKK}</span>
-            </DialogDescription>
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+          <DialogHeader className="flex flex-row items-center justify-between border-b border-border-color pb-3 print:hidden">
+            <div>
+              <DialogTitle className="text-base font-bold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Salinan Kartu Keluarga Resmi
+              </DialogTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="gap-1.5 h-8 text-xs font-semibold"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Cetak Salinan KK</span>
+              </Button>
+              {canUpdate && selectedKeluarga && (
+                <Button
+                  size="sm"
+                  onClick={() => router.push(`/keluarga/${selectedKeluarga.nomorKK}/edit`)}
+                  className="gap-1.5 h-8 text-xs font-semibold"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Ubah Data</span>
+                </Button>
+              )}
+            </div>
           </DialogHeader>
 
           {selectedKeluarga && (
-            <div className="space-y-6">
-              {/* Header Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-body-bg p-4 rounded-xl border border-border-color">
-                <div>
-                  <label className="text-xs text-secondary-text block mb-1">Kepala Keluarga</label>
-                  <div className="font-medium text-primary-text capitalize">{(selectedKeluarga.headName || "").toLowerCase()}</div>
-                  <div className="text-xs font-mono text-secondary-text">{selectedKeluarga.headNik}</div>
+            <div id="kk-official-print" className="bg-white text-zinc-900 p-6 md:p-8 rounded-xl border border-zinc-200 shadow-sm print:border-none print:shadow-none print:p-0">
+              {/* KK Header */}
+              <div className="text-center pb-4 border-b-2 border-zinc-900 mb-5">
+                <h1 className="text-xl md:text-2xl font-black tracking-widest uppercase font-serif text-zinc-950">
+                  KARTU KELUARGA
+                </h1>
+                <p className="text-sm md:text-base font-bold tracking-wider font-mono text-zinc-800 mt-0.5">
+                  No. {selectedKeluarga.nomorKK}
+                </p>
+              </div>
+
+              {/* KK Metadata (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs mb-6 text-zinc-800">
+                {/* Left Column */}
+                <div className="space-y-1">
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Nama Kepala Keluarga</span>
+                    <span>:</span>
+                    <span className="font-bold uppercase">{selectedKeluarga.headName || "-"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Alamat</span>
+                    <span>:</span>
+                    <span className="uppercase">{selectedKeluarga.addressLine || "-"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">RT / RW</span>
+                    <span>:</span>
+                    <span className="uppercase">{selectedKeluarga.dusunRwRt || "-"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Desa / Kelurahan</span>
+                    <span>:</span>
+                    <span className="uppercase">{identitasDesa?.nama_desa || selectedKeluarga.members[0]?.nama_desa || "GUNTUNG"}</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-secondary-text block mb-1">Alamat Domisili</label>
-                  <div className="text-sm text-primary-text">{selectedKeluarga.addressLine || "-"}</div>
-                  <div className="text-xs text-secondary-text">{selectedKeluarga.dusunRwRt || "-"}</div>
+
+                {/* Right Column */}
+                <div className="space-y-1">
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Kecamatan</span>
+                    <span>:</span>
+                    <span className="uppercase">{identitasDesa?.nama_kecamatan || selectedKeluarga.members[0]?.nama_kecamatan || "LIMA PULUH PESISIR"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Kabupaten / Kota</span>
+                    <span>:</span>
+                    <span className="uppercase">{identitasDesa?.nama_kabupaten || selectedKeluarga.members[0]?.nama_kabupaten || "BATU BARA"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Kode Pos</span>
+                    <span>:</span>
+                    <span className="font-mono">{identitasDesa?.kode_pos || selectedKeluarga.members[0]?.kode_pos || "21255"}</span>
+                  </div>
+                  <div className="grid grid-cols-[140px_12px_1fr]">
+                    <span className="font-semibold uppercase">Provinsi</span>
+                    <span>:</span>
+                    <span className="uppercase">{identitasDesa?.nama_provinsi || selectedKeluarga.members[0]?.nama_provinsi || "SUMATERA UTARA"}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Members List */}
-              <div>
-                <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary-text" />
-                  Daftar Anggota Keluarga ({selectedKeluarga.members.length} Orang)
-                </h4>
-                <div className="border border-border-color rounded-xl overflow-hidden">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-body-bg text-secondary-text font-medium text-xs uppercase">
-                      <tr>
-                        <th className="px-4 py-3">Nama</th>
-                        <th className="px-4 py-3">NIK</th>
-                        <th className="px-4 py-3">Hubungan</th>
-                        <th className="px-4 py-3">Status</th>
+              {/* TABEL I: Data Anggota Keluarga (Identitas Pribadi & Kelahiran) */}
+              <div className="mb-6 overflow-x-auto">
+                <table className="w-full text-[11px] border-collapse border border-zinc-900 text-left">
+                  <thead>
+                    <tr className="bg-zinc-100 text-zinc-900 text-center font-bold">
+                      <th className="border border-zinc-900 p-1.5 w-7">No</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[150px]">Nama Lengkap</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[130px]">NIK</th>
+                      <th className="border border-zinc-900 p-1.5 w-24">Jenis Kelamin</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[100px]">Tempat Lahir</th>
+                      <th className="border border-zinc-900 p-1.5 w-24">Tgl Lahir</th>
+                      <th className="border border-zinc-900 p-1.5 w-20">Agama</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[120px]">Pendidikan</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[120px]">Jenis Pekerjaan</th>
+                      <th className="border border-zinc-900 p-1.5 w-12">Gol. Darah</th>
+                    </tr>
+                    <tr className="bg-zinc-50 text-[9px] text-zinc-500 text-center">
+                      <th className="border border-zinc-900 p-0.5">(1)</th>
+                      <th className="border border-zinc-900 p-0.5">(2)</th>
+                      <th className="border border-zinc-900 p-0.5">(3)</th>
+                      <th className="border border-zinc-900 p-0.5">(4)</th>
+                      <th className="border border-zinc-900 p-0.5">(5)</th>
+                      <th className="border border-zinc-900 p-0.5">(6)</th>
+                      <th className="border border-zinc-900 p-0.5">(7)</th>
+                      <th className="border border-zinc-900 p-0.5">(8)</th>
+                      <th className="border border-zinc-900 p-0.5">(9)</th>
+                      <th className="border border-zinc-900 p-0.5">(10)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedKeluarga.members.map((member, idx) => (
+                      <tr key={member.nik || idx} className="hover:bg-zinc-50">
+                        <td className="border border-zinc-900 p-1.5 text-center font-medium">{idx + 1}</td>
+                        <td className="border border-zinc-900 p-1.5 font-bold uppercase">{member.nama || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 font-mono text-center">{member.nik || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.jenis_kelamin || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 uppercase">{member.tempat_lahir || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center font-mono">{formatDateIndo(member.tanggal_lahir)}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.agama || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 uppercase">{member.pendidikan_kk || member.pendidikan_saat_ini || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 uppercase">{member.pekerjaan || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.golongan_darah || "-"}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-color">
-                      {selectedKeluarga.members.map((member) => (
-                        <tr key={member.id || member.nik} className="hover:bg-body-bg/50">
-                          <td className="px-4 py-3 font-medium capitalize">{(member.nama || "").toLowerCase()}</td>
-                          <td className="px-4 py-3 font-mono text-xs">{member.nik}</td>
-                          <td className="px-4 py-3">
-                            <Badge variant="outline" className="text-[10px] h-5">
-                              {member.hubungan_keluarga || "ANGGOTA"}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={cn(
-                              "text-xs font-medium",
-                              member.status_penduduk === "Meninggal" ? "text-error-text" :
-                              member.status_penduduk === "Pindah" ? "text-info-text" :
-                              "text-success-text"
-                            )}>
-                              {member.status_penduduk || "Aktif"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* TABEL II: Data Status Perkawinan, Hubungan Keluarga & Orang Tua */}
+              <div className="mb-8 overflow-x-auto">
+                <table className="w-full text-[11px] border-collapse border border-zinc-900 text-left">
+                  <thead>
+                    <tr className="bg-zinc-100 text-zinc-900 text-center font-bold">
+                      <th className="border border-zinc-900 p-1.5 w-7" rowSpan={2}>No</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[110px]" rowSpan={2}>Status Perkawinan</th>
+                      <th className="border border-zinc-900 p-1.5 w-24" rowSpan={2}>Tgl Perkawinan</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[130px]" rowSpan={2}>Status Hubungan Dalam Keluarga</th>
+                      <th className="border border-zinc-900 p-1.5 w-24" rowSpan={2}>Kewarganegaraan</th>
+                      <th className="border border-zinc-900 p-1.5" colSpan={2}>Dokumen Imigrasi</th>
+                      <th className="border border-zinc-900 p-1.5" colSpan={2}>Nama Orang Tua</th>
+                    </tr>
+                    <tr className="bg-zinc-100 text-zinc-900 text-center font-bold">
+                      <th className="border border-zinc-900 p-1.5 min-w-[90px]">No. Paspor</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[90px]">No. KITAS/KITAP</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[120px]">Ayah</th>
+                      <th className="border border-zinc-900 p-1.5 min-w-[120px]">Ibu</th>
+                    </tr>
+                    <tr className="bg-zinc-50 text-[9px] text-zinc-500 text-center">
+                      <th className="border border-zinc-900 p-0.5">(1)</th>
+                      <th className="border border-zinc-900 p-0.5">(11)</th>
+                      <th className="border border-zinc-900 p-0.5">(12)</th>
+                      <th className="border border-zinc-900 p-0.5">(13)</th>
+                      <th className="border border-zinc-900 p-0.5">(14)</th>
+                      <th className="border border-zinc-900 p-0.5">(15)</th>
+                      <th className="border border-zinc-900 p-0.5">(16)</th>
+                      <th className="border border-zinc-900 p-0.5">(17)</th>
+                      <th className="border border-zinc-900 p-0.5">(18)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedKeluarga.members.map((member, idx) => (
+                      <tr key={member.nik || idx} className="hover:bg-zinc-50">
+                        <td className="border border-zinc-900 p-1.5 text-center font-medium">{idx + 1}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.status_kawin || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center font-mono">{formatDateIndo(member.tanggal_perkawinan)}</td>
+                        <td className="border border-zinc-900 p-1.5 font-semibold text-center uppercase">
+                          {member.hubungan_keluarga || (idx === 0 ? "KEPALA KELUARGA" : "ANGGOTA")}
+                        </td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.kewarganegaraan || "WNI"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.no_paspor || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 text-center uppercase">{member.no_kitas || member.no_kitap || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 uppercase">{member.nama_ayah || "-"}</td>
+                        <td className="border border-zinc-900 p-1.5 uppercase">{member.nama_ibu || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* KK Footer / Tanda Tangan */}
+              <div className="grid grid-cols-2 gap-4 text-xs pt-4 text-center">
+                <div>
+                  <p className="font-semibold uppercase mb-16">KEPALA KELUARGA</p>
+                  <p className="font-bold uppercase underline tracking-wider">{selectedKeluarga.headName}</p>
+                </div>
+                <div>
+                  <p className="mb-0.5">Dikeluarkan Tanggal: {formatDateIndo(new Date().toISOString())}</p>
+                  <p className="font-semibold uppercase mb-16">KEPALA DESA {identitasDesa?.nama_desa || "GUNTUNG"}</p>
+                  <p className="font-bold uppercase underline tracking-wider">{identitasDesa?.nama_kepala_desa || "KEPALA DESA"}</p>
                 </div>
               </div>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-border-color pt-3 print:hidden">
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
               Tutup
             </Button>
@@ -486,3 +673,4 @@ export default function KeluargaPage() {
     </div>
   );
 }
+
