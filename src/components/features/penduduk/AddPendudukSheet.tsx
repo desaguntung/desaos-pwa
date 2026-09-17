@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Sheet";
 import ResidentForm from "../../ResidentForm";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
-import { Resident } from "@/lib/services/penduduk";
+import { Resident, addResident } from "@/lib/services/penduduk";
 import { toast } from "sonner";
 
 export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: () => void, trigger?: React.ReactNode }) {
@@ -26,12 +26,14 @@ export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: (
       setIsSubmitting(true);
       const supabase = createSupabaseBrowserClient();
       
+      const cleanNik = (data.nik || "").replace(/\D/g, "");
+
       // Check for existing NIK
       const { data: existing } = await supabase
         .from("penduduk")
         .select("id")
-        .eq("nik", data.nik)
-        .single();
+        .eq("nik", cleanNik)
+        .maybeSingle();
         
       if (existing) {
         toast.error("NIK sudah terdaftar dalam sistem!");
@@ -39,13 +41,8 @@ export default function AddPendudukSheet({ onSuccess, trigger }: { onSuccess?: (
         return;
       }
 
-      // Insert data
-      const { error } = await supabase.from("penduduk").insert({
-        ...data,
-        status_penduduk: "TETAP",
-      });
-
-      if (error) throw error;
+      // Insert data using normalized addResident
+      await addResident(data);
 
       toast.success(`Data penduduk "${data.nama}" berhasil disimpan`);
       setOpen(false);

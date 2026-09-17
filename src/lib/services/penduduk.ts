@@ -616,14 +616,90 @@ export function mapResidentFromDb(row: any): Resident {
   };
 }
 
+export function reverseLookup(map: Record<number, string>, val?: string | null): number | undefined {
+  if (!val) return undefined;
+  const target = val.trim().toUpperCase();
+  const entry = Object.entries(map).find(([_, v]) => v.trim().toUpperCase() === target);
+  if (entry) return Number(entry[0]);
+  const partialEntry = Object.entries(map).find(([_, v]) => 
+    v.trim().toUpperCase().includes(target) || target.includes(v.trim().toUpperCase())
+  );
+  return partialEntry ? Number(partialEntry[0]) : undefined;
+}
+
 export function mapResidentToDb(resident: Partial<Resident>): any {
   const payload: any = { ...resident };
   
+  // Clean NIK & KK numbers (remove spaces or formatting)
+  if (payload.nik && typeof payload.nik === "string") {
+    payload.nik = payload.nik.replace(/\D/g, "");
+  }
+  if (payload.no_kk && typeof payload.no_kk === "string") {
+    payload.no_kk = payload.no_kk.replace(/\D/g, "");
+  }
+
+  // Reverse map Gender
   if (resident.jenis_kelamin) {
     const s = resident.jenis_kelamin.toUpperCase();
-    payload.jenis_kelamin_id = s.startsWith("L") ? 1 : 2;
+    const gId = s.startsWith("L") ? 1 : 2;
+    payload.jenis_kelamin_id = gId;
+    payload.sex = gId;
   }
+  delete payload.jenis_kelamin;
   
+  // Reverse map Agama
+  if (resident.agama) {
+    const aId = reverseLookup(AGAMA_MAP, resident.agama);
+    if (aId !== undefined) payload.agama_id = aId;
+  }
+  delete payload.agama;
+
+  // Reverse map Status Kawin
+  if (resident.status_kawin) {
+    const skId = reverseLookup(STATUS_KAWIN_MAP, resident.status_kawin);
+    if (skId !== undefined) payload.status_kawin_id = skId;
+  }
+  delete payload.status_kawin;
+
+  // Reverse map Status Penduduk
+  if (resident.status_penduduk) {
+    const spId = reverseLookup(STATUS_PENDUDUK_MAP, resident.status_penduduk);
+    if (spId !== undefined) {
+      payload.status_penduduk_id = spId;
+      payload.status_dasar = spId === 1 ? 1 : spId;
+    }
+  }
+  delete payload.status_penduduk;
+
+  // Reverse map Hubungan Keluarga
+  if (resident.hubungan_keluarga) {
+    const hkId = reverseLookup(HUBUNGAN_KELUARGA_MAP, resident.hubungan_keluarga);
+    if (hkId !== undefined) payload.hubungan_keluarga_id = hkId;
+  }
+  delete payload.hubungan_keluarga;
+
+  // Reverse map Golongan Darah
+  if (resident.golongan_darah) {
+    const gdId = reverseLookup(GOLONGAN_DARAH_MAP, resident.golongan_darah);
+    if (gdId !== undefined) payload.golongan_darah_id = gdId;
+  }
+  delete payload.golongan_darah;
+
+  // Reverse map Pendidikan KK
+  if (resident.pendidikan_kk) {
+    const pkkId = reverseLookup(PENDIDIKAN_KK_MAP, resident.pendidikan_kk);
+    if (pkkId !== undefined) payload.pendidikan_kk_id = pkkId;
+  }
+  delete payload.pendidikan_kk;
+
+  // Reverse map Pekerjaan
+  if (resident.pekerjaan) {
+    const pekId = reverseLookup(PEKERJAAN_MAP, resident.pekerjaan);
+    if (pekId !== undefined) payload.pekerjaan_id = pekId;
+  }
+  delete payload.pekerjaan;
+
+  // Dusun & Wilayah Dusun ID
   if (resident.dusun) {
     const norm = normalizeDusunKey(resident.dusun);
     const foundEntry = Object.entries(DUSUN_MAP).find(([_, v]) => normalizeDusunKey(v) === norm);
@@ -632,6 +708,10 @@ export function mapResidentToDb(resident: Partial<Resident>): any {
     }
     payload.dusun = formatDusunName(resident.dusun);
   }
+
+  // Remove primary key id and metadata from payload if present
+  delete payload.id;
+  delete payload.created_at;
   
   return payload;
 }

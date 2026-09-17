@@ -32,7 +32,7 @@ import {
   X,
   Loader2
 } from "lucide-react";
-import { Resident, getResidents } from "@/lib/services/penduduk";
+import { Resident, mapResidentFromDb } from "@/lib/services/penduduk";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 import { formatChunkedNIK } from "@/lib/utils/formatters";
 import VisualAuditTrailModal from "@/components/audit/VisualAuditTrailModal";
@@ -43,6 +43,7 @@ interface ResidentContextDrawerProps {
   onClose: () => void;
   resident: Resident | null;
   onEdit?: (resident: Resident) => void;
+  onSelectResident?: (resident: Resident) => void;
 }
 
 export function ResidentContextDrawer({
@@ -50,6 +51,7 @@ export function ResidentContextDrawer({
   onClose,
   resident,
   onEdit,
+  onSelectResident,
 }: ResidentContextDrawerProps) {
   const router = useRouter();
   const [familyMembers, setFamilyMembers] = useState<Resident[]>([]);
@@ -65,18 +67,38 @@ export function ResidentContextDrawer({
     const supabase = createSupabaseBrowserClient();
 
     const fetchData = async () => {
-      // Fetch Family Members if No KK exists
-      if (resident.no_kk) {
+      const cleanNoKk = (resident.no_kk || "").replace(/\D/g, "");
+      const cleanNik = (resident.nik || "").replace(/\D/g, "");
+
+      // 1. Fetch Family Members if No KK exists
+      if (cleanNoKk) {
         setLoadingFamily(true);
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("penduduk")
-            .select("id, nik, nama, hubungan_keluarga, jenis_kelamin, tanggal_lahir")
-            .eq("no_kk", resident.no_kk);
-          if (isMounted) {
-            setFamilyMembers((data as Resident[]) || []);
+            .select("*")
+            .eq("no_kk", cleanNoKk);
+
+          if (error) throw error;
+
+          if (isMounted && data) {
+            const mapped = data.map(mapResidentFromDb);
+            // Sort: Kepala Keluarga -> Istri/Suami -> Anak -> Orang Tua/Mertua -> Famili Lain
+            const sorted = mapped.sort((a, b) => {
+              const getWeight = (r: Resident) => {
+                const hk = (r.hubungan_keluarga || "").toUpperCase();
+                if (hk.includes("KEPALA")) return 1;
+                if (hk.includes("ISTRI") || hk.includes("SUAMI")) return 2;
+                if (hk.includes("ANAK")) return 3;
+                if (hk.includes("ORANG TUA") || hk.includes("MERTUA")) return 4;
+                return 5;
+              };
+              return getWeight(a) - getWeight(b);
+            });
+            setFamilyMembers(sorted);
           }
-        } catch {
+        } catch (err) {
+          console.error("Error fetching family members:", err);
           if (isMounted) setFamilyMembers([]);
         } finally {
           if (isMounted) setLoadingFamily(false);
@@ -85,19 +107,44 @@ export function ResidentContextDrawer({
         setFamilyMembers([]);
       }
 
-      // Fetch Recent Letters for this Resident
+      // 2. Fetch Recent Letters for this Resident from log_surat
       setLoadingLetters(true);
       try {
-        const { data } = await supabase
-          .from("surat_keluar")
-          .select("id, nomor_surat, tanggal_surat, keperluan, jenis_surat, status")
-          .eq("nik_pemohon", resident.nik)
-          .order("tanggal_surat", { ascending: false })
+        let query = supabase
+          .from("log_surat")
+          .select(`
+            id,
+            no_surat,
+            tanggal,
+            keperluan,
+            keterangan,
+            surat_formats (
+              nama
+            )
+          `)
+          .order("tanggal", { ascending: false })
           .limit(5);
-        if (isMounted) {
-          setRecentLetters(data || []);
+
+        if (resident.id) {
+          query = query.eq("id_pend", resident.id);
+        } else if (cleanNik) {
+          const { data: resByNik } = await supabase
+            .from("penduduk")
+            .select("id")
+            .eq("nik", cleanNik)
+            .maybeSingle();
+            
+          if (resByNik?.id) {
+            query = query.eq("id_pend", resByNik.id);
+          }
         }
-      } catch {
+
+        const { data: letterData } = await query;
+        if (isMounted && letterData) {
+          setRecentLetters(letterData);
+        }
+      } catch (err) {
+        console.error("Error fetching recent letters:", err);
         if (isMounted) setRecentLetters([]);
       } finally {
         if (isMounted) setLoadingLetters(false);
@@ -121,32 +168,29 @@ export function ResidentContextDrawer({
       )
     : "-";
 
+  const cleanKk = (resident.no_kk || "").replace(/\D/g, "");
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="w-full sm:max-w-xl flex flex-col h-full p-0 gap-0 border-l border-border-color shadow-2xl bg-card-bg">
-          {/* Drawer Header */}
-          <SheetHeader className="px-6 py-4 border-b border-border-color bg-card-bg sticky top-0 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar
-                  alt={resident.nama}
-                  fallback={resident.nama.substring(0, 2).toUpperCase()}
-                  size="md"
-                  shape="circle"
-                />
-                <div>
-                  <SheetTitle className="text-base font-semibold text-primary-text line-clamp-1">
-                    {resident.nama}
-                  </SheetTitle>
-                  <SheetDescription className="text-xs font-mono text-secondary-text mt-0.5">
-                    NIK: {formatChunkedNIK(resident.nik)}
-                  </SheetDescription>
-                </div>
+          {/* Drawer Header (Close button is rendered natively by SheetContent) */}
+          <SheetHeader className="px-6 py-4 border-b border-border-color bg-card-bg sticky top-0 z-10 pr-12">
+            <div className="flex items-center gap-3">
+              <Avatar
+                alt={resident.nama}
+                fallback={resident.nama.substring(0, 2).toUpperCase()}
+                size="md"
+                shape="circle"
+              />
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="text-base font-semibold text-primary-text truncate">
+                  {resident.nama}
+                </SheetTitle>
+                <SheetDescription className="text-xs font-mono text-secondary-text mt-0.5">
+                  NIK: {formatChunkedNIK(resident.nik)}
+                </SheetDescription>
               </div>
-              <SheetClose className="text-secondary-text hover:text-primary-text p-1 rounded-md hover:bg-hover-bg transition-colors">
-                <X className="w-4 h-4" />
-              </SheetClose>
             </div>
 
             {/* Quick Action Bar: Direct Letter Issuance */}
@@ -245,19 +289,21 @@ export function ResidentContextDrawer({
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold uppercase tracking-wider text-secondary-text flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
-                <span>Keluarga (No. KK: {resident.no_kk || "-"})</span>
+                <span>Keluarga (No. KK: {cleanKk || "-"})</span>
               </h4>
-              {resident.no_kk && (
+              {cleanKk && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     onClose();
-                    router.push(`/keluarga`);
+                    router.push(`/keluarga?search=${cleanKk}`);
                   }}
-                  className="h-6 text-[11px] text-secondary-text hover:text-primary-text p-1"
+                  className="h-6 text-[11px] px-2 gap-1 text-primary-text hover:bg-hover-bg"
                 >
-                  Lihat KK
+                  <Users className="w-3 h-3 text-primary-500" />
+                  <span>Lihat KK</span>
+                  <ArrowRight className="w-3 h-3 opacity-60" />
                 </Button>
               )}
             </div>
@@ -273,19 +319,28 @@ export function ResidentContextDrawer({
                   return (
                     <div
                       key={m.nik}
-                      className={`p-2.5 flex items-center justify-between text-xs ${
-                        isCurrent ? "bg-card-bg font-semibold" : ""
+                      onClick={() => {
+                        if (!isCurrent && onSelectResident) {
+                          onSelectResident(m);
+                        }
+                      }}
+                      className={`p-2.5 flex items-center justify-between text-xs transition-colors ${
+                        isCurrent
+                          ? "bg-primary-500/10 font-semibold"
+                          : onSelectResident
+                          ? "hover:bg-hover-bg cursor-pointer"
+                          : ""
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-primary-text">{m.nama}</span>
                         {isCurrent && (
-                          <Badge variant="outline" className="text-[10px] py-0 px-1">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1 font-normal bg-primary-500/10 text-primary-600 border-primary-500/30">
                             Warga Ini
                           </Badge>
                         )}
                       </div>
-                      <span className="text-secondary-text text-[11px]">
+                      <span className="text-secondary-text text-[11px] font-medium">
                         {m.hubungan_keluarga || "Anggota"}
                       </span>
                     </div>
@@ -312,25 +367,35 @@ export function ResidentContextDrawer({
               </div>
             ) : recentLetters.length > 0 ? (
               <div className="space-y-2">
-                {recentLetters.map((letter) => (
-                  <div
-                    key={letter.id}
-                    className="p-3 bg-body-bg/40 border border-border-color rounded-lg text-xs space-y-1"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-primary-text">
-                        {letter.jenis_surat || "Surat Keterangan"}
-                      </span>
-                      <span className="text-[10px] font-mono text-secondary-text">
-                        {letter.tanggal_surat}
-                      </span>
+                {recentLetters.map((letter) => {
+                  const jenisSurat = letter.surat_formats?.nama || letter.jenis_surat || "Surat Keterangan";
+                  const tanggalFormatted = letter.tanggal
+                    ? new Date(letter.tanggal).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-";
+                  return (
+                    <div
+                      key={letter.id}
+                      className="p-3 bg-body-bg/40 border border-border-color rounded-lg text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-primary-text">
+                          {jenisSurat}
+                        </span>
+                        <span className="text-[10px] font-mono text-secondary-text">
+                          {tanggalFormatted}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-secondary-text">
+                        <span className="font-mono text-[11px]">No: {letter.no_surat || letter.nomor_surat || "-"}</span>
+                        <span className="italic truncate max-w-[200px]">{letter.keperluan || letter.keterangan || "Layanan administrasi"}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-secondary-text">
-                      <span className="font-mono text-[11px]">No: {letter.nomor_surat || "-"}</span>
-                      <span className="italic">{letter.keperluan || "Keperluan warga"}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-6 border border-dashed border-border-color rounded-xl bg-body-bg/20">

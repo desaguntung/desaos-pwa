@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
   MoreHorizontal, 
@@ -44,6 +44,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -51,8 +52,9 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export default function KeluargaPage() {
+function KeluargaPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const resource: PermissionResource = "keluarga";
   const { canCreate, canUpdate, canDelete } = useRbac(resource);
   const { dusun: dusunList } = useReferenceData();
@@ -64,9 +66,18 @@ export default function KeluargaPage() {
   const [pamongList, setPamongList] = useState<Pamong[]>([]);
 
   // Filter States
-  const [searchTerm, setSearchTerm] = useState("");
+  const initialSearch = searchParams?.get("search") || searchParams?.get("kk") || "";
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
   const [dusunFilter, setDusunFilter] = useState<string>("Semua");
+
+  // Sync URL search param if it changes
+  useEffect(() => {
+    const q = searchParams?.get("search") || searchParams?.get("kk");
+    if (q) {
+      setSearchTerm(q);
+    }
+  }, [searchParams]);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -1154,6 +1165,18 @@ export default function KeluargaPage() {
         dusunOptions={dusunOptions}
       />
     </div>
+  );
+}
+
+export default function KeluargaPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex h-64 items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+      </div>
+    }>
+      <KeluargaPageContent />
+    </React.Suspense>
   );
 }
 
