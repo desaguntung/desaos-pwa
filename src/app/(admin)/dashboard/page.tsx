@@ -138,10 +138,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-color pb-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-primary-text">
-            Meja Kerja Pelayanan Kantor Desa
+            Dashboard
           </h1>
           <p className="text-xs text-secondary-text font-medium mt-0.5">
-            {currentDate} • Pusat operasional harian terpadu pelayanan warga
+            {currentDate}
           </p>
         </div>
 
@@ -166,142 +166,123 @@ export default function DashboardPage() {
             className="gap-1.5 text-xs font-semibold"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Terbitkan Surat</span>
+            <span>Terbitkan Surat</span>
           </Button>
         </div>
       </div>
 
-      {/* 1 Warga 1 Layar Selesai - Universal Omni-Search Service Hub */}
+      {/* Omni-Search Service Hub */}
       <UniversalServiceDesk />
 
       {/* Tabs View: Meja Kerja Harian vs Laporan Statistik */}
       <Tabs defaultValue="meja_kerja" onValueChange={(v) => setActiveTab(v as any)} className="w-full space-y-6">
         <div className="flex items-center justify-between border-b border-border-color pb-2">
-          <TabsList className="bg-hover-bg/80 p-1 border border-border-color rounded-xl">
+          <TabsList className="bg-body-bg p-1 border border-border-color rounded-lg">
             <TabsTrigger value="meja_kerja" className="text-xs font-medium px-4 py-1.5">
-              Meja Kerja Hari Ini
+              Meja Kerja
             </TabsTrigger>
             <TabsTrigger value="laporan" className="text-xs font-medium px-4 py-1.5">
-              Laporan & Analisis Statistik
+              Statistik Desa
             </TabsTrigger>
           </TabsList>
-
-          <span className="text-[11px] font-mono text-secondary-text hidden md:inline">
-            DesaOS v2.4 • Mode Kerja Tenang (Calm UI)
-          </span>
         </div>
 
-        {/* TAB 1: MEJA KERJA HARI INI (CALM OPERATIONAL WORKBENCH) */}
+        {/* TAB 1: MEJA KERJA */}
         <TabsContent value="meja_kerja" className="space-y-6">
           {/* 4 Priority Action Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Card 1: Siap Dicetak */}
             <div 
               onClick={() => router.push("/surat/keluar")}
-              className="bg-card-bg border border-border-color hover:border-emerald-500/50 p-4 rounded-xl shadow-sm cursor-pointer transition-all hover:shadow-md group space-y-3"
+              className="bg-card-bg border border-border-color hover:border-primary-text/40 p-4 rounded-xl cursor-pointer transition-colors group space-y-2"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-secondary-text">Siap Dicetak</span>
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                  <Printer className="w-4 h-4" />
+                <span className="text-xs font-medium text-secondary-text">Siap Dicetak</span>
+                <div className="w-7 h-7 rounded-md bg-body-bg border border-border-color text-primary-text flex items-center justify-center">
+                  <Printer className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between pt-1">
                 <span className="text-2xl font-bold tracking-tight text-primary-text">
                   {readyToPrintCount}
                 </span>
-                <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:underline">
-                  Buka Antrean Cetak <ChevronRight className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-secondary-text group-hover:text-primary-text flex items-center gap-1 transition-colors">
+                  Antrean Cetak <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
-              <p className="text-[11px] text-secondary-text">
-                Surat yang telah disahkan dan siap dicetak/diserahkan ke warga.
-              </p>
             </div>
 
-            {/* Card 2: Menunggu Tindakan / TTD */}
+            {/* Card 2: Menunggu Persetujuan */}
             <div 
               onClick={() => router.push("/surat/verifikasi")}
-              className="bg-card-bg border border-border-color hover:border-amber-500/50 p-4 rounded-xl shadow-sm cursor-pointer transition-all hover:shadow-md group space-y-3"
+              className="bg-card-bg border border-border-color hover:border-primary-text/40 p-4 rounded-xl cursor-pointer transition-colors group space-y-2"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-secondary-text">Menunggu Persetujuan</span>
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <Clock className="w-4 h-4" />
+                <span className="text-xs font-medium text-secondary-text">Menunggu Persetujuan</span>
+                <div className="w-7 h-7 rounded-md bg-body-bg border border-border-color text-primary-text flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between pt-1">
                 <span className="text-2xl font-bold tracking-tight text-primary-text">
                   {pendingReviewCount}
                 </span>
-                <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 flex items-center gap-1 group-hover:underline">
-                  Periksa Berkas <ChevronRight className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-secondary-text group-hover:text-primary-text flex items-center gap-1 transition-colors">
+                  Verifikasi <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
-              <p className="text-[11px] text-secondary-text">
-                Permohonan dalam proses verifikasi Sekdes / TTD Kades.
-              </p>
             </div>
 
             {/* Card 3: Total Warga Aktif */}
             <div 
               onClick={() => router.push("/penduduk")}
-              className="bg-card-bg border border-border-color hover:border-neutral-400 p-4 rounded-xl shadow-sm cursor-pointer transition-all hover:shadow-md group space-y-3"
+              className="bg-card-bg border border-border-color hover:border-primary-text/40 p-4 rounded-xl cursor-pointer transition-colors group space-y-2"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-secondary-text">Penduduk Terdata</span>
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Users className="w-4 h-4" />
+                <span className="text-xs font-medium text-secondary-text">Total Penduduk</span>
+                <div className="w-7 h-7 rounded-md bg-body-bg border border-border-color text-primary-text flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between pt-1">
                 <span className="text-2xl font-bold tracking-tight text-primary-text">
                   {stats?.totalPenduduk || 0}
                 </span>
-                <span className="text-[11px] font-mono text-secondary-text flex items-center gap-1 group-hover:underline">
-                  Kelola Warga <ChevronRight className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-secondary-text group-hover:text-primary-text flex items-center gap-1 transition-colors">
+                  Data Penduduk <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
-              <p className="text-[11px] text-secondary-text">
-                Total jiwa aktif dalam database kependudukan desa.
-              </p>
             </div>
 
             {/* Card 4: Total Kepala Keluarga */}
             <div 
               onClick={() => router.push("/keluarga")}
-              className="bg-card-bg border border-border-color hover:border-neutral-400 p-4 rounded-xl shadow-sm cursor-pointer transition-all hover:shadow-md group space-y-3"
+              className="bg-card-bg border border-border-color hover:border-primary-text/40 p-4 rounded-xl cursor-pointer transition-colors group space-y-2"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-secondary-text">Kepala Keluarga (KK)</span>
-                <div className="w-8 h-8 rounded-lg bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 flex items-center justify-center">
-                  <Landmark className="w-4 h-4" />
+                <span className="text-xs font-medium text-secondary-text">Kepala Keluarga (KK)</span>
+                <div className="w-7 h-7 rounded-md bg-body-bg border border-border-color text-primary-text flex items-center justify-center">
+                  <Landmark className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between pt-1">
                 <span className="text-2xl font-bold tracking-tight text-primary-text">
                   {stats?.totalKeluarga || 0}
                 </span>
-                <span className="text-[11px] font-mono text-secondary-text flex items-center gap-1 group-hover:underline">
-                  Lihat Buku KK <ChevronRight className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-secondary-text group-hover:text-primary-text flex items-center gap-1 transition-colors">
+                  Data Keluarga <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
-              <p className="text-[11px] text-secondary-text">
-                Kartu Keluarga terdaftar dan mutasi hubungan keluarga.
-              </p>
             </div>
           </div>
 
           {/* Actionable Table: Tugas & Permohonan Surat Terkini */}
-          <div className="bg-card-bg border border-border-color rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="bg-card-bg border border-border-color rounded-xl p-4 sm:p-5 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-sm font-bold text-primary-text tracking-tight">
-                  Tugas & Permohonan Layanan Surat Terkini
+                  Permohonan Layanan Surat
                 </h3>
-                <p className="text-xs text-secondary-text">
-                  Daftar surat yang baru diterbitkan atau membutuhkan tindakan langsung
-                </p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -318,22 +299,22 @@ export default function DashboardPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto border border-border-color rounded-xl">
+            <div className="overflow-x-auto border border-border-color rounded-lg">
               <table className="w-full text-xs text-left">
-                <thead className="bg-hover-bg/60 border-b border-border-color text-secondary-text font-mono uppercase text-[11px]">
+                <thead className="bg-body-bg border-b border-border-color text-secondary-text font-mono uppercase text-[11px]">
                   <tr>
                     <th className="p-3">No. Register / Tanggal</th>
                     <th className="p-3">Jenis Surat</th>
                     <th className="p-3">Pemohon & NIK</th>
-                    <th className="p-3">Status Operasional</th>
-                    <th className="p-3 text-right">Tindakan Cepat</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Tindakan</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-color/60 font-medium">
+                <tbody className="divide-y divide-border-color font-medium">
                   {urgentTasks.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="p-8 text-center text-secondary-text">
-                        Belum ada antrean permohonan surat hari ini. Meja kerja bersih!
+                        Tidak ada permohonan surat hari ini.
                       </td>
                     </tr>
                   ) : (
@@ -430,7 +411,7 @@ export default function DashboardPage() {
         <TabsContent value="laporan" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Chart Area */}
-            <div className="lg:col-span-8 bg-card-bg border border-border-color rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="lg:col-span-8 bg-card-bg border border-border-color rounded-xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-primary-text tracking-tight">
@@ -468,7 +449,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Demographic Aggregate Quick Summary */}
-            <div className="lg:col-span-4 bg-card-bg border border-border-color rounded-2xl p-6 space-y-4 shadow-sm flex flex-col justify-between">
+            <div className="lg:col-span-4 bg-card-bg border border-border-color rounded-xl p-5 space-y-4 flex flex-col justify-between">
               <div>
                 <h3 className="text-sm font-bold text-primary-text tracking-tight">
                   Ringkasan Kependudukan
