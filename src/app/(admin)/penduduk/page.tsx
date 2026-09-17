@@ -18,10 +18,13 @@ import {
   Check,
   Activity,
   Plus,
-  Filter
+  Filter,
+  SlidersHorizontal,
+  FileText
 } from "lucide-react";
 import { getPaginatedResidents, Resident, deleteResident } from "@/lib/services/penduduk";
 import { useReferenceData } from "@/lib/services/referensi";
+import { ResidentContextDrawer } from "@/components/penduduk/ResidentContextDrawer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -84,6 +87,11 @@ export default function PendudukPage() {
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [density, setDensity] = useState<"compact" | "comfortable">("compact");
+
+  // Context Drawer State
+  const [drawerResident, setDrawerResident] = useState<Resident | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Dropdown Accordion State
   const [openFilterCategory, setOpenFilterCategory] = useState<string | null>(null);
@@ -584,6 +592,18 @@ export default function PendudukPage() {
                           <FilterList />
                       </DropdownMenuContent>
                   </DropdownMenu>
+                  {/* Density Toggle Button (Compact vs Comfortable) */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setDensity((prev) => (prev === "compact" ? "comfortable" : "compact"))}
+                    className="text-secondary-text h-9 px-2.5"
+                    title={density === "compact" ? "Mode Padat (Optimal monitor 1366x768). Klik untuk mode Lega." : "Mode Lega. Klik untuk mode Padat."}
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {density === "compact" ? "Padat" : "Lega"}
+                    </span>
+                  </Button>
               </div>
 
               {/* Add Button */}
@@ -596,13 +616,17 @@ export default function PendudukPage() {
           </div>
        </Card>
 
-      {/* DataTable */}
+      {/* DataTable with Density and Context Drawer */}
       <DataTable 
           columns={columns}
           data={residents}
           mobileConfig={mobileConfig}
-          onRowClick={(row) => handleDetail(row.nik)}
+          onRowClick={(row) => {
+            setDrawerResident(row);
+            setIsDrawerOpen(true);
+          }}
           loading={loading}
+          density={density}
       />
       
       {/* Pagination */}
@@ -617,6 +641,16 @@ export default function PendudukPage() {
           setCurrentPage(1);
         }}
         sticky={true}
+      />
+
+      {/* Master-Detail Resident Context Drawer */}
+      <ResidentContextDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setDrawerResident(null);
+        }}
+        resident={drawerResident}
       />
     </div>
   );

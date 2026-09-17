@@ -7,6 +7,7 @@ import { PanelLeft, ArrowLeft, ChevronRight, Home } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
+import { AmbientSystemStatus } from "./AmbientSystemStatus";
 
 interface PageHeaderProps {
   title: string;
@@ -38,9 +39,6 @@ export function PageHeader({
           <Home className="w-3 h-3" />
         </Link>
         {segments.map((segment, index) => {
-          // Skip if segment is numeric (likely an ID)
-          // if (!isNaN(Number(segment))) return null;
-          
           const href = `/${segments.slice(0, index + 1).join('/')}`;
           const isLast = index === segments.length - 1;
           const label = segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -99,9 +97,11 @@ export function PageHeader({
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <AmbientSystemStatus />
         <ThemeToggle />
         {actions}
       </div>
     </div>
   );
 }
+

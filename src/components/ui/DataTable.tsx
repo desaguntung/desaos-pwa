@@ -33,6 +33,7 @@ interface DataTableProps<T> {
   emptyMessage?: React.ReactNode;
   virtualized?: boolean;
   estimateRowHeight?: number;
+  density?: "compact" | "comfortable";
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -46,17 +47,20 @@ export function DataTable<T extends Record<string, any>>({
   maxHeight = "calc(100vh - 420px)", // Default height adjusted to ensure pagination is visible and not touching
   emptyMessage = "No data available.",
   virtualized = true,
-  estimateRowHeight = 52,
+  density = "comfortable",
+  estimateRowHeight,
 }: DataTableProps<T>) {
   const isTableLoading = loading || isLoading || false;
   const parentRef = useRef<HTMLDivElement>(null);
   const mobileParentRef = useRef<HTMLDivElement>(null);
 
+  const effectiveRowHeight = estimateRowHeight || (density === "compact" ? 38 : 52);
+
   // Desktop DOM Virtualization
   const rowVirtualizer = useVirtualizer({
     count: data.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => estimateRowHeight,
+    estimateSize: () => effectiveRowHeight,
     overscan: 5,
     enabled: virtualized && data.length > 0 && !isTableLoading,
   });
@@ -65,7 +69,7 @@ export function DataTable<T extends Record<string, any>>({
   const mobileVirtualizer = useVirtualizer({
     count: data.length,
     getScrollElement: () => mobileParentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => (density === "compact" ? 58 : 72),
     overscan: 5,
     enabled: virtualized && data.length > 0 && !isTableLoading,
   });
@@ -88,6 +92,9 @@ export function DataTable<T extends Record<string, any>>({
   const mobileTotalSize = mobileVirtualizer.getTotalSize();
   const mobilePaddingTop = mobileVirtualItems.length > 0 ? mobileVirtualItems[0]?.start || 0 : 0;
 
+  const headerHeightClass = density === "compact" ? "h-9 text-[11px]" : "h-12 text-xs";
+  const cellPaddingClass = density === "compact" ? "px-4 py-2 text-xs" : "px-6 py-4 text-sm";
+
   return (
     <div className="w-full">
       {/* Desktop View (md and up) */}
@@ -98,12 +105,12 @@ export function DataTable<T extends Record<string, any>>({
           style={{ maxHeight }}
         >
           <table className={`w-full text-left relative tabular-nums ${data.length === 0 ? "is-empty" : ""}`}>
-            <thead className="border-b border-border-color h-12 sticky top-0 z-10">
+            <thead className={`border-b border-border-color ${headerHeightClass} sticky top-0 z-10`}>
               <tr>
                 {columns.map((col, idx) => (
                   <th
                     key={idx}
-                    className={`px-6 h-12 align-middle font-semibold text-xs text-secondary-text uppercase tracking-wider bg-[var(--table-header-bg)] backdrop-blur-sm ${col.className || ""}`}
+                    className={`px-4 md:px-6 align-middle font-semibold text-secondary-text uppercase tracking-wider bg-[var(--table-header-bg)] backdrop-blur-sm ${headerHeightClass} ${col.className || ""}`}
                   >
                     {col.header}
                   </th>
@@ -115,8 +122,8 @@ export function DataTable<T extends Record<string, any>>({
                 Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="loading-row">
                     {columns.map((_, colIdx) => (
-                      <td key={colIdx} className="px-6 py-4">
-                        <Skeleton className="h-6 w-full rounded-md" />
+                      <td key={colIdx} className={cellPaddingClass}>
+                        <Skeleton className="h-5 w-full rounded-md" />
                       </td>
                     ))}
                   </tr>
@@ -155,7 +162,7 @@ export function DataTable<T extends Record<string, any>>({
                         {columns.map((col, colIdx) => (
                           <td
                             key={colIdx}
-                            className={`px-6 py-4 text-sm text-primary-text whitespace-nowrap ${col.className || ""}`}
+                            className={`${cellPaddingClass} text-primary-text whitespace-nowrap ${col.className || ""}`}
                           >
                             {col.cell
                               ? col.cell(row)
@@ -183,7 +190,7 @@ export function DataTable<T extends Record<string, any>>({
                     {columns.map((col, colIdx) => (
                       <td
                         key={colIdx}
-                        className={`px-6 py-4 text-sm text-primary-text whitespace-nowrap ${col.className || ""}`}
+                        className={`${cellPaddingClass} text-primary-text whitespace-nowrap ${col.className || ""}`}
                       >
                         {col.cell
                           ? col.cell(row)
@@ -197,6 +204,7 @@ export function DataTable<T extends Record<string, any>>({
           </table>
         </div>
       </div>
+
 
       {/* Mobile View (below md) */}
       <div 

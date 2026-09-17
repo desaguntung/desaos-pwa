@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   User, 
   FileText, 
@@ -22,7 +22,8 @@ import {
   Maximize2,
   FileCheck2,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -40,7 +41,7 @@ import {
   IdentitasDesa
 } from "@/lib/services/surat";
 import { extractFieldsFromTemplate, FormFieldDefinition, SuratFlowStatus } from "@/lib/services/surat-flow";
-import { Resident } from "@/lib/services/penduduk";
+import { Resident, getResidentByNIK } from "@/lib/services/penduduk";
 import ResidentPickerModal from "@/components/ResidentPickerModal";
 import FormatPickerModal from "@/components/FormatPickerModal";
 import LandSketchInput from "@/components/surat/LandSketchInput";
@@ -49,8 +50,12 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
 
-export default function CetakSuratPage() {
+function CetakSuratContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nikQuery = searchParams.get("nik");
+  const formatIdQuery = searchParams.get("formatId") || searchParams.get("format");
+
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
@@ -106,6 +111,34 @@ export default function CetakSuratPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-select resident if nik query parameter is present (from context drawer or external link)
+  useEffect(() => {
+    if (nikQuery) {
+      getResidentByNIK(nikQuery).then(res => {
+        if (res) {
+          setSelectedResident(res);
+          toast.success(`Penduduk ${res.nama} dimuat otomatis`);
+        }
+      }).catch(err => {
+        console.error("Error auto-loading resident by NIK:", err);
+      });
+    }
+  }, [nikQuery]);
+
+  // Auto-select format if formatId query parameter is present
+  useEffect(() => {
+    if (formatIdQuery && formatList.length > 0) {
+      const found = formatList.find(f => 
+        String(f.id) === String(formatIdQuery) || 
+        f.kode_surat === formatIdQuery || 
+        f.url_surat === formatIdQuery
+      );
+      if (found) {
+        setSelectedFormat(found);
+      }
+    }
+  }, [formatIdQuery, formatList]);
 
   // Parse template and generate number when format changes
   useEffect(() => {
@@ -987,5 +1020,20 @@ export default function CetakSuratPage() {
         onSelect={handleSelectFormat}
       />
     </div>
+  );
+}
+
+export default function CetakSuratPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-neutral-900">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+          <p className="text-xs text-neutral-400 font-mono tracking-wider uppercase">Memuat Studio Cetak Surat...</p>
+        </div>
+      </div>
+    }>
+      <CetakSuratContent />
+    </Suspense>
   );
 }

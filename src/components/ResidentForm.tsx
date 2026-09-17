@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS, formatDusunName } from "@/lib/services/penduduk";
 import { useReferenceData } from "@/lib/services/referensi";
+import { parseIndonesianNIK } from "@/lib/utils/nik-parser";
+import { useFormDraft } from "@/lib/hooks/useFormDraft";
+import { toast } from "sonner";
 
 // New Standard Components
 import { FormLayout } from "@/components/layout/FormLayout";
@@ -55,6 +58,15 @@ export default function ResidentForm({
   const [activeSection, setActiveSection] = useState("data-diri");
   const [formData, setFormData] = useState<Partial<Resident>>(initialData || {});
   const [showGelar, setShowGelar] = useState(!!(initialData?.gelar_depan || initialData?.gelar_belakang));
+
+  // Form Auto-Save Draft Hook
+  const isCreateMode = !initialData?.nik;
+  const { hasDraft, draftTimestamp, restoreDraft, clearDraft, saveDraft } = useFormDraft<Partial<Resident>>({
+    key: `resident_${initialData?.nik || "new"}`,
+    initialData: initialData || {},
+    enabled: isCreateMode,
+    onRestore: (restored) => setFormData(restored),
+  });
 
   // Dynamic Reference Hook
   const {
@@ -124,17 +136,49 @@ export default function ResidentForm({
   ];
 
   const updateField = (field: keyof Resident, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      saveDraft(updated);
+      return updated;
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
+    // Smart Field Inference on NIK change
+    if (name === "nik") {
+      const cleanDigits = value.replace(/\D/g, "");
+      const updated: Partial<Resident> = { ...formData, nik: cleanDigits };
+
+      if (cleanDigits.length === 16) {
+        const parsed = parseIndonesianNIK(cleanDigits);
+        if (parsed.isValid) {
+          if (parsed.gender) {
+            updated.jenis_kelamin = parsed.gender;
+            updated.jenis_kelamin_id = parsed.genderId;
+          }
+          if (parsed.birthDate) {
+            updated.tanggal_lahir = parsed.birthDate;
+          }
+          toast.success(`Smart NIK: Jenis Kelamin (${parsed.gender}) & Tanggal Lahir (${parsed.birthDateFormatted}) terisi otomatis!`);
+        }
+      }
+
+      setFormData(updated);
+      saveDraft(updated);
+      return;
+    }
+
     updateField(name as keyof Resident, value);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(formData);
+    if (onSubmit) {
+      clearDraft();
+      onSubmit(formData);
+    }
   };
 
   // Scroll spy logic
@@ -168,11 +212,44 @@ export default function ResidentForm({
 
   const content = (
     <form id="resident-form" onSubmit={handleSubmit} className="space-y-8">
+      {/* Draft Recovery Alert */}
+      {hasDraft && isCreateMode && (
+        <div className="flex items-center justify-between p-3 bg-secondary-bg border border-border-color rounded-lg text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-secondary-text">
+              Draf formulir sebelumnya tersimpan secara lokal {draftTimestamp ? `(${new Date(draftTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => restoreDraft()} className="h-7 text-xs">
+              Pulihkan Draf
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => clearDraft()} className="h-7 text-xs text-secondary-text">
+              Abaikan
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* DATA DIRI */}
       <div id="data-diri" className="scroll-mt-24 space-y-6">
         <SectionTitle title="Data Diri" description="Identitas utama penduduk" icon={User} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InputField label="NIK" name="nik" value={formData.nik || ""} onChange={handleChange} placeholder="Nomor Induk Kependudukan" required />
+          <div className="space-y-1">
+            <InputField 
+              label="NIK" 
+              name="nik" 
+              value={formData.nik || ""} 
+              onChange={handleChange} 
+              placeholder="Nomor Induk Kependudukan (16 digit)" 
+              maxLength={16}
+              required 
+            />
+            <p className="text-[11px] text-secondary-text">
+              ✨ Smart Inference: Mengetik 16 digit NIK akan mengisi Jenis Kelamin & Tanggal Lahir otomatis.
+            </p>
+          </div>
           <InputField label="Nama Lengkap" name="nama" value={formData.nama || ""} onChange={handleChange} placeholder="Nama Lengkap" required />
 
           <div className="md:col-span-2 space-y-4">

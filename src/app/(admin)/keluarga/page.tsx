@@ -14,13 +14,15 @@ import {
   Check,
   Plus,
   Printer,
-  FileText
+  FileText,
+  GitFork
 } from "lucide-react";
 import { useRbac } from "@/useRbac";
 import { PermissionResource } from "@/config/permissions";
 import { getKeluargaList, deleteKeluarga, Keluarga } from "@/lib/services/keluarga";
 import { useReferenceData } from "@/lib/services/referensi";
 import { getIdentitasDesa, IdentitasDesa, getPamong, Pamong } from "@/lib/services/surat";
+import PecahKKModal from "@/components/keluarga/PecahKKModal";
 
 // UI Components
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -73,6 +75,8 @@ export default function KeluargaPage() {
   // Modal States
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedKeluarga, setSelectedKeluarga] = useState<Keluarga | null>(null);
+  const [pecahKkModalOpen, setPecahKkModalOpen] = useState(false);
+  const [pecahKkTarget, setPecahKkTarget] = useState<Keluarga | null>(null);
 
   // Initial Data Fetch
   useEffect(() => {
@@ -657,6 +661,18 @@ export default function KeluargaPage() {
                 Lihat Kartu Keluarga
               </DropdownMenuItem>
               {canUpdate && (
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setPecahKkTarget(row);
+                    setPecahKkModalOpen(true);
+                  }} 
+                  className="cursor-pointer"
+                >
+                  <GitFork className="mr-2 h-4 w-4 text-secondary-text" />
+                  Pecah Kartu Keluarga
+                </DropdownMenuItem>
+              )}
+              {canUpdate && (
                 <DropdownMenuItem onClick={() => router.push(`/keluarga/${row.nomorKK}/edit`)} className="cursor-pointer">
                   <Pencil className="mr-2 h-4 w-4 text-secondary-text" />
                   Ubah Data KK
@@ -878,6 +894,20 @@ export default function KeluargaPage() {
                 <Printer className="w-3.5 h-3.5" />
                 <span>Cetak Salinan KK</span>
               </Button>
+              {canUpdate && selectedKeluarga && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPecahKkTarget(selectedKeluarga);
+                    setPecahKkModalOpen(true);
+                  }}
+                  className="gap-1.5 h-8 text-xs font-semibold"
+                >
+                  <GitFork className="w-3.5 h-3.5" />
+                  <span>Pecah KK</span>
+                </Button>
+              )}
               {canUpdate && selectedKeluarga && (
                 <Button
                   size="sm"
@@ -1108,6 +1138,21 @@ export default function KeluargaPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Pecah KK Modal */}
+      <PecahKKModal
+        isOpen={pecahKkModalOpen}
+        onClose={() => {
+          setPecahKkModalOpen(false);
+          setPecahKkTarget(null);
+        }}
+        keluarga={pecahKkTarget}
+        onSuccess={async () => {
+          await fetchData();
+          setDetailOpen(false);
+        }}
+        dusunOptions={dusunOptions}
+      />
     </div>
   );
 }
