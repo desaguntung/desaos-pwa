@@ -17,6 +17,7 @@ import {
 import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS, formatDusunName } from "@/lib/services/penduduk";
 import { useReferenceData } from "@/lib/services/referensi";
 import { parseIndonesianNIK } from "@/lib/utils/nik-parser";
+import { formatChunkedNIK } from "@/lib/utils/formatters";
 import { useFormDraft } from "@/lib/hooks/useFormDraft";
 import { toast } from "sonner";
 
@@ -238,16 +239,17 @@ export default function ResidentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
             <InputField 
-              label="NIK" 
+              label="NIK (Nomor Induk Kependudukan)" 
               name="nik" 
-              value={formData.nik || ""} 
+              value={formatChunkedNIK(formData.nik || "")} 
               onChange={handleChange} 
-              placeholder="Nomor Induk Kependudukan (16 digit)" 
-              maxLength={16}
+              placeholder="Contoh: 3507 1234 5678 0001" 
+              maxLength={19}
+              className="font-mono tracking-wider font-semibold"
               required 
             />
             <p className="text-[11px] text-secondary-text">
-              ✨ Smart Inference: Mengetik 16 digit NIK akan mengisi Jenis Kelamin & Tanggal Lahir otomatis.
+              ✨ Format 4-digit mempermudah pencocokan dengan KTP fisik. Smart Inference akan otomatis mengisi data kelahiran.
             </p>
           </div>
           <InputField label="Nama Lengkap" name="nama" value={formData.nama || ""} onChange={handleChange} placeholder="Nama Lengkap" required />

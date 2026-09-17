@@ -34,23 +34,29 @@ import {
 } from "lucide-react";
 import { Resident, getResidents } from "@/lib/services/penduduk";
 import { createSupabaseBrowserClient } from "@/utils/supabase/client";
+import { formatChunkedNIK } from "@/lib/utils/formatters";
+import VisualAuditTrailModal from "@/components/audit/VisualAuditTrailModal";
+import { ShieldCheck } from "lucide-react";
 
 interface ResidentContextDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   resident: Resident | null;
+  onEdit?: (resident: Resident) => void;
 }
 
 export function ResidentContextDrawer({
   isOpen,
   onClose,
   resident,
+  onEdit,
 }: ResidentContextDrawerProps) {
   const router = useRouter();
   const [familyMembers, setFamilyMembers] = useState<Resident[]>([]);
   const [recentLetters, setRecentLetters] = useState<any[]>([]);
   const [loadingFamily, setLoadingFamily] = useState(false);
   const [loadingLetters, setLoadingLetters] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   useEffect(() => {
     if (!resident || !isOpen) return;
@@ -116,62 +122,77 @@ export function ResidentContextDrawer({
     : "-";
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-xl flex flex-col h-full p-0 gap-0 border-l border-border-color shadow-2xl bg-card-bg">
-        {/* Drawer Header */}
-        <SheetHeader className="px-6 py-4 border-b border-border-color bg-card-bg sticky top-0 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar
-                alt={resident.nama}
-                fallback={resident.nama.substring(0, 2).toUpperCase()}
-                size="md"
-                shape="circle"
-              />
-              <div>
-                <SheetTitle className="text-base font-semibold text-primary-text line-clamp-1">
-                  {resident.nama}
-                </SheetTitle>
-                <SheetDescription className="text-xs font-mono text-secondary-text mt-0.5">
-                  NIK: {resident.nik}
-                </SheetDescription>
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent className="w-full sm:max-w-xl flex flex-col h-full p-0 gap-0 border-l border-border-color shadow-2xl bg-card-bg">
+          {/* Drawer Header */}
+          <SheetHeader className="px-6 py-4 border-b border-border-color bg-card-bg sticky top-0 z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  alt={resident.nama}
+                  fallback={resident.nama.substring(0, 2).toUpperCase()}
+                  size="md"
+                  shape="circle"
+                />
+                <div>
+                  <SheetTitle className="text-base font-semibold text-primary-text line-clamp-1">
+                    {resident.nama}
+                  </SheetTitle>
+                  <SheetDescription className="text-xs font-mono text-secondary-text mt-0.5">
+                    NIK: {formatChunkedNIK(resident.nik)}
+                  </SheetDescription>
+                </div>
               </div>
+              <SheetClose className="text-secondary-text hover:text-primary-text p-1 rounded-md hover:bg-hover-bg transition-colors">
+                <X className="w-4 h-4" />
+              </SheetClose>
             </div>
-            <SheetClose className="text-secondary-text hover:text-primary-text p-1 rounded-md hover:bg-hover-bg transition-colors">
-              <X className="w-4 h-4" />
-            </SheetClose>
-          </div>
 
-          {/* Quick Action Bar: Direct Letter Issuance */}
-          <div className="pt-3 flex gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                onClose();
-                router.push(`/surat/cetak?nik=${resident.nik}`);
-              }}
-              className="flex-1 gap-2 font-medium"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Terbitkan Surat</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-auto opacity-70" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                onClose();
-                router.push(`/penduduk/edit/${resident.nik}`);
-              }}
-              className="gap-1.5"
-              title="Edit Data Warga"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              <span>Edit</span>
-            </Button>
-          </div>
-        </SheetHeader>
+            {/* Quick Action Bar: Direct Letter Issuance */}
+            <div className="pt-3 flex gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  onClose();
+                  router.push(`/surat/cetak?nik=${resident.nik}`);
+                }}
+                className="flex-1 gap-2 font-medium"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Terbitkan Surat</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-auto opacity-70" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (onEdit) {
+                    onEdit(resident);
+                  } else {
+                    onClose();
+                    router.push(`/penduduk/edit/${resident.nik}`);
+                  }
+                }}
+                className="gap-1.5"
+                title="Edit Data Warga"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAuditModalOpen(true)}
+                className="gap-1.5"
+                title="Lihat Jejak Audit & Riwayat Mutasi"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Audit</span>
+              </Button>
+            </div>
+          </SheetHeader>
 
         {/* Drawer Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -332,5 +353,21 @@ export function ResidentContextDrawer({
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Visual Audit Trail Modal */}
+    {resident && (
+      <VisualAuditTrailModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        entityType="PENDUDUK"
+        entityId={resident.id || resident.nik}
+        entityIdentifier={resident.nik}
+        title={`Jejak Audit & Riwayat: ${resident.nama}`}
+        subtitle={`NIK: ${formatChunkedNIK(resident.nik)}`}
+      />
+    )}
+  </>
   );
 }
+
+export default ResidentContextDrawer;

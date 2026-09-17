@@ -129,14 +129,20 @@ export const Signature = ({
     return (
       <>
         <div
-          className="w-full flex flex-col"
-          style={{ marginTop: `${marginTop}px` }}
+          className="w-full flex flex-col print:break-inside-avoid"
+          style={{ 
+            marginTop: `${marginTop}px`,
+            pageBreakInside: "avoid",
+            breakInside: "avoid"
+          }}
         >
           <div 
             className="w-full flex"
             style={{
               justifyContent,
-              gap: gap !== "0" ? `${gap}px` : undefined
+              gap: gap !== "0" ? `${gap}px` : undefined,
+              pageBreakInside: "avoid",
+              breakInside: "avoid"
             }}
           >
             {/* Left Signature: Pemegang Surat */}

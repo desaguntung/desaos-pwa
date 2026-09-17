@@ -8,6 +8,8 @@ import {
   FileText, 
   Mail, 
   Calendar,
+  ShieldCheck,
+  Eye
 } from "lucide-react";
 import { 
   getSuratMasuk, 
@@ -16,6 +18,7 @@ import {
   LogSurat 
 } from "@/lib/services/surat";
 import { formatDate } from "@/lib/utils";
+import VisualAuditTrailModal from "@/components/audit/VisualAuditTrailModal";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Input } from "@/components/ui/Input";
@@ -32,6 +35,13 @@ export default function ArsipLayananPage() {
   const [suratMasuk, setSuratMasuk] = useState<SuratMasuk[]>([]);
   const [suratKeluar, setSuratKeluar] = useState<(LogSurat & { surat_formats?: { nama: string } })[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Audit Trail State
+  const [auditTarget, setAuditTarget] = useState<{
+    id: number | string;
+    identifier: string;
+    title: string;
+  } | null>(null);
 
   // Pagination & Search States
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,22 +171,37 @@ export default function ArsipLayananPage() {
       cell: (row) => <span className="capitalize text-secondary-text">{(row.nama_non_warga ? row.nama_non_warga : (row.id_pend ? `Penduduk #${row.id_pend}` : "-")).toLowerCase()}</span>
     },
     {
-      header: "Dokumen",
+      header: "Dokumen & Aksi",
       accessorKey: "url_surat",
-      className: "text-center w-20",
-      cell: (row) => row.url_surat ? (
-          <div className="flex justify-center">
-              <a 
-                  href={row.url_surat} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors border border-border-color"
-                  title="Download Surat"
-              >
-                  <ArrowDownToLine className="w-4 h-4" />
-              </a>
-          </div>
-      ) : <span className="text-xs text-secondary-text/50">-</span>
+      className: "text-right w-36",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {row.url_surat && (
+            <a 
+              href={row.url_surat} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors border border-border-color"
+              title="Download Surat"
+            >
+              <ArrowDownToLine className="w-4 h-4" />
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setAuditTarget({
+              id: row.id || 0,
+              identifier: row.no_surat || String(row.id || "-"),
+              title: row.surat_formats?.nama || row.nama_surat || "Surat Keluar"
+            })}
+            className="inline-flex items-center justify-center h-8 px-2 rounded-lg hover:bg-hover-bg text-secondary-text hover:text-primary-text transition-colors border border-border-color text-xs gap-1"
+            title="Lihat Jejak Audit & Riwayat"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="hidden sm:inline text-[11px]">Audit</span>
+          </button>
+        </div>
+      )
     }
   ];
 
@@ -266,6 +291,18 @@ export default function ArsipLayananPage() {
             />
         </TabsContent>
       </Tabs>
+
+      {/* Visual Audit Trail Modal */}
+      {auditTarget && (
+        <VisualAuditTrailModal
+          isOpen={true}
+          onClose={() => setAuditTarget(null)}
+          entityType="SURAT"
+          entityId={auditTarget.id}
+          entityIdentifier={auditTarget.identifier}
+          title={auditTarget.title}
+        />
+      )}
     </div>
   );
 }

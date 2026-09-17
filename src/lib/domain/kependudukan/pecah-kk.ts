@@ -224,6 +224,27 @@ export class KependudukanDomainService {
         }
       }
 
+      // 4. Record Audit Log
+      try {
+        const { recordAuditLog } = await import("@/lib/services/audit");
+        await recordAuditLog({
+          entityType: "KELUARGA",
+          entityId: payload.noKkBaru,
+          entityIdentifier: payload.noKkBaru,
+          title: `Pecah KK Baru dari KK Asal ${payload.noKkAsal}`,
+          action: "MUTASI",
+          comment: `Pemisahan ${payload.nikAnggotaPindah.length} anggota keluarga dari KK ${payload.noKkAsal} ke KK Baru ${payload.noKkBaru}. Kepala Keluarga baru NIK: ${payload.nikKepalaKeluargaBaru}.`,
+          metadata: {
+            no_kk_asal: payload.noKkAsal,
+            no_kk_baru: payload.noKkBaru,
+            kepala_keluarga_baru: payload.nikKepalaKeluargaBaru,
+            total_anggota: payload.nikAnggotaPindah.length
+          }
+        });
+      } catch (logErr) {
+        console.warn("Could not record audit log for Pecah KK:", logErr);
+      }
+
       return {
         success: true,
         message: `Pemisahan Kartu Keluarga berhasil! KK Baru (${payload.noKkBaru}) telah dibuat dengan ${payload.nikAnggotaPindah.length} anggota.`,

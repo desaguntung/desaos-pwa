@@ -6,8 +6,10 @@ import Editor from "@/components/editor/Editor";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { getLogSuratDetail, getIdentitasDesa, buildSuratPreviewData } from "@/lib/services/surat";
 import { Button } from "@/components/ui/Button";
-import { Printer } from "lucide-react";
+import { Printer, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { recordPrintAudit } from "@/lib/services/audit";
+import VisualAuditTrailModal from "@/components/audit/VisualAuditTrailModal";
 
 export default function ViewSuratPage() {
   const params = useParams();
@@ -15,6 +17,7 @@ export default function ViewSuratPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -60,6 +63,17 @@ export default function ViewSuratPage() {
     }
   };
 
+  const handlePrint = async () => {
+    if (data) {
+      recordPrintAudit({
+        suratId: data.id,
+        noSurat: data.no_surat || String(data.id),
+        namaSurat: data.surat_formats?.nama || data.nama_surat || "Surat Layanan"
+      }).catch(err => console.warn("Could not log print audit:", err));
+    }
+    window.print();
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-secondary-text gap-3 bg-body-bg">
@@ -86,16 +100,29 @@ export default function ViewSuratPage() {
           showBackButton={true}
           backButtonHref="/surat/arsip"
           actions={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Cetak / PDF</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAuditModalOpen(true)}
+                className="gap-2 text-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <span>Jejak Audit</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handlePrint}
+                className="gap-2 text-xs"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Cetak / PDF</span>
+              </Button>
+            </div>
           }
         />
       </div>
@@ -110,6 +137,18 @@ export default function ViewSuratPage() {
           hideHeaderNavigation={true}
         />
       </div>
+
+      {/* Visual Audit Trail Modal */}
+      {data && (
+        <VisualAuditTrailModal
+          isOpen={isAuditModalOpen}
+          onClose={() => setIsAuditModalOpen(false)}
+          entityType="SURAT"
+          entityId={data.id}
+          entityIdentifier={data.no_surat || String(data.id)}
+          title={data.surat_formats?.nama || data.nama_surat || "Surat Keluar"}
+        />
+      )}
     </div>
   );
 }
