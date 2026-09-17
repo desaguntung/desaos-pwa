@@ -177,9 +177,14 @@
     font-feature-settings: "tnum";
   }
 
-  /* Global Focus Ring Reset */
+  /* Global Focus Ring Reset & FLAT ARCHITECTURE (Zero Shadows / No Visual Clutter) */
   *, ::before, ::after {
     @apply focus:ring-0 focus:outline-none;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    --tw-shadow: 0 0 #0000 !important;
+    --tw-shadow-colored: 0 0 #0000 !important;
+    --tw-drop-shadow: 0 0 #0000 !important;
   }
 
   /* Global Selection Styles */

@@ -399,7 +399,7 @@ export default function RumahTanggaForm({
     <div className={cn(
       "flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200",
       variant === "selected" 
-        ? "bg-card-bg border-primary/40 shadow-xs" 
+        ? "bg-card-bg border-primary/40" 
         : "bg-card-bg border-border-color hover:border-primary-text/30"
     )}>
       <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">

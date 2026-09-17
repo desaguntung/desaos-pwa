@@ -145,7 +145,7 @@ export default function ResidentPickerModal({
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-card-bg rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-border-color shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="bg-card-bg rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-border-color animate-in zoom-in-95 duration-200 overflow-hidden">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-border-color flex items-center justify-between bg-card-bg/80 backdrop-blur-sm">

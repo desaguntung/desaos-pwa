@@ -159,7 +159,7 @@ export default function SuratMasukForm({
       <div className="space-y-8 pb-24">
         <div 
           id="informasi-surat"
-          className="bg-card-bg rounded-xl shadow-sm border border-border-color p-6 md:p-8 space-y-8 scroll-mt-24"
+          className="bg-card-bg rounded-xl border border-border-color p-6 md:p-8 space-y-8 scroll-mt-24"
         >
         <div className="space-y-6">
           <SectionTitle 

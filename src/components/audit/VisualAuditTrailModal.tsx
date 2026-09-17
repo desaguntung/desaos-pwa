@@ -126,7 +126,7 @@ export default function VisualAuditTrailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
       <div 
-        className="relative w-full max-w-3xl max-h-[90vh] bg-card-bg rounded-xl border border-border-color shadow-2xl flex flex-col overflow-hidden text-primary-text"
+        className="relative w-full max-w-3xl max-h-[90vh] bg-card-bg rounded-xl border border-border-color flex flex-col overflow-hidden text-primary-text"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

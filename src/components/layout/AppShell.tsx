@@ -29,7 +29,7 @@ function MobileSidebar() {
         onClick={close} 
       />
       <div className={cn(
-        "relative w-64 h-full bg-sidebar-bg shadow-xl flex flex-col transform transition-transform duration-300 ease-out",
+        "relative w-64 h-full bg-sidebar-bg border-r border-border-color flex flex-col transform transition-transform duration-300 ease-out",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="absolute top-3 right-3 z-50">

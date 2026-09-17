@@ -206,7 +206,7 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 border border-border-color rounded-xl bg-card-bg p-4 shadow-xs">
+    <div className="flex flex-col md:flex-row gap-4 border border-border-color rounded-xl bg-card-bg p-4">
       {/* Canvas Area */}
       <div className="flex-1 flex flex-col gap-2">
          <div className="border border-border-color rounded-xl overflow-hidden relative h-[500px] bg-body-bg">
@@ -263,7 +263,7 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                             onClick={() => setEdgeForm({...edgeForm, type: key})}
                             className={`flex items-center justify-start px-2.5 gap-2 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                                 edgeForm.type === key 
-                                ? 'bg-card-bg text-primary-text shadow-xs border border-border-color font-semibold' 
+                                ? 'bg-card-bg text-primary-text border border-border-color font-semibold' 
                                 : 'text-secondary-text hover:text-primary-text hover:bg-hover-bg'
                             }`}
                           >
@@ -361,7 +361,7 @@ export default function LandSketchInput({ value, onChange }: LandSketchInputProp
                     <button 
                         type="button"
                         onClick={applyPropertyChanges}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-semibold text-white bg-accent hover:opacity-90 rounded-lg transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-semibold text-white bg-accent hover:opacity-90 rounded-lg transition-all active:scale-[0.98] cursor-pointer"
                     >
                         <Save size={14} />
                         Simpan Perubahan

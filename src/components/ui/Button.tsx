@@ -13,12 +13,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-95";
     
     const variants = {
-      primary: "bg-primary-btn-bg text-primary-btn-text hover:opacity-90 shadow-sm",
-      secondary: "bg-card-bg text-primary-text border border-border-color hover:bg-hover-bg shadow-sm",
+      primary: "bg-primary-btn-bg text-primary-btn-text hover:opacity-90",
+      secondary: "bg-card-bg text-primary-text border border-border-color hover:bg-hover-bg",
       outline: "border border-border-color bg-transparent hover:bg-hover-bg text-primary-text",
       ghost: "hover:bg-hover-bg text-primary-text",
       link: "text-primary-text underline-offset-4 hover:underline",
-      destructive: "bg-error-bg text-error-text border border-error-border hover:opacity-90 shadow-sm",
+      destructive: "bg-error-bg text-error-text border border-error-border hover:opacity-90",
       "ghost-destructive": "text-secondary-text hover:text-error-text hover:bg-error-bg",
       "ghost-secondary": "text-secondary-text hover:text-primary-text hover:bg-hover-bg",
     };

@@ -548,7 +548,7 @@ export default function ResidentForm({
 
       {/* Floating or Footer Actions */}
       {!hideActions && (
-        <div className="sticky bottom-4 z-10 flex justify-end gap-3 p-4 bg-card-bg/90 backdrop-blur border border-border-color rounded-xl shadow-lg">
+        <div className="sticky bottom-4 z-10 flex justify-end gap-3 p-4 bg-card-bg/95 backdrop-blur border border-border-color rounded-xl">
           <Button
             type="button"
             variant="secondary"
