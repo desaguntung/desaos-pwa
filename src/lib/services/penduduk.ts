@@ -97,6 +97,8 @@ export interface Resident {
   no_akta_nikah?: string;
   cara_hubung_warga?: string;
   telegram?: string;
+  no_asuransi?: string;
+  bpjs_ketenagakerjaan?: string;
   nomor_bpjs_ketenagakerjaan?: string;
   no_kk_sebelumnya?: string;
   created_at?: string;
@@ -404,6 +406,7 @@ export const STATUS_EKONOMI_OPTIONS = [
   "LAINNYA"
 ];
 
+
 export const GENDER_MAP: Record<number, string> = {
   1: "LAKI-LAKI",
   2: "PEREMPUAN",
@@ -487,6 +490,132 @@ export const PENDIDIKAN_KK_MAP: Record<number, string> = {
   8: "DIPLOMA IV/ STRATA I",
   9: "STRATA II",
   10: "STRATA III",
+};
+
+export const PENDIDIKAN_SEDANG_MAP: Record<number, string> = {
+  1: "Belum Masuk TK / Kelompok Bermain",
+  2: "Sedang TK / Kelompok Bermain",
+  3: "Tidak Pernah Sekolah",
+  4: "Sedang SD / Sederajat",
+  5: "Tidak Tamat SD / Sederajat",
+  6: "Sedang SLTP / Sederajat",
+  7: "Sedang SLTA / Sederajat",
+  8: "Sedang D-1 / Sederajat",
+  9: "Sedang D-2 / Sederajat",
+  10: "Sedang D-3 / Sederajat",
+  11: "Sedang S-1 / Sederajat",
+  12: "Sedang S-2 / Sederajat",
+  13: "Sedang S-3 / Sederajat",
+  14: "Tamat SD / Sederajat",
+  15: "Tamat SLTP / Sederajat",
+  16: "Tamat SLTA / Sederajat",
+  17: "Tamat D-1 / Sederajat",
+  18: "Tamat D-2 / Sederajat",
+  19: "Tamat D-3 / Sederajat",
+  20: "Tamat S-1 / Sederajat",
+  21: "Tamat S-2 / Sederajat",
+  22: "Tamat S-3 / Sederajat",
+  23: "Tamat SLB A / Sederajat",
+  24: "Tamat SLB B / Sederajat",
+  25: "Tamat SLB C / Sederajat",
+  26: "Tidak Dapat Membaca dan Menulis Huruf Latin / Arab",
+  27: "Tidak Sedang Sekolah",
+};
+
+export const WARGANEGARA_MAP: Record<number, string> = {
+  1: "WNI",
+  2: "WNA",
+  3: "DUA KEWARGANEGARAAN",
+};
+
+export const CACAT_MAP: Record<number, string> = {
+  1: "CACAT FISIK",
+  2: "CACAT NETRA / BUTA",
+  3: "CACAT RUNGU / WICARA",
+  4: "CACAT MENTAL / JIWA",
+  5: "CACAT FISIK DAN MENTAL",
+  6: "CACAT LAINNYA",
+  7: "TIDAK CACAT",
+};
+
+export const SAKIT_MENAHUN_MAP: Record<number, string> = {
+  1: "JANTUNG",
+  2: "LEVER",
+  3: "PARU - PARU",
+  4: "KANKER",
+  5: "STROKE",
+  6: "DIABETES MILITUS",
+  7: "GINJAL",
+  8: "MALARIA",
+  9: "LEPRA / KUSTA",
+  10: "HIV / AIDS",
+  11: "GILA / STRESS",
+  12: "TBC",
+  13: "ASTHMA",
+  14: "TIDAK ADA / TIDAK SAKIT",
+};
+
+export const ASURANSI_MAP: Record<number, string> = {
+  1: "TIDAK/BELUM PUNYA",
+  2: "BPJS PBI",
+  3: "BPJS NON PBI",
+  4: "ASURANSI LAINNYA",
+};
+
+export const CARA_KB_MAP: Record<number, string> = {
+  1: "PIL",
+  2: "IUD",
+  3: "SUNTIK",
+  4: "KONDOM",
+  5: "SUSUK KB",
+  6: "STERILISASI WANITA",
+  7: "STERILISASI PRIA",
+  8: "LAINNYA",
+  9: "TIDAK MENGGUNAKAN",
+};
+
+export const WAJIB_IDENTITAS_MAP: Record<number, string> = {
+  1: "WAJIB",
+  2: "TIDAK WAJIB",
+};
+
+export const IDENTITAS_ELEKTRONIK_MAP: Record<number, string> = {
+  1: "BELUM",
+  2: "KTP-EL",
+  3: "KIA",
+};
+
+export const STATUS_REKAM_MAP: Record<number, string> = {
+  1: "BELUM REKAM",
+  2: "SUDAH REKAM",
+  3: "CARD PRINTED",
+  4: "PRINT READY TO RECORD",
+  5: "CARD SHIPPED",
+  6: "SENT FOR CARD PRINTING",
+  7: "CARD ISSUED",
+  8: "BELUM WAJIB",
+};
+
+export const TEMPAT_DILAHIRKAN_MAP: Record<number, string> = {
+  1: "RS/RB",
+  2: "PUSKESMAS",
+  3: "POLINDES",
+  4: "RUMAH",
+  5: "LAINNYA",
+};
+
+export const JENIS_KELAHIRAN_MAP: Record<number, string> = {
+  1: "TUNGGAL",
+  2: "KEMBAR 2",
+  3: "KEMBAR 3",
+  4: "KEMBAR 4",
+};
+
+export const PENOLONG_KELAHIRAN_MAP: Record<number, string> = {
+  1: "DOKTER",
+  2: "BIDAN PERAWAT",
+  3: "DUKUN",
+  4: "LAINNYA",
 };
 
 export const PEKERJAAN_MAP: Record<number, string> = {
@@ -581,6 +710,132 @@ export const PEKERJAAN_MAP: Record<number, string> = {
   89: "LAINNYA"
 };
 
+export function reverseLookup(map: Record<number, string>, val?: string | number | null): number | undefined {
+  if (val === undefined || val === null || val === "") return undefined;
+  if (typeof val === "number") return val;
+  const target = String(val).trim().toUpperCase();
+  const entry = Object.entries(map).find(([_, v]) => v.trim().toUpperCase() === target);
+  if (entry) return Number(entry[0]);
+  const partialEntry = Object.entries(map).find(([_, v]) => 
+    v.trim().toUpperCase().includes(target) || target.includes(v.trim().toUpperCase())
+  );
+  return partialEntry ? Number(partialEntry[0]) : undefined;
+}
+
+const formatDateToDb = (val?: string | Date | null): string | null => {
+  if (!val) return null;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    return trimmed.split("T")[0];
+  }
+  try {
+    return new Date(val).toISOString().split("T")[0];
+  } catch {
+    return null;
+  }
+};
+
+const ALLOWED_PENDUDUK_DB_COLUMNS = new Set([
+  'nik',
+  'nama',
+  'no_kk',
+  'tempat_lahir',
+  'tanggal_lahir',
+  'waktu_lahir',
+  'tempat_dilahirkan_id',
+  'jenis_kelahiran_id',
+  'anak_ke',
+  'berat_lahir',
+  'panjang_lahir',
+  'nik_ayah',
+  'nama_ayah',
+  'nik_ibu',
+  'nama_ibu',
+  'alamat_rt',
+  'alamat_sebelumnya',
+  'alamat_saat_ini',
+  'wilayah_dusun_id',
+  'wilayah_rw_id',
+  'wilayah_rt_id',
+  'identitas_desa_id',
+  'telepon',
+  'email',
+  'foto_url',
+  'gelar_depan',
+  'gelar_belakang',
+  'akta_kelahiran_nomor',
+  'keahlian_khusus',
+  'status_ekonomi_dtks',
+  'penghasilan_rata_rata',
+  'kepemilikan_rumah',
+  'sumber_air_minum',
+  'akun_facebook',
+  'akun_instagram',
+  'akun_twitter',
+  'id_sosial_lainnya',
+  'scan_ktp_url',
+  'scan_kk_url',
+  'scan_akta_lahir_url',
+  'scan_akta_nikah_url',
+  'scan_ijazah_url',
+  'scan_paspor_url',
+  'tanggal_perkawinan',
+  'no_paspor',
+  'no_kitap',
+  'rumah_tangga_id',
+  'id_kk',
+  'no_kk_sebelumnya',
+  'id_rtm',
+  'rtm_level_id',
+  'id_cluster',
+  'status_tinggal_id',
+  'status_dasar',
+  'jenis_kelamin_id',
+  'penolong_kelahiran_id',
+  'agama_id',
+  'pendidikan_kk_id',
+  'pendidikan_sedang_id',
+  'pekerjaan_id',
+  'warganegara_id',
+  'golongan_darah_id',
+  'cacat_id',
+  'sakit_menahun_id',
+  'cara_kb_id',
+  'bahasa_id',
+  'status_kawin_id',
+  'hubungan_keluarga_id',
+  'status_penduduk_id',
+  'identitas_elektronik_id',
+  'status_rekam_id',
+  'wajib_identitas_id',
+  'akte_kelahiran_id',
+  'tanggal_akhir_paspor',
+  'akta_perkawinan',
+  'akta_perceraian',
+  'tanggalperceraian',
+  'tag_id_card',
+  'tempat_cetak_ktp',
+  'tanggal_cetak_ktp',
+  'hubung_warga',
+  'email_token',
+  'email_tgl_kadaluarsa',
+  'email_tgl_verifikasi',
+  'telegram',
+  'telegram_token',
+  'telegram_tgl_kadaluarsa',
+  'telegram_tgl_verifikasi',
+  'hamil',
+  'id_asuransi',
+  'no_asuransi',
+  'bpjs_ketenagakerjaan',
+  'suku_id',
+  'negara_asal',
+  'ket',
+  'created_by',
+  'updated_by'
+]);
+
 export function mapResidentFromDb(row: any): Resident {
   if (!row) return row;
 
@@ -588,11 +843,25 @@ export function mapResidentFromDb(row: any): Resident {
   const rawDusun = row.dusun || (dusunId ? DUSUN_MAP[dusunId] || `Dusun ${dusunId}` : undefined);
   const dusunName = rawDusun ? formatDusunName(rawDusun) : undefined;
 
-  let alamat = row.alamat_saat_ini || row.alamat_rt || row.alamat_sebelumnya;
+  let rwVal = row.wilayah_rw_id ? String(row.wilayah_rw_id).padStart(3, '0') : (row.rw ? String(row.rw).padStart(3, '0') : undefined);
+  let rtVal = row.wilayah_rt_id ? String(row.wilayah_rt_id).padStart(3, '0') : (row.rt ? String(row.rt).padStart(3, '0') : undefined);
+
+  if (row.alamat_rt) {
+    if (!rtVal) {
+      const rtMatch = row.alamat_rt.match(/RT\s*[:\.]?\s*(\d+)/i);
+      if (rtMatch) rtVal = rtMatch[1].padStart(3, '0');
+    }
+    if (!rwVal) {
+      const rwMatch = row.alamat_rt.match(/RW\s*[:\.]?\s*(\d+)/i);
+      if (rwMatch) rwVal = rwMatch[1].padStart(3, '0');
+    }
+  }
+
+  let alamat = row.alamat_saat_ini || row.alamat_sebelumnya;
   if (!alamat && dusunName && dusunName !== "Tanpa Dusun") {
     const parts = [dusunName];
-    if (row.rt || row.wilayah_rt_id) parts.push(`RT ${row.rt || row.wilayah_rt_id}`);
-    if (row.rw || row.wilayah_rw_id) parts.push(`RW ${row.rw || row.wilayah_rw_id}`);
+    if (rtVal) parts.push(`RT ${rtVal}`);
+    if (rwVal) parts.push(`RW ${rwVal}`);
     alamat = parts.join(", ");
   }
 
@@ -602,118 +871,285 @@ export function mapResidentFromDb(row: any): Resident {
     nik: row.nik || "",
     nama: row.nama || "",
     no_kk: row.no_kk || "",
-    jenis_kelamin: row.jenis_kelamin || (row.jenis_kelamin_id ? GENDER_MAP[Number(row.jenis_kelamin_id)] || "" : ""),
+    jenis_kelamin: row.jenis_kelamin || (row.jenis_kelamin_id ? GENDER_MAP[Number(row.jenis_kelamin_id)] || "" : (row.sex ? GENDER_MAP[Number(row.sex)] || "" : "")),
+    jenis_kelamin_id: row.jenis_kelamin_id || row.sex || null,
     agama: row.agama || (row.agama_id ? AGAMA_MAP[Number(row.agama_id)] || "" : ""),
+    agama_id: row.agama_id || null,
     status_kawin: row.status_kawin || (row.status_kawin_id ? STATUS_KAWIN_MAP[Number(row.status_kawin_id)] || "" : ""),
-    status_penduduk: row.status_penduduk || (row.status_penduduk_id ? STATUS_PENDUDUK_MAP[Number(row.status_penduduk_id)] || "Aktif" : (row.status_dasar === 1 ? "Aktif" : "Aktif")),
+    status_penduduk: row.status_penduduk || (row.status_penduduk_id ? STATUS_PENDUDUK_MAP[Number(row.status_penduduk_id)] || "Tetap" : (row.status_dasar === 1 ? "Tetap" : "Tetap")),
     hubungan_keluarga: row.hubungan_keluarga || (row.hubungan_keluarga_id ? HUBUNGAN_KELUARGA_MAP[Number(row.hubungan_keluarga_id)] || "" : ""),
+    hubungan_keluarga_id: row.hubungan_keluarga_id || null,
     golongan_darah: row.golongan_darah || (row.golongan_darah_id ? GOLONGAN_DARAH_MAP[Number(row.golongan_darah_id)] || "" : ""),
     dusun: dusunName,
+    rw: rwVal,
+    rt: rtVal,
     alamat_saat_ini: alamat || "-",
+    alamat_rt: row.alamat_rt || (rtVal && rwVal ? `RT ${rtVal} / RW ${rwVal}` : undefined),
     pekerjaan: row.pekerjaan || (row.pekerjaan_id ? PEKERJAAN_MAP[Number(row.pekerjaan_id)] || "" : ""),
     pendidikan_kk: row.pendidikan_kk || (row.pendidikan_kk_id ? PENDIDIKAN_KK_MAP[Number(row.pendidikan_kk_id)] || "" : ""),
-    tanggal_lahir: row.tanggal_lahir ? (typeof row.tanggal_lahir === 'string' ? row.tanggal_lahir.split('T')[0] : new Date(row.tanggal_lahir).toISOString().split('T')[0]) : undefined,
+    pendidikan_saat_ini: row.pendidikan_saat_ini || (row.pendidikan_sedang_id ? PENDIDIKAN_SEDANG_MAP[Number(row.pendidikan_sedang_id)] || "" : ""),
+    kewarganegaraan: row.kewarganegaraan || (row.warganegara_id ? WARGANEGARA_MAP[Number(row.warganegara_id)] || "WNI" : "WNI"),
+    cacat_fisik_mental: row.cacat_fisik_mental || (row.cacat_id ? CACAT_MAP[Number(row.cacat_id)] || "" : ""),
+    sakit_menahun: row.sakit_menahun || (row.sakit_menahun_id ? SAKIT_MENAHUN_MAP[Number(row.sakit_menahun_id)] || "" : ""),
+    kepesertaan_asuransi: row.kepesertaan_asuransi || (row.id_asuransi ? ASURANSI_MAP[Number(row.id_asuransi)] || "" : ""),
+    cara_kb_id: row.cara_kb_id || null,
+    akseptor_kb: row.cara_kb_id ? CARA_KB_MAP[Number(row.cara_kb_id)] || "" : "",
+    status_kepemilikan_identitas: row.wajib_identitas_id ? WAJIB_IDENTITAS_MAP[Number(row.wajib_identitas_id)] || "WAJIB" : "WAJIB",
+    identitas_elektronik: row.identitas_elektronik_id ? IDENTITAS_ELEKTRONIK_MAP[Number(row.identitas_elektronik_id)] || "BELUM" : "BELUM",
+    status_rekam: row.status_rekam_id ? STATUS_REKAM_MAP[Number(row.status_rekam_id)] || "" : "",
+    jenis_tempat_lahir: row.tempat_dilahirkan_id ? TEMPAT_DILAHIRKAN_MAP[Number(row.tempat_dilahirkan_id)] || "" : "",
+    jenis_kelahiran: row.jenis_kelahiran_id ? JENIS_KELAHIRAN_MAP[Number(row.jenis_kelahiran_id)] || "TUNGGAL" : "TUNGGAL",
+    cara_lahir: row.penolong_kelahiran_id ? PENOLONG_KELAHIRAN_MAP[Number(row.penolong_kelahiran_id)] || "" : "",
+    status_kehamilan: row.hamil === 2 ? "HAMIL" : "TIDAK HAMIL",
+    tanggal_lahir: formatDateToDb(row.tanggal_lahir) || undefined,
+    tanggal_perkawinan: formatDateToDb(row.tanggal_perkawinan) || undefined,
+    tanggal_perceraian: formatDateToDb(row.tanggalperceraian || row.tanggal_perceraian) || undefined,
+    tgl_berakhir_paspor: formatDateToDb(row.tanggal_akhir_paspor || row.tgl_berakhir_paspor) || undefined,
   };
 }
 
-export function reverseLookup(map: Record<number, string>, val?: string | null): number | undefined {
-  if (!val) return undefined;
-  const target = val.trim().toUpperCase();
-  const entry = Object.entries(map).find(([_, v]) => v.trim().toUpperCase() === target);
-  if (entry) return Number(entry[0]);
-  const partialEntry = Object.entries(map).find(([_, v]) => 
-    v.trim().toUpperCase().includes(target) || target.includes(v.trim().toUpperCase())
-  );
-  return partialEntry ? Number(partialEntry[0]) : undefined;
-}
-
 export function mapResidentToDb(resident: Partial<Resident>): any {
-  const payload: any = { ...resident };
-  
-  // Clean NIK & KK numbers (remove spaces or formatting)
-  if (payload.nik && typeof payload.nik === "string") {
-    payload.nik = payload.nik.replace(/\D/g, "");
+  const raw: any = { ...resident };
+  const dbData: Record<string, any> = {};
+
+  // Clean NIK & KK numbers
+  if (raw.nik && typeof raw.nik === "string") {
+    dbData.nik = raw.nik.replace(/\D/g, "");
   }
-  if (payload.no_kk && typeof payload.no_kk === "string") {
-    payload.no_kk = payload.no_kk.replace(/\D/g, "");
+  if (raw.no_kk && typeof raw.no_kk === "string") {
+    dbData.no_kk = raw.no_kk.replace(/\D/g, "");
+  }
+  if (raw.nama) dbData.nama = raw.nama;
+
+  // Gender
+  if (raw.jenis_kelamin_id) {
+    dbData.jenis_kelamin_id = Number(raw.jenis_kelamin_id);
+  } else if (raw.jenis_kelamin) {
+    const s = raw.jenis_kelamin.toUpperCase();
+    dbData.jenis_kelamin_id = s.startsWith("L") ? 1 : 2;
   }
 
-  // Reverse map Gender
-  if (resident.jenis_kelamin) {
-    const s = resident.jenis_kelamin.toUpperCase();
-    const gId = s.startsWith("L") ? 1 : 2;
-    payload.jenis_kelamin_id = gId;
-    payload.sex = gId;
+  // Agama
+  if (raw.agama_id) {
+    dbData.agama_id = Number(raw.agama_id);
+  } else if (raw.agama) {
+    const aId = reverseLookup(AGAMA_MAP, raw.agama);
+    if (aId !== undefined) dbData.agama_id = aId;
   }
-  delete payload.jenis_kelamin;
-  
-  // Reverse map Agama
-  if (resident.agama) {
-    const aId = reverseLookup(AGAMA_MAP, resident.agama);
-    if (aId !== undefined) payload.agama_id = aId;
-  }
-  delete payload.agama;
 
-  // Reverse map Status Kawin
-  if (resident.status_kawin) {
-    const skId = reverseLookup(STATUS_KAWIN_MAP, resident.status_kawin);
-    if (skId !== undefined) payload.status_kawin_id = skId;
+  // Status Kawin
+  if (raw.status_kawin) {
+    const skId = reverseLookup(STATUS_KAWIN_MAP, raw.status_kawin);
+    if (skId !== undefined) dbData.status_kawin_id = skId;
   }
-  delete payload.status_kawin;
 
-  // Reverse map Status Penduduk
-  if (resident.status_penduduk) {
-    const spId = reverseLookup(STATUS_PENDUDUK_MAP, resident.status_penduduk);
+  // Status Penduduk
+  if (raw.status_penduduk) {
+    const spId = reverseLookup(STATUS_PENDUDUK_MAP, raw.status_penduduk);
     if (spId !== undefined) {
-      payload.status_penduduk_id = spId;
-      payload.status_dasar = spId === 1 ? 1 : spId;
+      dbData.status_penduduk_id = spId;
+      dbData.status_dasar = spId === 1 ? 1 : spId;
     }
   }
-  delete payload.status_penduduk;
 
-  // Reverse map Hubungan Keluarga
-  if (resident.hubungan_keluarga) {
-    const hkId = reverseLookup(HUBUNGAN_KELUARGA_MAP, resident.hubungan_keluarga);
-    if (hkId !== undefined) payload.hubungan_keluarga_id = hkId;
+  // Hubungan Keluarga
+  if (raw.hubungan_keluarga_id) {
+    dbData.hubungan_keluarga_id = Number(raw.hubungan_keluarga_id);
+  } else if (raw.hubungan_keluarga) {
+    const hkId = reverseLookup(HUBUNGAN_KELUARGA_MAP, raw.hubungan_keluarga);
+    if (hkId !== undefined) dbData.hubungan_keluarga_id = hkId;
   }
-  delete payload.hubungan_keluarga;
 
-  // Reverse map Golongan Darah
-  if (resident.golongan_darah) {
-    const gdId = reverseLookup(GOLONGAN_DARAH_MAP, resident.golongan_darah);
-    if (gdId !== undefined) payload.golongan_darah_id = gdId;
+  // Golongan Darah
+  if (raw.golongan_darah) {
+    const gdId = reverseLookup(GOLONGAN_DARAH_MAP, raw.golongan_darah);
+    if (gdId !== undefined) dbData.golongan_darah_id = gdId;
   }
-  delete payload.golongan_darah;
 
-  // Reverse map Pendidikan KK
-  if (resident.pendidikan_kk) {
-    const pkkId = reverseLookup(PENDIDIKAN_KK_MAP, resident.pendidikan_kk);
-    if (pkkId !== undefined) payload.pendidikan_kk_id = pkkId;
+  // Pendidikan KK
+  if (raw.pendidikan_kk) {
+    const pkkId = reverseLookup(PENDIDIKAN_KK_MAP, raw.pendidikan_kk);
+    if (pkkId !== undefined) dbData.pendidikan_kk_id = pkkId;
   }
-  delete payload.pendidikan_kk;
 
-  // Reverse map Pekerjaan
-  if (resident.pekerjaan) {
-    const pekId = reverseLookup(PEKERJAAN_MAP, resident.pekerjaan);
-    if (pekId !== undefined) payload.pekerjaan_id = pekId;
+  // Pendidikan Sedang Ditempuh
+  if (raw.pendidikan_saat_ini) {
+    const psId = reverseLookup(PENDIDIKAN_SEDANG_MAP, raw.pendidikan_saat_ini);
+    if (psId !== undefined) dbData.pendidikan_sedang_id = psId;
   }
-  delete payload.pekerjaan;
+
+  // Pekerjaan
+  if (raw.pekerjaan) {
+    const pekId = reverseLookup(PEKERJAAN_MAP, raw.pekerjaan);
+    if (pekId !== undefined) dbData.pekerjaan_id = pekId;
+  }
+
+  // Warganegara
+  if (raw.kewarganegaraan) {
+    const wnId = reverseLookup(WARGANEGARA_MAP, raw.kewarganegaraan);
+    if (wnId !== undefined) dbData.warganegara_id = wnId;
+  }
+
+  // Cacat
+  if (raw.cacat_fisik_mental) {
+    const cId = reverseLookup(CACAT_MAP, raw.cacat_fisik_mental);
+    if (cId !== undefined) dbData.cacat_id = cId;
+  }
+
+  // Sakit Menahun
+  if (raw.sakit_menahun) {
+    const smId = reverseLookup(SAKIT_MENAHUN_MAP, raw.sakit_menahun);
+    if (smId !== undefined) dbData.sakit_menahun_id = smId;
+  }
+
+  // Asuransi
+  if (raw.kepesertaan_asuransi) {
+    const asId = reverseLookup(ASURANSI_MAP, raw.kepesertaan_asuransi);
+    if (asId !== undefined) dbData.id_asuransi = asId;
+  }
+
+  // Cara KB
+  if (raw.cara_kb_id !== undefined && raw.cara_kb_id !== null) {
+    dbData.cara_kb_id = Number(raw.cara_kb_id) || null;
+  } else if (raw.akseptor_kb) {
+    const kbId = reverseLookup(CARA_KB_MAP, raw.akseptor_kb);
+    if (kbId !== undefined) dbData.cara_kb_id = kbId;
+  }
+
+  // Wajib Identitas
+  if (raw.status_kepemilikan_identitas) {
+    const wiId = reverseLookup(WAJIB_IDENTITAS_MAP, raw.status_kepemilikan_identitas);
+    if (wiId !== undefined) dbData.wajib_identitas_id = wiId;
+  }
+
+  // Identitas Elektronik
+  if (raw.identitas_elektronik) {
+    const ieId = reverseLookup(IDENTITAS_ELEKTRONIK_MAP, raw.identitas_elektronik);
+    if (ieId !== undefined) dbData.identitas_elektronik_id = ieId;
+  }
+
+  // Status Rekam
+  if (raw.status_rekam) {
+    const srId = reverseLookup(STATUS_REKAM_MAP, raw.status_rekam);
+    if (srId !== undefined) dbData.status_rekam_id = srId;
+  }
+
+  // Tempat Dilahirkan
+  if (raw.jenis_tempat_lahir) {
+    const tlId = reverseLookup(TEMPAT_DILAHIRKAN_MAP, raw.jenis_tempat_lahir);
+    if (tlId !== undefined) dbData.tempat_dilahirkan_id = tlId;
+  }
+
+  // Jenis Kelahiran
+  if (raw.jenis_kelahiran) {
+    const jkId = reverseLookup(JENIS_KELAHIRAN_MAP, raw.jenis_kelahiran);
+    if (jkId !== undefined) dbData.jenis_kelahiran_id = jkId;
+  }
+
+  // Penolong Kelahiran
+  if (raw.cara_lahir) {
+    const pkId = reverseLookup(PENOLONG_KELAHIRAN_MAP, raw.cara_lahir);
+    if (pkId !== undefined) dbData.penolong_kelahiran_id = pkId;
+  }
+
+  // Kehamilan
+  if (raw.status_kehamilan) {
+    dbData.hamil = raw.status_kehamilan.toUpperCase().includes("TIDAK") ? 1 : 2;
+  }
 
   // Dusun & Wilayah Dusun ID
-  if (resident.dusun) {
-    const norm = normalizeDusunKey(resident.dusun);
+  if (raw.dusun) {
+    const norm = normalizeDusunKey(raw.dusun);
     const foundEntry = Object.entries(DUSUN_MAP).find(([_, v]) => normalizeDusunKey(v) === norm);
     if (foundEntry) {
-      payload.wilayah_dusun_id = Number(foundEntry[0]);
+      dbData.wilayah_dusun_id = Number(foundEntry[0]);
+    } else {
+      const numOnly = raw.dusun.replace(/\D/g, "");
+      if (numOnly) dbData.wilayah_dusun_id = Number(numOnly);
     }
-    payload.dusun = formatDusunName(resident.dusun);
   }
 
-  // Remove primary key id and metadata from payload if present
-  delete payload.id;
-  delete payload.created_at;
-  
-  return payload;
+  // RW and RT: Format into alamat_rt to avoid FK constraint violations on empty wilayah_rw/wilayah_rt tables
+  if (raw.rw || raw.rt) {
+    const rtStr = raw.rt ? String(raw.rt).padStart(3, '0') : '';
+    const rwStr = raw.rw ? String(raw.rw).padStart(3, '0') : '';
+    if (!raw.alamat_rt || !raw.alamat_rt.trim()) {
+      if (rtStr && rwStr) {
+        dbData.alamat_rt = `RT ${rtStr} / RW ${rwStr}`;
+      } else if (rtStr) {
+        dbData.alamat_rt = `RT ${rtStr}`;
+      } else if (rwStr) {
+        dbData.alamat_rt = `RW ${rwStr}`;
+      }
+    }
+  }
+
+  // Text and Standard Fields
+  const directFields: (keyof Resident)[] = [
+    "tempat_lahir",
+    "waktu_lahir",
+    "anak_ke",
+    "berat_lahir",
+    "panjang_lahir",
+    "nik_ayah",
+    "nama_ayah",
+    "nik_ibu",
+    "nama_ibu",
+    "alamat_rt",
+    "alamat_sebelumnya",
+    "alamat_saat_ini",
+    "telepon",
+    "email",
+    "gelar_depan",
+    "gelar_belakang",
+    "akta_kelahiran_nomor",
+    "keahlian_khusus",
+    "status_ekonomi_dtks",
+    "penghasilan_rata_rata",
+    "kepemilikan_rumah",
+    "sumber_air_minum",
+    "akun_facebook",
+    "akun_instagram",
+    "akun_twitter",
+    "id_sosial_lainnya",
+    "no_paspor",
+    "no_kitap",
+    "no_kk_sebelumnya",
+    "tag_id_card",
+    "akta_perkawinan",
+    "akta_perceraian",
+    "no_asuransi",
+    "bpjs_ketenagakerjaan",
+    "foto_url",
+    "scan_ktp_url",
+    "scan_kk_url",
+    "scan_akta_lahir_url",
+    "scan_akta_nikah_url",
+    "scan_ijazah_url",
+    "scan_paspor_url",
+  ];
+
+  directFields.forEach((field) => {
+    if (raw[field] !== undefined) {
+      (dbData as any)[field] = raw[field] === "" ? null : raw[field];
+    }
+  });
+
+  // Date Fields (Formatted to YYYY-MM-DD or null)
+  if (raw.tanggal_lahir !== undefined) dbData.tanggal_lahir = formatDateToDb(raw.tanggal_lahir);
+  if (raw.tanggal_perkawinan !== undefined) dbData.tanggal_perkawinan = formatDateToDb(raw.tanggal_perkawinan);
+  if (raw.tanggal_perceraian !== undefined) dbData.tanggalperceraian = formatDateToDb(raw.tanggal_perceraian);
+  if (raw.tgl_berakhir_paspor !== undefined) dbData.tanggal_akhir_paspor = formatDateToDb(raw.tgl_berakhir_paspor);
+
+  // Filter strictly against allowed Supabase DB table columns
+  const finalPayload: Record<string, any> = {};
+  for (const [k, v] of Object.entries(dbData)) {
+    if (ALLOWED_PENDUDUK_DB_COLUMNS.has(k)) {
+      finalPayload[k] = v;
+    }
+  }
+
+  return finalPayload;
 }
 
 const getClient = () => createSupabaseBrowserClient();

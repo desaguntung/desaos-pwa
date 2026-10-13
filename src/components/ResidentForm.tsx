@@ -14,7 +14,7 @@ import {
   Users,
   HeartHandshake,
 } from "lucide-react";
-import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS, formatDusunName } from "@/lib/services/penduduk";
+import { Resident, IDENTITAS_ELEKTRONIK_OPTIONS, STATUS_REKAM_OPTIONS, STATUS_HAMIL_OPTIONS, formatDusunName, normalizeDusunKey } from "@/lib/services/penduduk";
 import { useReferenceData } from "@/lib/services/referensi";
 import { parseIndonesianNIK } from "@/lib/utils/nik-parser";
 import { formatChunkedNIK } from "@/lib/utils/formatters";
@@ -94,24 +94,41 @@ export default function ResidentForm({
     return num?.toString().padStart(3, "0") || "";
   };
 
+  const normalizedSelectedDusun = formData.dusun ? normalizeDusunKey(formData.dusun) : "";
+  const selectedDusun = dusun.find((d) => normalizeDusunKey(d.nama) === normalizedSelectedDusun);
+
   // Derived state for filtered wilayah
-  const filteredRw = rw.filter((item) => {
-    const selectedDusun = dusun.find((d) => d.nama === formData.dusun);
+  const dbFilteredRw = rw.filter((item) => {
     return selectedDusun && String(item.dusun_id) === String(selectedDusun.id);
   });
 
-  const filteredRt = rt.filter((item) => {
-    const selectedDusun = dusun.find((d) => d.nama === formData.dusun);
-    if (!selectedDusun) return false;
+  const standardRwOptions = Array.from({ length: 10 }, (_, i) => {
+    const val = formatNumber(i + 1);
+    return { label: `RW ${val}`, value: val };
+  });
 
+  const rwOptions = dbFilteredRw.length > 0
+    ? dbFilteredRw.map((item) => ({ label: `RW ${formatNumber(item.nomor_rw)}`, value: formatNumber(item.nomor_rw) }))
+    : standardRwOptions;
+
+  const dbFilteredRt = rt.filter((item) => {
+    if (!selectedDusun) return false;
     const selectedRw = rw.find(
       (r) =>
         String(r.dusun_id) === String(selectedDusun.id) &&
         formatNumber(r.nomor_rw) === formData.rw
     );
-
     return selectedRw && String(item.rw_id) === String(selectedRw.id);
   });
+
+  const standardRtOptions = Array.from({ length: 15 }, (_, i) => {
+    const val = formatNumber(i + 1);
+    return { label: `RT ${val}`, value: val };
+  });
+
+  const rtOptions = dbFilteredRt.length > 0
+    ? dbFilteredRt.map((item) => ({ label: `RT ${formatNumber(item.nomor_rt)}`, value: formatNumber(item.nomor_rt) }))
+    : standardRtOptions;
 
   const handleDusunChange = (val: string) => {
     updateField("dusun", val);
@@ -436,25 +453,38 @@ export default function ResidentForm({
 
            <SelectField
               label="Dusun"
-              value={formData.dusun}
+              value={formData.dusun ? formatDusunName(formData.dusun) : ""}
               onValueChange={handleDusunChange}
-              options={dusun.map((d) => ({ label: formatDusunName(d.nama), value: d.nama }))}
+              options={
+                dusun.length > 0
+                  ? dusun.map((d) => ({ label: formatDusunName(d.nama), value: formatDusunName(d.nama) }))
+                  : [
+                      { label: "Dusun I", value: "Dusun I" },
+                      { label: "Dusun II", value: "Dusun II" },
+                      { label: "Dusun III", value: "Dusun III" },
+                      { label: "Dusun IV", value: "Dusun IV" },
+                      { label: "Dusun V", value: "Dusun V" },
+                      { label: "Dusun VI", value: "Dusun VI" },
+                      { label: "Dusun VII", value: "Dusun VII" },
+                      { label: "Dusun VIII", value: "Dusun VIII" },
+                    ]
+              }
            />
 
            <div className="grid grid-cols-2 gap-4">
              <SelectField
                 label="RW"
-                value={formData.rw}
+                value={formData.rw ? formatNumber(formData.rw) : ""}
                 onValueChange={handleRwChange}
-                options={filteredRw.map((item) => ({ label: formatNumber(item.nomor_rw), value: formatNumber(item.nomor_rw) }))}
+                options={rwOptions}
                 disabled={!formData.dusun}
              />
              <SelectField
                 label="RT"
-                value={formData.rt}
+                value={formData.rt ? formatNumber(formData.rt) : ""}
                 onValueChange={(val) => updateField("rt", val)}
-                options={filteredRt.map((item) => ({ label: formatNumber(item.nomor_rt), value: formatNumber(item.nomor_rt) }))}
-                disabled={!formData.rw}
+                options={rtOptions}
+                disabled={!formData.dusun}
              />
            </div>
 
